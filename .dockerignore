@@ -1,0 +1,41 @@
+# Dependencies (installed fresh inside Docker)
+node_modules
+.bun
+
+# Build outputs
+dist
+.output
+
+# Local env files — NEVER include in image
+.env
+.env.*
+!.env.example
+
+# Dev tools
+.git
+.gitignore
+*.md
+dump_repo.ts
+repo_dump.txt
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode
+.idea
+*.swp
+
+# Test artifacts
+coverage
+*.test.ts
+
+# Local uploads (managed via persistent volume in production)
+packages/api/public/receipts
+packages/api/public/avatars
+apps/client/dist
