@@ -16,7 +16,16 @@
     "db:studio": "bun run --filter @fintr/api db:studio",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,ts,vue,json,css,md}": [
+      "prettier --write"
+    ],
+    "*.{js,ts,vue}": [
+      "eslint --fix"
+    ]
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -26,6 +35,8 @@
     "framework7": "^9.0.5",
     "framework7-vue": "^9.0.5",
     "globals": "^17.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.7",
     "prettier": "^3.8.3",
     "typescript-eslint": "^8.60.1",
     "vue": "^3.5.35"
