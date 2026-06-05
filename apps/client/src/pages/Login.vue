@@ -154,6 +154,7 @@
         <a
           href="https://github.com/ihkaru/fintr/releases/latest"
           target="_blank"
+          class="external"
           style="
             display: inline-flex;
             align-items: center;
