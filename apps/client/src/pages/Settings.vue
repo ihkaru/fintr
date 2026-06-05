@@ -29,7 +29,7 @@
         >
           <img
             v-if="userProfile?.avatarUrl && !userAvatarError"
-            :src="userProfile.avatarUrl"
+            :src="getAssetUrl(userProfile.avatarUrl)"
             @error="userAvatarError = true"
             style="width: 100%; height: 100%; object-fit: cover"
             alt="Avatar"
@@ -125,7 +125,7 @@
                 >
                   <img
                     v-if="member.avatarUrl"
-                    :src="member.avatarUrl"
+                    :src="getAssetUrl(member.avatarUrl)"
                     style="width: 100%; height: 100%; object-fit: cover"
                     alt="Avatar"
                   />
@@ -266,7 +266,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { f7Page, f7Navbar, f7Preloader, f7 } from "framework7-vue";
-import { household, auth, periods, getUser, clearToken } from "../js/api";
+import { household, auth, periods, getUser, clearToken, getAssetUrl } from "../js/api";
 import { MONTH_NAMES } from "../js/routes";
 
 declare const __APP_VERSION__: string;

@@ -3,9 +3,24 @@
  * Handles JWT auth, error handling, and response parsing.
  */
 
-// In production, VITE_API_URL is injected at build time by Coolify (e.g. https://fintr-api.dvlpid.my.id/api)
-// In local dev, falls back to "/api" which is proxied to localhost:3001 by Vite
-const API_BASE = (import.meta.env.VITE_API_URL as string) ?? "/api";
+export const API_BASE = (import.meta.env.VITE_API_URL as string) ?? "/api";
+
+export function getAssetUrl(path: string | null | undefined): string {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) {
+    return path;
+  }
+
+  let cleanPath = path;
+  if (cleanPath.startsWith("/api")) {
+    cleanPath = cleanPath.slice(4);
+  }
+  if (!cleanPath.startsWith("/")) {
+    cleanPath = "/" + cleanPath;
+  }
+
+  return `${API_BASE}${cleanPath}`;
+}
 
 function getToken(): string | null {
   return localStorage.getItem("fintr_token");

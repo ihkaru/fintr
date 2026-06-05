@@ -198,7 +198,7 @@
             <!-- Background blurred version of the receipt image -->
             <div
               :style="{
-                backgroundImage: `url(/api${transaction.rawImageKey})`,
+                backgroundImage: `url(${getAssetUrl(transaction.rawImageKey)})`,
                 position: 'absolute',
                 top: 0,
                 left: 0,
@@ -212,7 +212,7 @@
             ></div>
             <!-- Main foreground preview image -->
             <img
-              :src="`/api${transaction.rawImageKey}`"
+              :src="getAssetUrl(transaction.rawImageKey)"
               alt="Pratinjau Struk"
               style="
                 max-height: 100%;
@@ -291,6 +291,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { f7Sheet, f7 } from "framework7-vue";
+import { getAssetUrl } from "../js/api";
 
 const props = defineProps<{
   opened: boolean;
@@ -308,7 +309,7 @@ const isOpened = computed({
 });
 
 const openReceiptFull = (key: string) => {
-  window.open(`/api${key}`, "_blank");
+  window.open(getAssetUrl(key), "_blank");
 };
 
 const confirmDelete = () => {

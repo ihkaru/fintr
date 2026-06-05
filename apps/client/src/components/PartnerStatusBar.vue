@@ -30,7 +30,7 @@
         >
           <img
             v-if="userAvatar && !userAvatarError"
-            :src="userAvatar"
+            :src="getAssetUrl(userAvatar)"
             @error="userAvatarError = true"
             style="width: 100%; height: 100%; object-fit: cover"
           />
@@ -71,7 +71,7 @@
         >
           <img
             v-if="partner.avatarUrl && !partnerAvatarError"
-            :src="partner.avatarUrl"
+            :src="getAssetUrl(partner.avatarUrl)"
             @error="partnerAvatarError = true"
             style="width: 100%; height: 100%; object-fit: cover"
           />
@@ -129,6 +129,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { getAssetUrl } from "../js/api";
 
 interface UserProfile {
   name: string;
