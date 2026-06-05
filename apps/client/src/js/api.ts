@@ -358,6 +358,22 @@ export const transactions = {
     return poll();
   },
 
+  async parseText(text: string, envelopes?: Array<{ id: string; name: string }>) {
+    return request<{
+      amount: number | null;
+      merchant: string | null;
+      date: string | null;
+      rawText: string;
+      confidence: "high" | "medium" | "low";
+      recommendedEnvelopeId?: string | null;
+      analysisReasoning?: string | null;
+      formattedNote?: string | null;
+    }>("/transactions/parse-text", {
+      method: "POST",
+      body: JSON.stringify({ text, envelopes }),
+    });
+  },
+
   async update(
     id: string,
     data: Partial<{

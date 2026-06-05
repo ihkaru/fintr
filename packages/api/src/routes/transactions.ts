@@ -3,7 +3,7 @@ import { authMiddleware } from "../middleware/auth";
 import { db } from "../db/index";
 import { transactions, budgetAllocations, budgetPeriods, envelopeTemplates } from "../db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { extractTransactionFromImage } from "../services/ocr";
+import { extractTransactionFromImage, extractTransactionFromText } from "../services/ocr";
 import { broadcastToHousehold } from "../services/sync";
 import fs from "node:fs";
 
@@ -264,6 +264,31 @@ export const transactionRoutes = new Elysia({ prefix: "/transactions" })
     }
     return job;
   })
+  .post(
+    "/parse-text",
+    async ({ body, set }) => {
+      try {
+        const result = await extractTransactionFromText(body.text, body.envelopes);
+        return result;
+      } catch (error: any) {
+        set.status = 500;
+        return { error: error.message || "Gagal memproses teks transaksi" };
+      }
+    },
+    {
+      body: t.Object({
+        text: t.String(),
+        envelopes: t.Optional(
+          t.Array(
+            t.Object({
+              id: t.String(),
+              name: t.String(),
+            })
+          )
+        ),
+      }),
+    }
+  )
   .patch(
     "/:id",
     async ({ params, body, userId, householdId, set }) => {

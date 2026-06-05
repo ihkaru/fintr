@@ -311,7 +311,43 @@ export function useAddTransaction(routeQueryAllocId?: string) {
           console.error("Gagal OCR share target:", err);
         }
       } else if (data.type === "text" && data.text) {
-        form.note = data.text;
+        const sessionId = ++currentOcrSessionId.value;
+        ocrStatus.value = "🔄 Menganalisis teks yang dibagikan...";
+        form.source = "ocr";
+
+        if (allocations.value.length === 0) {
+          const list = await periods.list();
+          const current = list.find(p => !p.isClosed);
+          if (current) {
+            currentPeriodId.value = current.id;
+            const detail = await periods.getDetail(current.id);
+            allocations.value = detail.allocations;
+          }
+        }
+
+        const envelopeCandidates = allocations.value.map(a => ({
+          id: a.id,
+          name: a.envelopeName,
+        }));
+
+        try {
+          const result = await transactions.parseText(data.text, envelopeCandidates);
+          if (sessionId !== currentOcrSessionId.value) return;
+          processOcrResult(
+            result,
+            form,
+            isSplit,
+            splitItems,
+            allocations.value,
+            aiRecommendationText
+          );
+          ocrStatus.value = `✅ Terdeteksi (Akurasi: ${result.confidence}). Cek dan lengkapi jika salah.`;
+        } catch (err: any) {
+          if (sessionId !== currentOcrSessionId.value) return;
+          ocrStatus.value = "❌ Gagal menganalisis teks. Masukkan manual saja.";
+          console.error("Gagal parseText share target:", err);
+          form.note = data.text;
+        }
       }
       return; // Handled native share target
     }
@@ -382,7 +418,7 @@ export function useAddTransaction(routeQueryAllocId?: string) {
       }
     }
 
-    // Check for shared image from PWA Share Target
+    // Check for shared image or text from PWA Share Target
     if ("caches" in window) {
       try {
         const cache = await caches.open("shared-image-cache");
@@ -415,39 +451,89 @@ export function useAddTransaction(routeQueryAllocId?: string) {
             name: a.envelopeName,
           }));
 
-          const result = await transactions.ocr(
-            base64,
-            blob.type,
-            envelopeCandidates,
-            statusText => {
-              if (sessionId !== currentOcrSessionId.value) return;
-              ocrStatus.value = `🔄 ${statusText}`;
+          try {
+            const result = await transactions.ocr(
+              base64,
+              blob.type,
+              envelopeCandidates,
+              statusText => {
+                if (sessionId !== currentOcrSessionId.value) return;
+                ocrStatus.value = `🔄 ${statusText}`;
+              }
+            );
+
+            if (sessionId !== currentOcrSessionId.value) return;
+            processOcrResult(
+              result,
+              form,
+              isSplit,
+              splitItems,
+              allocations.value,
+              aiRecommendationText
+            );
+            ocrStatus.value = `✅ Terdeteksi (Akurasi: ${result.confidence}). Cek dan lengkapi jika salah.`;
+
+            // Clean up cache after successful extraction
+            await cache.delete("/shared-image");
+          } catch (err: any) {
+            if (sessionId !== currentOcrSessionId.value) return;
+            ocrStatus.value = "❌ Gagal memproses gambar terbagi. Silakan isi manual.";
+            console.error("Shared target image processing error:", err);
+            await cache.delete("/shared-image");
+          }
+        }
+
+        const sharedTextResponse = await cache.match("/shared-text");
+        if (sharedTextResponse) {
+          const sessionId = ++currentOcrSessionId.value;
+          ocrStatus.value = "🔄 Menganalisis teks yang dibagikan...";
+          form.source = "ocr";
+
+          const textData = await sharedTextResponse.json();
+          const textToParse =
+            `${textData.title || ""}\n${textData.text || ""}\n${textData.url || ""}`.trim();
+
+          if (allocations.value.length === 0) {
+            const list = await periods.list();
+            const current = list.find(p => !p.isClosed);
+            if (current) {
+              currentPeriodId.value = current.id;
+              const detail = await periods.getDetail(current.id);
+              allocations.value = detail.allocations;
             }
-          );
+          }
 
-          if (sessionId !== currentOcrSessionId.value) return;
-          processOcrResult(
-            result,
-            form,
-            isSplit,
-            splitItems,
-            allocations.value,
-            aiRecommendationText
-          );
-          ocrStatus.value = `✅ Terdeteksi (Akurasi: ${result.confidence}). Cek dan lengkapi jika salah.`;
+          const envelopeCandidates = allocations.value.map(a => ({
+            id: a.id,
+            name: a.envelopeName,
+          }));
 
-          // Clean up cache after successful extraction
-          await cache.delete("/shared-image");
+          try {
+            const result = await transactions.parseText(textToParse, envelopeCandidates);
+            if (sessionId !== currentOcrSessionId.value) return;
+            processOcrResult(
+              result,
+              form,
+              isSplit,
+              splitItems,
+              allocations.value,
+              aiRecommendationText
+            );
+            ocrStatus.value = `✅ Terdeteksi (Akurasi: ${result.confidence}). Cek dan lengkapi jika salah.`;
+
+            // Clean up cache after successful extraction
+            await cache.delete("/shared-text");
+          } catch (err: any) {
+            if (sessionId !== currentOcrSessionId.value) return;
+            ocrStatus.value = "❌ Gagal menganalisis teks. Masukkan manual saja.";
+            console.error("Gagal parseText share target:", err);
+            form.note = textToParse;
+            await cache.delete("/shared-text");
+          }
         }
       } catch (err: any) {
-        ocrStatus.value = "❌ Gagal memproses gambar terbagi. Silakan isi manual.";
+        ocrStatus.value = "❌ Gagal memproses data terbagi. Silakan isi manual.";
         console.error("Shared target processing error:", err);
-        try {
-          const cache = await caches.open("shared-image-cache");
-          await cache.delete("/shared-image");
-        } catch {
-          // ignore cache delete failure
-        }
       }
     }
   });

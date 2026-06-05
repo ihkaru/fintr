@@ -5,6 +5,10 @@ import Framework7Vue, { registerComponents } from "framework7-vue/bundle";
 import App from "../components/App.vue";
 import "../css/app.css";
 import { registerServiceWorker } from "../composables/useAppUpdate";
+import { initShareHandler } from "./shareHandler";
+
+// Initialize native share handler immediately on cold boot
+initShareHandler();
 
 // Init Framework7 Vue plugin
 Framework7.use(Framework7Vue);

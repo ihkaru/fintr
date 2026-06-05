@@ -195,6 +195,7 @@ import {
   f7Icon,
   f7Preloader,
   f7,
+  f7ready,
 } from "framework7-vue";
 import {
   periods,
@@ -376,28 +377,37 @@ const handleTransactionSaved = async (e: Event) => {
 onMounted(async () => {
   window.addEventListener("fintr:transaction-saved", handleTransactionSaved);
 
-  // Intercept shared receipt image from PWA share target and auto-redirect
-  if ("caches" in window) {
-    try {
-      const cache = await caches.open("shared-image-cache");
-      const sharedResponse = await cache.match("/shared-image");
-      if (sharedResponse) {
-        console.log("Shared image detected in cache, redirecting to Add Transaction");
-        navigateToAddTransaction();
+  f7ready(async () => {
+    // Intercept shared receipt image or text from PWA share target and auto-redirect
+    if ("caches" in window) {
+      try {
+        const cache = await caches.open("shared-image-cache");
+        const [sharedImage, sharedText] = await Promise.all([
+          cache.match("/shared-image"),
+          cache.match("/shared-text"),
+        ]);
+        if (sharedImage || sharedText) {
+          console.log("Shared PWA content detected in cache, redirecting to Add Transaction");
+          if (f7.views.main && f7.views.main.router) {
+            f7.views.main.router.navigate("/add-transaction/?source=share", { reloadAll: false });
+          }
+        }
+      } catch (e) {
+        console.error("Error checking shared PWA content in cache:", e);
       }
-    } catch (e) {
-      console.error("Error checking shared image in cache:", e);
     }
-  }
 
-  // Intercept shared data from Native share target and auto-redirect
-  const { sharedData } = useShareStore();
-  if (sharedData.value) {
-    console.log("Shared data detected in shareStore on mount, redirecting to Add Transaction");
-    if (f7.views.main && f7.views.main.router) {
-      f7.views.main.router.navigate("/add-transaction/?source=share", { reloadAll: false });
+    // Intercept shared data from Native share target and auto-redirect
+    const { sharedData } = useShareStore();
+    if (sharedData.value) {
+      console.log(
+        "Shared native data detected in shareStore on mount, redirecting to Add Transaction"
+      );
+      if (f7.views.main && f7.views.main.router) {
+        f7.views.main.router.navigate("/add-transaction/?source=share", { reloadAll: false });
+      }
     }
-  }
+  });
 });
 
 onBeforeUnmount(() => {

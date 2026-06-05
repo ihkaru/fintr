@@ -4,10 +4,7 @@
 const CACHE_VERSION = "__CACHE_V1__";
 const CACHE_NAME = `famivault-${CACHE_VERSION}`;
 
-const ASSETS = [
-  "/",
-  "/index.html",
-];
+const ASSETS = ["/", "/index.html"];
 
 // Install Event
 self.addEventListener("install", event => {
@@ -62,6 +59,10 @@ self.addEventListener("fetch", event => {
         try {
           const formData = await event.request.formData();
           const file = formData.get("receipt");
+          const title = formData.get("title");
+          const text = formData.get("text");
+          const urlStr = formData.get("url");
+
           if (file) {
             const cache = await caches.open("shared-image-cache");
             // Store the shared file in the cache under /shared-image
@@ -75,9 +76,25 @@ self.addEventListener("fetch", event => {
                 },
               })
             );
+          } else if (title || text || urlStr) {
+            const cache = await caches.open("shared-image-cache");
+            const sharedTextData = {
+              title: title || "",
+              text: text || "",
+              url: urlStr || "",
+            };
+            // Store the shared text in the cache under /shared-text
+            await cache.put(
+              "/shared-text",
+              new Response(JSON.stringify(sharedTextData), {
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              })
+            );
           }
         } catch (err) {
-          console.error("Service Worker: Failed to store shared file", err);
+          console.error("Service Worker: Failed to store shared content", err);
         }
         // Redirect to home page where the app will check the cache and redirect to add-transaction
         return Response.redirect("/", 303);
