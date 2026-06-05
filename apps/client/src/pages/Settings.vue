@@ -225,6 +225,20 @@
       >
         Keluar Akun (Logout)
       </button>
+
+      <!-- App Version -->
+      <div
+        style="
+          text-align: center;
+          margin-top: 32px;
+          padding-bottom: 24px;
+          font-size: 12px;
+          color: var(--fintr-text-dim);
+          letter-spacing: 0.02em;
+        "
+      >
+        FamiVault v{{ appVersion }}
+      </div>
     </div>
   </f7-page>
 </template>
@@ -234,6 +248,9 @@ import { ref, onMounted } from "vue";
 import { f7Page, f7Navbar, f7Preloader, f7 } from "framework7-vue";
 import { household, auth, periods, getUser, clearToken } from "../js/api";
 import { MONTH_NAMES } from "../js/routes";
+
+declare const __APP_VERSION__: string;
+const appVersion = __APP_VERSION__;
 
 const loading = ref(true);
 const joining = ref(false);

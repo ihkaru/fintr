@@ -1,5 +1,8 @@
 <template>
   <f7-app v-bind="f7params">
+    <!-- PWA Update Banner — shown when a new Service Worker is waiting -->
+    <UpdateBanner />
+
     <!-- Main Views tabs when logged in -->
     <f7-views v-if="isLoggedIn" tabs class="safe-areas">
       <!-- Tabbar / Toolbar -->
@@ -41,6 +44,7 @@ import { isLoggedInReactive as isLoggedIn } from "../js/api";
 import { watch } from "vue";
 import { useSync } from "../composables/useSync";
 import { useHardwareBack } from "../composables/useHardwareBack";
+import UpdateBanner from "./UpdateBanner.vue";
 
 const f7params = {
   name: "FamiVault",

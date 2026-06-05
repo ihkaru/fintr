@@ -1,11 +1,12 @@
-const CACHE_NAME = "famivault-v1";
+// Cache version — bump this string on each deploy to trigger SW update.
+// Vite build hashes the JS/CSS filenames, but the SW file itself needs
+// a changed constant so the browser treats it as a new worker.
+const CACHE_VERSION = "__CACHE_V1__";
+const CACHE_NAME = `famivault-${CACHE_VERSION}`;
+
 const ASSETS = [
   "/",
   "/index.html",
-  "/src/js/app.ts",
-  "/src/css/app.css",
-  "https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap",
-  "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap",
 ];
 
 // Install Event
@@ -36,6 +37,13 @@ self.addEventListener("activate", event => {
       })
       .then(() => self.clients.claim())
   );
+});
+
+// Message handler — allows the app to tell a waiting SW to activate immediately
+self.addEventListener("message", event => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 // Fetch Event
@@ -83,7 +91,28 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // 3. Cache-first strategy for static assets
+  // 3. Network-first for navigation, cache-first for assets
+  if (event.request.mode === "navigate") {
+    // Navigation requests: try network first so the user always gets the
+    // latest index.html after a deploy, fall back to cache for offline.
+    event.respondWith(
+      fetch(event.request)
+        .then(networkResponse => {
+          // Update the cache with the fresh response
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(event.request).then(cached => cached || caches.match("/"));
+        })
+    );
+    return;
+  }
+
+  // 4. Cache-first strategy for static assets (JS/CSS/images/fonts)
   event.respondWith(
     caches
       .match(event.request)
