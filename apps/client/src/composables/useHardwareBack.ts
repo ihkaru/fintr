@@ -2,7 +2,7 @@ import { onMounted, onBeforeUnmount } from "vue";
 import { f7, f7ready } from "framework7-vue";
 import { useBackButton } from "./useBackButton";
 import { useSync } from "./useSync";
-import { isLoggedInReactive } from "../js/api";
+import { isLoggedInReactive, auth, setToken, setUser } from "../js/api";
 
 let lastTimeBackButtonWasPressed = 0;
 
@@ -95,6 +95,35 @@ export function useHardwareBack() {
         } else {
           console.log("[Lifecycle] Pausing real-time sync (App backgrounded)...");
           stopSync();
+        }
+      });
+
+      // Register Custom URL Scheme Deep Link Listener
+      await AppPlugin.addListener("appUrlOpen", async (data: { url: string }) => {
+        console.log("[DeepLink] App opened with URL:", data.url);
+        if (data.url.includes("id_token=")) {
+          const cleanUrl = data.url.replace("com.fintr.famivault://", "http://localhost/");
+          try {
+            const urlObj = new URL(cleanUrl);
+            const idToken = urlObj.searchParams.get("id_token");
+            if (idToken) {
+              console.log("[DeepLink] Found Google id_token from redirect");
+              f7.dialog.preloader("Menghubungkan Akun...");
+
+              const res = await auth.loginWithGoogle(idToken);
+              setToken(res.token);
+              setUser(res.user);
+
+              f7.dialog.close();
+
+              if (f7.views.main && f7.views.main.router) {
+                f7.views.main.router.navigate("/", { reloadAll: true });
+              }
+            }
+          } catch (err: any) {
+            f7.dialog.close();
+            f7.dialog.alert("Gagal masuk dengan Google: " + err.message, "Error");
+          }
         }
       });
     });
