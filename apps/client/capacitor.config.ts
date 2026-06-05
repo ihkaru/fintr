@@ -8,7 +8,7 @@ const config: CapacitorConfig = {
     GoogleAuth: {
       scopes: ["profile", "email"],
       // Standard Google OAuth Web Client ID (configured in Google Developer Console)
-      clientId: "30564891683-6k4nfjjds7h0c2ldarpd3uavpo5vc7ga.apps.googleusercontent.com",
+      clientId: "30564891683-s56f75ginc4a30sps38j6j51hh3dpthc.apps.googleusercontent.com",
       forceCodeForRefreshToken: true,
     },
   },
