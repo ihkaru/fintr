@@ -24,7 +24,7 @@
       <PartnerStatusBar
         :user="currentUserProfile"
         :partner="partnerProfile"
-        :householdName="householdName"
+        :household-name="householdName"
       />
 
       <!-- Hero Stats Card -->
@@ -206,6 +206,7 @@ import {
   Transaction,
 } from "../js/api";
 import { formatRp } from "../js/routes";
+import { useShareStore } from "../js/shareStore";
 
 // Modular UI Components
 import PartnerStatusBar from "../components/PartnerStatusBar.vue";
@@ -386,6 +387,15 @@ onMounted(async () => {
       }
     } catch (e) {
       console.error("Error checking shared image in cache:", e);
+    }
+  }
+
+  // Intercept shared data from Native share target and auto-redirect
+  const { sharedData } = useShareStore();
+  if (sharedData.value) {
+    console.log("Shared data detected in shareStore on mount, redirecting to Add Transaction");
+    if (f7.views.main && f7.views.main.router) {
+      f7.views.main.router.navigate("/add-transaction/?source=share", { reloadAll: false });
     }
   }
 });

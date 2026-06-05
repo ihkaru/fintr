@@ -1,7 +1,8 @@
-import { ref, reactive, toRef, onMounted } from "vue";
+import { ref, reactive, toRef, onMounted, watch } from "vue";
 import { useSplit } from "./useSplit";
 import { useOcr } from "./useOcr";
 import { periods, transactions, PeriodDetail } from "../js/api";
+import { useShareStore, SharedData } from "../js/shareStore";
 
 export function useAddTransaction(routeQueryAllocId?: string) {
   const loadingEnvelopes = ref(true);
@@ -251,6 +252,69 @@ export function useAddTransaction(routeQueryAllocId?: string) {
   // Setup Capacitor + PWA share intent handlers
   onMounted(async () => {
     initDateTime();
+
+    // Check for shared data from Native share store
+    const { sharedData, clearSharedData } = useShareStore();
+    if (sharedData.value) {
+      const data = { ...sharedData.value };
+      clearSharedData();
+
+      if (data.type === "image" || data.type === "pdf") {
+        const sessionId = ++currentOcrSessionId.value;
+        ocrStatus.value = "🔄 Mengambil struk dari share target...";
+        form.source = "ocr";
+
+        clearOcrPreview();
+        localImagePreviewUrl.value = `data:${data.mimeType};base64,${data.base64}`;
+
+        ocrStatus.value = "🔄 Mengirim gambar...";
+
+        if (allocations.value.length === 0) {
+          const list = await periods.list();
+          const current = list.find(p => !p.isClosed);
+          if (current) {
+            currentPeriodId.value = current.id;
+            const detail = await periods.getDetail(current.id);
+            allocations.value = detail.allocations;
+          }
+        }
+
+        const envelopeCandidates = allocations.value.map(a => ({
+          id: a.id,
+          name: a.envelopeName,
+        }));
+
+        try {
+          const result = await transactions.ocr(
+            data.base64!,
+            data.mimeType!,
+            envelopeCandidates,
+            statusText => {
+              if (sessionId !== currentOcrSessionId.value) return;
+              ocrStatus.value = `🔄 ${statusText}`;
+            }
+          );
+
+          if (sessionId !== currentOcrSessionId.value) return;
+          processOcrResult(
+            result,
+            form,
+            isSplit,
+            splitItems,
+            allocations.value,
+            aiRecommendationText
+          );
+          ocrStatus.value = `✅ Terdeteksi (Akurasi: ${result.confidence}). Cek dan lengkapi jika salah.`;
+        } catch (err: any) {
+          if (sessionId !== currentOcrSessionId.value) return;
+          ocrStatus.value = "❌ Gagal mendeteksi. Masukkan manual saja.";
+          console.error("Gagal OCR share target:", err);
+        }
+      } else if (data.type === "text" && data.text) {
+        form.note = data.text;
+      }
+      return; // Handled native share target
+    }
 
     // Check Capacitor share intent if running on a native device
     const cap = (window as any).Capacitor;

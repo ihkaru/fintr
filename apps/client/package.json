@@ -1,6 +1,6 @@
 {
   "name": "@fintr/client",
-  "version": "1.0.3",
+  "version": "1.0.10",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,6 +11,8 @@
   "dependencies": {
     "@capacitor/android": "^8.4.0",
     "@capacitor/core": "^8.4.0",
+    "@capacitor/filesystem": "^8.1.2",
+    "@capgo/capacitor-share-target": "^8.0.37",
     "framework7": "^9.0.5",
     "framework7-vue": "^9.0.5",
     "vue": "^3.5.13"
