@@ -107,7 +107,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
         // Seed default envelopes
         await seedDefaultEnvelopes(household.id);
 
-        // Create initial June 2025 period
+        // Create initial period (defaults to current month and year)
         await seedInitialPeriod(household.id);
       }
 

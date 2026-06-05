@@ -5,13 +5,13 @@ A zero-based envelope budgeting application designed for newlywed households, po
 ## Features
 
 - **Zero-Based Budgeting**: Alokasi penuh pendapatan bulanan ke dalam amplop anggaran (Unallocated Fund = Rp 0).
-- **Sistem Amplop Interaktif**: Lacak sisa anggaran per kategori amplop dengan riwayat transaksi terintegrasi dan opsi kustomisasi (nama, target alokasi default, warna visual, dan perilaku *rollover*).
+- **Sistem Amplop Interaktif**: Lacak sisa anggaran per kategori amplop dengan riwayat transaksi terintegrasi dan opsi kustomisasi (nama, target alokasi default, warna visual, dan perilaku _rollover_).
 - **Split Transactions (Transaksi Terbagi)**: Pecah pengeluaran dari satu struk belanja besar ke beberapa amplop anggaran berbeda secara fleksibel dalam satu form input tunggal dengan validasi sisa saldo ketat.
-- **AI OCR Receipt Scanning & Rincian Barang**: Unggah foto struk/bukti transfer atau manfaatkan fitur *Share Target* Android untuk memindai struk. Ditenagai oleh **Gemini Vision AI** untuk mengekstrak nominal, tanggal, merchant, klasifikasi rekomendasi amplop otomatis, serta rincian detail barang belanjaan yang tersimpan dalam format catatan multi-baris terstruktur.
+- **AI OCR Receipt Scanning & Rincian Barang**: Unggah foto struk/bukti transfer atau manfaatkan fitur _Share Target_ Android untuk memindai struk. Ditenagai oleh **Gemini Vision AI** untuk mengekstrak nominal, tanggal, merchant, klasifikasi rekomendasi amplop otomatis, serta rincian detail barang belanjaan yang tersimpan dalam format catatan multi-baris terstruktur.
 - **Sinkronisasi Real-Time (SSE)**: Sinkronisasi instan otomatis untuk data transaksi dan amplop anggaran antar perangkat pasangan menggunakan Server-Sent Events (SSE) dengan otentikasi kueri token yang aman.
 - **Autentikasi Aman & Local Avatar Caching**: Login mudah menggunakan Google OAuth dengan bypass mode demo. Dilengkapi dengan unduh otomatis & caching lokal gambar profil Google untuk mengatasi limitasi rate limiting (429) dan fallback huruf inisial reaktif jika gambar gagal dimuat.
 - **Rekonsiliasi Saldo Aktual**: Monitor selisih anggaran tercatat aplikasi dengan jumlah dana riil (rekening bank + dompet digital + kas fisik) secara mingguan atau periodik dengan widget interaktif.
-- **PWA & Capacitor Mobile Optimization**: Dilengkapi dengan penanganan tombol kembali perangkat Android (*hardware back button*), *dirty-form checks*, dan terintegrasi penuh sebagai aplikasi PWA/Native Mobile dengan Capacitor.
+- **PWA & Capacitor Mobile Optimization**: Dilengkapi dengan penanganan tombol kembali perangkat Android (_hardware back button_), _dirty-form checks_, dan terintegrasi penuh sebagai aplikasi PWA/Native Mobile dengan Capacitor.
 
 ---
 
@@ -58,26 +58,29 @@ FamiVault dirancang untuk membantu rumah tangga mengelola anggaran dengan metode
 
 ## Panduan Menghubungkan Akun Pasangan (Household Connection Guide)
 
-FamiVault memungkinkan pasangan mengelola amplop anggaran secara bersama-sama dalam satu Rumah Tangga (*Household*). Berikut adalah alur cara menghubungkan akun dan memantau status keanggotaan di UI:
+FamiVault memungkinkan pasangan mengelola amplop anggaran secara bersama-sama dalam satu Rumah Tangga (_Household_). Berikut adalah alur cara menghubungkan akun dan memantau status keanggotaan di UI:
 
 ### 1. Mendapatkan Kode Undangan (Invite Code)
+
 - Buka menu **Pengaturan** (ikon gerigi di pojok kanan atas halaman Dasbor).
 - Pada kartu **Rumah Tangga**, Anda akan melihat 6 karakter **Kode Undangan** unik milik Rumah Tangga Anda (contoh: `A1B2C3`).
 - Salin kode tersebut dan kirimkan ke pasangan Anda.
 
 ### 2. Bergabung ke Rumah Tangga Pasangan
+
 - Pasangan Anda harus membuka aplikasi FamiVault di perangkat mereka sendiri dan masuk ke menu **Pengaturan**.
 - Pada kartu **Rumah Tangga** bagian bawah, temukan kolom input **"Gabung Rumah Tangga Pasangan"**.
 - Tempel atau ketik **Kode Undangan** yang telah Anda bagikan, lalu tekan tombol **Gabung**.
 - Sistem akan memindahkan akun pasangan Anda ke dalam Rumah Tangga Anda. Aplikasi pasangan akan secara otomatis ter-logout untuk menyegarkan token otentikasi. Setelah login kembali, seluruh data amplop, alokasi, dan transaksi akan saling terhubung secara real-time.
 
 ### 3. Memantau Status Keanggotaan di UI
+
 - **Melalui Halaman Pengaturan (Settings):**
   Di kartu **Rumah Tangga**, terdapat daftar **Anggota Terhubung** yang menampilkan seluruh anggota yang tergabung dalam Rumah Tangga saat ini lengkap dengan foto profil/avatar, nama, alamat email, serta peran mereka (misalnya: `Owner` untuk pembuat awal, dan `Anggota` untuk pasangan yang baru bergabung).
 - **Melalui Halaman Dasbor (Home):**
   Di bagian atas dasbor, terdapat indikator status **PartnerStatusBar**:
   - Jika belum terhubung dengan pasangan, status bar akan bertuliskan **"Menunggu Partner..."** dengan satu lingkaran avatar Anda sendiri.
-  - Jika pasangan berhasil terhubung, status bar akan bertuliskan **"Alokasi Saling Terhubung"** dan menampilkan dua avatar yang saling bertumpuk (avatar Anda dan avatar pasangan) serta menampilkan gabungan nama Anda dan pasangan (contoh: *Ihsan & Partner*).
+  - Jika pasangan berhasil terhubung, status bar akan bertuliskan **"Alokasi Saling Terhubung"** dan menampilkan dua avatar yang saling bertumpuk (avatar Anda dan avatar pasangan) serta menampilkan gabungan nama Anda dan pasangan (contoh: _Ihsan & Partner_).
 
 ---
 

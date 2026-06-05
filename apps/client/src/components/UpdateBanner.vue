@@ -48,7 +48,9 @@ import { swUpdateAvailable, applyUpdate } from "../composables/useAppUpdate";
 
 .update-icon {
   font-size: 28px;
-  font-variation-settings: "FILL" 1, "wght" 500;
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 500;
   flex-shrink: 0;
   animation: pulse-glow 2s ease-in-out infinite;
 }
@@ -72,7 +74,9 @@ import { swUpdateAvailable, applyUpdate } from "../composables/useAppUpdate";
 
 .update-action {
   font-size: 24px;
-  font-variation-settings: "FILL" 1, "wght" 500;
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 500;
   flex-shrink: 0;
   opacity: 0.9;
 }
@@ -97,7 +101,8 @@ import { swUpdateAvailable, applyUpdate } from "../composables/useAppUpdate";
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

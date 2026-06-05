@@ -151,9 +151,7 @@ systemPrompt += `\n\nJawab dalam format JSON saja, tanpa markdown atau penjelasa
       "confidence": "high",
       "recommendedEnvelopeId": "env-4",
       "analysisReasoning": "Belanja di Tlogomas 44 mencakup produk kebutuhan rumah tangga.",
-      "items": [
-        { "name": "POP MIE AYAM 75G", "quantity": 1, "price": 4900, "total": 4900 }
-      ],
+      "items": [{ "name": "POP MIE AYAM 75G", "quantity": 1, "price": 4900, "total": 4900 }],
       "formattedNote": "🛒 Rincian Belanja:\n• 1x POP MIE AYAM 75G @ Rp 4.900 (Rp 4.900)"
     }
   }
@@ -164,11 +162,14 @@ systemPrompt += `\n\nJawab dalam format JSON saja, tanpa markdown atau penjelasa
 ## 5. Penggunaan di Sisi Klien (Client-Side Integration)
 
 ### A. Composable `useOcr.ts`
+
 Fungsi-fungsi pembantu di sisi klien memfasilitasi status pengunggahan berkas, pemuatan pratinjau gambar instan (`localImagePreviewUrl`), serta polling status hasil analisis berkala:
+
 - **`uploadReceiptFile(file: File)`**: Mengubah file gambar ke base64 dan memicu endpoint `/ocr`.
 - **`startOcrPolling(jobId: string)`**: Menjalankan interval polling status setiap 1.5 detik hingga job selesai atau gagal.
 
 ### B. Pratinjau Detil Rincian Belanja
+
 Hasil `formattedNote` secara otomatis dimasukkan ke kolom Catatan transaksi. Transaksi yang memiliki catatan dengan format ini akan menampilkan tombol ikon keranjang belanja 🛒 di halaman daftar transaksi dan dapat diklik untuk membuka **TransactionDetailSheet.vue** guna menampilkan rincian tabel belanjaan secara interaktif.
 
 ---

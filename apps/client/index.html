@@ -9,10 +9,10 @@
           const idToken = params.get("id_token");
           if (idToken) {
             const appSchemeUrl = "com.fintr.famivault://oauth?id_token=" + encodeURIComponent(idToken);
-            
+
             // Lakukan pengalihan otomatis ke aplikasi
             window.location.href = appSchemeUrl;
-            
+
             // Masukkan style dan UI fallback untuk menghentikan loading Vue app
             document.write(\`
               <style>

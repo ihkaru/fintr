@@ -86,7 +86,14 @@
 
         <!-- Daftar Anggota Rumah Tangga -->
         <div v-if="members && members.length > 0" style="margin-bottom: 20px">
-          <div style="font-size: 13px; font-weight: 700; color: var(--fintr-text-muted); margin-bottom: 10px">
+          <div
+            style="
+              font-size: 13px;
+              font-weight: 700;
+              color: var(--fintr-text-muted);
+              margin-bottom: 10px;
+            "
+          >
             Anggota Terhubung:
           </div>
           <div style="display: flex; flex-direction: column; gap: 10px">
@@ -136,12 +143,14 @@
                       color: white;
                     "
                   >
-                    {{ member.name ? member.name.charAt(0).toUpperCase() : 'M' }}
+                    {{ member.name ? member.name.charAt(0).toUpperCase() : "M" }}
                   </div>
                 </div>
                 <div>
                   <div style="font-size: 13px; font-weight: 700">{{ member.name }}</div>
-                  <div style="font-size: 11px; color: var(--fintr-text-muted)">{{ member.email }}</div>
+                  <div style="font-size: 11px; color: var(--fintr-text-muted)">
+                    {{ member.email }}
+                  </div>
                 </div>
               </div>
               <div
@@ -155,7 +164,7 @@
                   color: var(--fintr-text-muted);
                 "
               >
-                {{ member.role === 'owner' ? 'Owner' : 'Anggota' }}
+                {{ member.role === "owner" ? "Owner" : "Anggota" }}
               </div>
             </div>
           </div>
@@ -227,20 +236,8 @@
       </button>
 
       <!-- App Version & Update Link -->
-      <div
-        style="
-          text-align: center;
-          margin-top: 32px;
-          padding-bottom: 24px;
-        "
-      >
-        <div
-          style="
-            font-size: 12px;
-            color: var(--fintr-text-dim);
-            letter-spacing: 0.02em;
-          "
-        >
+      <div style="text-align: center; margin-top: 32px; padding-bottom: 24px">
+        <div style="font-size: 12px; color: var(--fintr-text-dim); letter-spacing: 0.02em">
           FamiVault v{{ appVersion }}
         </div>
         <a
@@ -258,7 +255,7 @@
             font-weight: 600;
           "
         >
-          <span class="material-symbols-outlined" style="font-size: 14px;">download</span>
+          <span class="material-symbols-outlined" style="font-size: 14px">download</span>
           Unduh APK / Cek Update
         </a>
       </div>

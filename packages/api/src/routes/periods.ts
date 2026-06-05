@@ -4,6 +4,7 @@ import { db } from "../db/index";
 import { budgetPeriods, budgetAllocations, envelopeTemplates, transactions } from "../db/schema";
 import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import { closePeriodAndRollover } from "../services/rollover";
+import { seedDefaultEnvelopes, seedInitialPeriod } from "../db/seed";
 
 export const periodRoutes = new Elysia({ prefix: "/periods" })
   .use(authMiddleware)
@@ -13,11 +14,66 @@ export const periodRoutes = new Elysia({ prefix: "/periods" })
       return { error: "Household required" };
     }
 
-    const periods = await db
+    let periods = await db
       .select()
       .from(budgetPeriods)
       .where(eq(budgetPeriods.householdId, householdId))
       .orderBy(desc(budgetPeriods.year), desc(budgetPeriods.month));
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // 1-indexed
+
+    // Case 1: No periods exist. Auto-seed.
+    if (periods.length === 0) {
+      const templates = await db
+        .select()
+        .from(envelopeTemplates)
+        .where(eq(envelopeTemplates.householdId, householdId));
+
+      if (templates.length === 0) {
+        await seedDefaultEnvelopes(householdId);
+      }
+
+      await seedInitialPeriod(householdId, currentYear, currentMonth);
+
+      periods = await db
+        .select()
+        .from(budgetPeriods)
+        .where(eq(budgetPeriods.householdId, householdId))
+        .orderBy(desc(budgetPeriods.year), desc(budgetPeriods.month));
+    }
+    // Case 2: Exactly 1 period exists, is not closed, is in the past, and has 0 transactions.
+    // Automatically fast-forward to current year/month.
+    else if (periods.length === 1 && !periods[0].isClosed) {
+      const period = periods[0];
+      const isPast =
+        period.year < currentYear || (period.year === currentYear && period.month < currentMonth);
+
+      if (isPast) {
+        const [txCount] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(transactions)
+          .where(eq(transactions.periodId, period.id));
+
+        if (Number(txCount.count) === 0) {
+          await db
+            .update(budgetPeriods)
+            .set({ year: currentYear, month: currentMonth })
+            .where(eq(budgetPeriods.id, period.id));
+
+          periods = await db
+            .select()
+            .from(budgetPeriods)
+            .where(eq(budgetPeriods.householdId, householdId))
+            .orderBy(desc(budgetPeriods.year), desc(budgetPeriods.month));
+
+          console.log(
+            `🔄 Automatically fast-forwarded empty initial period for household ${householdId} to ${currentMonth}/${currentYear}`
+          );
+        }
+      }
+    }
 
     return periods;
   })

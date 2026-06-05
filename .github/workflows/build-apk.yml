@@ -3,7 +3,7 @@ name: Build Android APK
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
   workflow_dispatch:
 
 jobs:
@@ -20,8 +20,8 @@ jobs:
       - name: Set up Java JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: '21'
+          distribution: "zulu"
+          java-version: "21"
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -42,7 +42,6 @@ jobs:
         run: |
           cd apps/client
           bunx cap sync android
-
 
       - name: Decode Android Keystore
         if: env.HAS_KEYSTORE == 'true'
@@ -68,7 +67,7 @@ jobs:
         run: |
           APK_PATH="apps/client/android/app/build/outputs/apk/release/app-release.apk"
           UNSIGNED_APK_PATH="apps/client/android/app/build/outputs/apk/release/app-release-unsigned.apk"
-          
+
           if [ -f "$APK_PATH" ]; then
             # If signed successfully
             cp "$APK_PATH" FamiVault-release.apk

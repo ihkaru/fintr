@@ -81,9 +81,10 @@ export async function seedDefaultEnvelopes(householdId: string) {
 }
 
 /**
- * Creates the initial June 2025 budget period with allocations from templates.
+ * Creates the initial budget period with allocations from templates.
+ * Defaults to current month and year if not specified.
  */
-export async function seedInitialPeriod(householdId: string) {
+export async function seedInitialPeriod(householdId: string, year?: number, month?: number) {
   const templates = await db
     .select()
     .from(envelopeTemplates)
@@ -91,15 +92,19 @@ export async function seedInitialPeriod(householdId: string) {
 
   if (templates.length === 0) {
     console.log("⚠️ No templates found, skipping period creation");
-    return;
+    return null;
   }
+
+  const now = new Date();
+  const currentYear = year ?? now.getFullYear();
+  const currentMonth = month ?? now.getMonth() + 1;
 
   const [period] = await db
     .insert(budgetPeriods)
     .values({
       householdId,
-      year: 2025,
-      month: 6,
+      year: currentYear,
+      month: currentMonth,
     })
     .returning();
 
@@ -112,7 +117,10 @@ export async function seedInitialPeriod(householdId: string) {
     }))
   );
 
-  console.log(`✅ Created June 2025 budget period with ${templates.length} allocations`);
+  console.log(
+    `✅ Created initial budget period (${currentMonth}/${currentYear}) with ${templates.length} allocations`
+  );
+  return period;
 }
 
 // Run directly: bun run src/db/seed.ts
