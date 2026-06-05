@@ -1,189 +1,258 @@
-# FamiVault (FinTr)
+<p align="center">
+  <img src=".github/assets/famivault_banner.png" alt="FamiVault Banner" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.35);">
+</p>
 
-A zero-based envelope budgeting application designed for newlywed households, powered by Vue 3, Framework7, ElysiaJS, Drizzle ORM, and Gemini Vision AI OCR.
-
-## Features
-
-- **Zero-Based Budgeting**: Alokasi penuh pendapatan bulanan ke dalam amplop anggaran (Unallocated Fund = Rp 0).
-- **Sistem Amplop Interaktif**: Lacak sisa anggaran per kategori amplop dengan riwayat transaksi terintegrasi dan opsi kustomisasi (nama, target alokasi default, warna visual, dan perilaku _rollover_).
-- **Split Transactions (Transaksi Terbagi)**: Pecah pengeluaran dari satu struk belanja besar ke beberapa amplop anggaran berbeda secara fleksibel dalam satu form input tunggal dengan validasi sisa saldo ketat.
-- **AI OCR Receipt Scanning & Rincian Barang**: Unggah foto struk/bukti transfer atau manfaatkan fitur _Share Target_ Android untuk memindai struk. Ditenagai oleh **Gemini Vision AI** untuk mengekstrak nominal, tanggal, merchant, klasifikasi rekomendasi amplop otomatis, serta rincian detail barang belanjaan yang tersimpan dalam format catatan multi-baris terstruktur.
-- **Sinkronisasi Real-Time (SSE)**: Sinkronisasi instan otomatis untuk data transaksi dan amplop anggaran antar perangkat pasangan menggunakan Server-Sent Events (SSE) dengan otentikasi kueri token yang aman.
-- **Autentikasi Aman & Local Avatar Caching**: Login mudah menggunakan Google OAuth dengan bypass mode demo. Dilengkapi dengan unduh otomatis & caching lokal gambar profil Google untuk mengatasi limitasi rate limiting (429) dan fallback huruf inisial reaktif jika gambar gagal dimuat.
-- **Rekonsiliasi Saldo Aktual**: Monitor selisih anggaran tercatat aplikasi dengan jumlah dana riil (rekening bank + dompet digital + kas fisik) secara mingguan atau periodik dengan widget interaktif.
-- **PWA & Capacitor Mobile Optimization**: Dilengkapi dengan penanganan tombol kembali perangkat Android (_hardware back button_), _dirty-form checks_, dan terintegrasi penuh sebagai aplikasi PWA/Native Mobile dengan Capacitor.
-
----
-
-## Siklus Alur Penggunaan Pengguna (User Lifecycle Flow)
-
-FamiVault dirancang untuk membantu rumah tangga mengelola anggaran dengan metode _Zero-Based Budgeting_. Berikut adalah panduan langkah demi langkah siklus penggunaan aplikasi dari awal periode hingga transisi bulan berikutnya:
-
-### 1. Awal Periode Anggaran (Setiap Gajian / Tanggal 1)
-
-- **Langkah 1: Inisialisasi Periode Baru:** Ketika periode baru (misalnya bulan berjalan) dimulai, sistem akan membuat sesi anggaran baru berdasarkan pendapatan Anda.
-- **Langkah 2: Tentukan Template Amplop:** Masuk ke tab **Amplop** untuk mengelola amplop anggaran bulanan Anda. Anda dapat menentukan nama amplop (misal: _Makan & Dapur_, _Tabungan_, _Hiburan_), target alokasi default bulanan, warna visual, dan perilaku sisa dana (_Rollover_).
-- **Langkah 3: Alokasikan Dana (Zero-Based Budgeting):** Distribusikan total take-home pay Anda ke dalam amplop-amplop tersebut hingga seluruh dana teralokasikan secara penuh (Sisa anggaran unallocated = Rp 0).
-
-### 2. Aktivitas Harian (Transaksi Real-Time)
-
-- **Pencatatan Manual:** Setiap kali melakukan pembelian fisik, tekan tombol melayang **`+`** (FAB) di Dasbor untuk memasukkan jumlah transaksi, memilih amplop tujuan, mencatat nama toko/merchant, serta tanggal transaksi.
-- **Pencatatan Cepat via AI OCR (Bukti Transfer/QRIS):**
-  1. Ambil screenshot bukti transfer atau struk transaksi digital (misalnya dari GoPay, OVO, ShopeePay, atau m-Banking).
-  2. Buka halaman Tambah Transaksi di FamiVault, pilih tombol **"Scan Resi via AI"**, lalu unggah gambar tersebut.
-  3. **Gemini Vision AI** akan mengekstrak data nominal, tanggal, dan nama merchant secara instan, serta **merekomendasikan klasifikasi amplop** secara otomatis (misalnya, pembayaran GoFood otomatis disarankan masuk ke amplop _Makan & Dapur_).
-  4. Pengguna meninjau hasil ekstraksi dan menekan tombol simpan. Saldo amplop terkait akan langsung terpotong.
-
-### 3. Aktivitas Rekonsiliasi Saldo Aktual (Mingguan / Setiap Ingin Sinkronisasi)
-
-- **Kapan waktu yang tepat memasukkan saldo rekening?** Anda dapat memasukkan sisa saldo riil/aktual Anda secara fleksibel, misalnya:
-  - Setiap akhir pekan (mingguan) untuk evaluasi rutin mingguan.
-  - Setiap kali Anda mencurigai ada pengeluaran atau transfer yang terlewat dicatat.
-  - Di akhir periode sebelum menutup anggaran bulan berjalan guna memastikan kecocokan data 100%.
-- **Bagaimana alur penggunaannya?**
-  1. Hitung total uang riil yang Anda miliki saat ini (jumlah gabungan dari sisa saldo rekening bank asli, dompet digital seperti GoPay/OVO, dan kas fisik).
-  2. Buka halaman Dasbor (Home), gulir ke bawah menuju widget **Rekonsiliasi Saldo**, lalu masukkan angka tersebut pada kolom input yang tersedia.
-  3. Sistem akan secara otomatis membandingkan nominal tersebut dengan sisa saldo terhitung yang ada di dalam amplop FamiVault.
-  4. Selisih (_Variance_) yang muncul akan menjadi indikator pembantu: jika selisih minus, berarti ada pengeluaran riil yang belum dicatat di aplikasi; jika selisih plus, berarti ada pemasukan atau transaksi yang salah catat. Ini mempercepat perbaikan pembukuan agar selalu akurat.
-
-### 4. Akhir Periode & Transisi Bulan Baru (_Rollover_)
-
-- Saat berganti periode bulan selanjutnya, sistem secara otomatis mengevaluasi sisa dana di setiap amplop sesuai dengan perilaku _Rollover_ yang telah dikonfigurasi sebelumnya:
-  - **Reset (Kembali Nol):** Sisa dana ditarik kembali ke Kategori Utama (_Unallocated Fund_) agar dapat diatur ulang dari awal di bulan baru.
-  - **Rollover (Menumpuk):** Sisa dana dibiarkan menumpuk di amplop yang sama (cocok untuk kategori seperti _Kesehatan_ atau _Darurat_).
-  - **Transfer ke Tabungan:** Sisa dana langsung dialihkan secara otomatis ke amplop _Tabungan_.
-- Siklus kembali ke **Langkah 1** untuk merencanakan anggaran bulan baru!
+<p align="center">
+  <a href="https://github.com/ihkaru/fintr/actions/workflows/build-apk.yml">
+    <img src="https://github.com/ihkaru/fintr/actions/workflows/build-apk.yml/badge.svg" alt="Build Android APK Status">
+  </a>
+  <a href="https://bun.sh">
+    <img src="https://img.shields.io/badge/Bun-%3E%3D1.1.0-black?style=flat&logo=bun&logoColor=F9F9F9" alt="Bun version">
+  </a>
+  <a href="https://vuejs.org">
+    <img src="https://img.shields.io/badge/Vue-3.x-4fc08d?style=flat&logo=vuedotjs&logoColor=white" alt="Vue 3">
+  </a>
+  <a href="https://elysiajs.com">
+    <img src="https://img.shields.io/badge/ElysiaJS-1.x-blueviolet?style=flat&logo=elysia" alt="ElysiaJS">
+  </a>
+  <a href="https://ai.google.dev">
+    <img src="https://img.shields.io/badge/Gemini_Vision-AI-blue?style=flat&logo=google-gemini&logoColor=white" alt="Gemini Vision API">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat" alt="MIT License">
+  </a>
+</p>
 
 ---
 
-## Panduan Menghubungkan Akun Pasangan (Household Connection Guide)
+**FamiVault (FinTr)** adalah aplikasi penganggaran amplop berbasis _zero-based budgeting_ yang dirancang khusus untuk rumah tangga baru/pasangan. Ditenagai oleh arsitektur modern berkinerja tinggi, FamiVault memadukan kemudahan pencatatan harian otomatis lewat AI Vision OCR dengan sinkronisasi instan multi-perangkat.
 
-FamiVault memungkinkan pasangan mengelola amplop anggaran secara bersama-sama dalam satu Rumah Tangga (_Household_). Berikut adalah alur cara menghubungkan akun dan memantau status keanggotaan di UI:
-
-### 1. Mendapatkan Kode Undangan (Invite Code)
-
-- Buka menu **Pengaturan** (ikon gerigi di pojok kanan atas halaman Dasbor).
-- Pada kartu **Rumah Tangga**, Anda akan melihat 6 karakter **Kode Undangan** unik milik Rumah Tangga Anda (contoh: `A1B2C3`).
-- Salin kode tersebut dan kirimkan ke pasangan Anda.
-
-### 2. Bergabung ke Rumah Tangga Pasangan
-
-- Pasangan Anda harus membuka aplikasi FamiVault di perangkat mereka sendiri dan masuk ke menu **Pengaturan**.
-- Pada kartu **Rumah Tangga** bagian bawah, temukan kolom input **"Gabung Rumah Tangga Pasangan"**.
-- Tempel atau ketik **Kode Undangan** yang telah Anda bagikan, lalu tekan tombol **Gabung**.
-- Sistem akan memindahkan akun pasangan Anda ke dalam Rumah Tangga Anda. Aplikasi pasangan akan secara otomatis ter-logout untuk menyegarkan token otentikasi. Setelah login kembali, seluruh data amplop, alokasi, dan transaksi akan saling terhubung secara real-time.
-
-### 3. Memantau Status Keanggotaan di UI
-
-- **Melalui Halaman Pengaturan (Settings):**
-  Di kartu **Rumah Tangga**, terdapat daftar **Anggota Terhubung** yang menampilkan seluruh anggota yang tergabung dalam Rumah Tangga saat ini lengkap dengan foto profil/avatar, nama, alamat email, serta peran mereka (misalnya: `Owner` untuk pembuat awal, dan `Anggota` untuk pasangan yang baru bergabung).
-- **Melalui Halaman Dasbor (Home):**
-  Di bagian atas dasbor, terdapat indikator status **PartnerStatusBar**:
-  - Jika belum terhubung dengan pasangan, status bar akan bertuliskan **"Menunggu Partner..."** dengan satu lingkaran avatar Anda sendiri.
-  - Jika pasangan berhasil terhubung, status bar akan bertuliskan **"Alokasi Saling Terhubung"** dan menampilkan dua avatar yang saling bertumpuk (avatar Anda dan avatar pasangan) serta menampilkan gabungan nama Anda dan pasangan (contoh: _Ihsan & Partner_).
+> [!NOTE]
+> Proyek ini menggunakan **Bun Workspace** (Monorepo) untuk backend dan frontend, menghasilkan latensi minimal dan kenyamanan penuh dalam pengembangan lokal maupun deployment produksi.
 
 ---
 
-## Tech Stack
+## 🎨 Fitur Unggulan
 
-### Backend
-
-- **Runtime**: Bun
-- **Framework**: ElysiaJS
-- **ORM**: Drizzle ORM
-- **Database**: PostgreSQL
-- **OCR AI**: Gemini Vision API (OpenAI-compatible protocol)
-
-### Frontend
-
-- **Framework**: Vue 3 + Framework7 v9
-- **Bundler**: Vite
-- **Language**: TypeScript
-- **Target Platforms**: Mobile (Capacitor) & Browser (PWA)
+- 🎯 **Zero-Based Budgeting**: Alokasi penuh pendapatan bulanan ke dalam amplop anggaran secara presisi hingga sisa dana tidak teralokasi (_Unallocated Fund_) bernilai Rp 0.
+- ✉️ **Sistem Amplop Reaktif**: Pantau sisa dana per kategori amplop secara reaktif lengkap dengan indikator batas aman anggaran, visualisasi warna, dan kustomisasi aturan _rollover_ akhir bulan.
+- 🛍️ **Split Transactions**: Pecah pengeluaran dari satu struk belanja besar ke beberapa amplop anggaran berbeda secara fleksibel dalam satu form input tunggal dengan validasi saldo sisa yang ketat.
+- 🤖 **AI OCR & Smart Receipt Scanning**: Unggah foto struk, bukti transfer, atau gunakan fitur _Share Target_ Android. Ditenagai oleh **Gemini Vision AI** untuk mengekstrak nominal, merchant, tanggal secara otomatis, serta mengklasifikasikan barang belanjaan ke rekomendasi amplop yang paling sesuai.
+- ⚡ **Sinkronisasi Real-Time (SSE)**: Sinkronisasi instan data transaksi dan amplop anggaran antar perangkat pasangan menggunakan koneksi _Server-Sent Events_ (SSE) berkeamanan tinggi.
+- 🔄 **Rekonsiliasi Saldo Aktual**: Widget interaktif yang membandingkan total anggaran tercatat di aplikasi dengan uang riil (bank + dompet digital + kas fisik) secara periodik demi menjaga keakuratan data 100%.
+- 📱 **PWA & Android Native Optimization**: Integrasi Capacitor penuh dengan penanganan tombol kembali perangkat keras (_hardware back button_), _dirty-form checks_, dan dukungan _offline caching_.
 
 ---
 
-## Project Structure
+## 🔌 Arsitektur Sistem
 
-```
-fintr/
-├── apps/
-│   └── client/                 # Vue 3 + Framework7 Frontend
-├── packages/
-│   └── api/                    # ElysiaJS Backend
-├── docker-compose.yml          # PostgreSQL Container
-└── package.json                # Bun Workspace Root
+Berikut adalah alur aliran data dan komponen arsitektur monorepo FamiVault:
+
+```mermaid
+graph TD
+    %% Client Tier
+    subgraph Client ["Frontend (Vue 3 + Framework7 + Capacitor)"]
+        UI["User Interface / App Screens"]
+        SH["Share Handler & PWA Target"]
+        SSE_C["SSE Client (Real-time Sync)"]
+    end
+
+    %% API Server Tier
+    subgraph Backend ["Backend API (ElysiaJS + Bun Runtime)"]
+        Router["Elysia Router / API Controllers"]
+        SSE_S["SSE Hub & Broadcast Engine"]
+        OCR["Gemini Vision AI Engine"]
+        Drizzle["Drizzle ORM Query Builder"]
+    end
+
+    %% Storage Tier
+    subgraph Storage ["Storage & External Service"]
+        DB[(PostgreSQL Database)]
+        Gemini[(Google Gemini AI API)]
+    end
+
+    %% Connections
+    UI -->|HTTP Request / JSON| Router
+    SH -->|Share Intent Struk| UI
+    SSE_C <-->|Server-Sent Events| SSE_S
+    Router --> SSE_S
+    Router --> OCR
+    OCR -->|Analyze Images| Gemini
+    Router --> Drizzle
+    Drizzle -->|Read/Write SQL| DB
+
+    %% Styling Colors
+    classDef client fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:#fff;
+    classDef backend fill:#8b5cf6,stroke:#6d28d9,stroke-width:2px,color:#fff;
+    classDef storage fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff;
+
+    class UI,SH,SSE_C client;
+    class Router,SSE_S,OCR,Drizzle backend;
+    class DB,Gemini storage;
 ```
 
 ---
 
-## Getting Started
+## 🔄 Siklus Penggunaan Aplikasi (User Lifecycle)
 
-### Prerequisites
+FamiVault memandu Anda dalam siklus pengelolaan keuangan yang sehat melalui empat fase berulang setiap bulannya:
 
-- Bun (latest)
-- Docker & Docker Compose
-- Google Cloud OAuth Credentials
-- Gemini Vision API Key & Base URL
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Pasangan as Pengguna & Partner
+    participant Client as FamiVault Client
+    participant Server as Elysia Backend
+    participant Gemini as Gemini AI
+    participant DB as Database PostgreSQL
 
-### Setup Environment
+    %% 1. Inisialisasi Periode
+    Note over Pasangan, DB: Fase 1: Awal Periode (Setiap Awal Bulan / Gajian)
+    Pasangan->>Client: Mulai Periode Baru (Onboarding / Transisi Bulan)
+    Client->>Server: Inisialisasi Dinamis Bulan & Tahun Berjalan
+    Server->>DB: Seed Inisial Periode & Default Envelopes
+    Server-->>Client: Kirim data Amplop Baru
+    Pasangan->>Client: Lakukan Zero-Based Allocation (Unallocated Fund = Rp 0)
+    Client->>Server: Simpan Alokasi Saldo Amplop
 
-Configure the `.env` file in the root directory (copy from `.env.example`):
+    %% 2. Aktivitas Harian
+    Note over Pasangan, DB: Fase 2: Aktivitas Harian (Belanja & Catat Transaksi)
+    Pasangan->>Client: Upload Foto Struk / Share Struk dari m-Banking
+    Client->>Server: Kirim Gambar Struk
+    Server->>Gemini: Minta Ekstraksi Struk via Vision Model
+    Gemini-->>Server: Kembalikan Nilai, Merchant, Tanggal, dan Klasifikasi Amplop
+    Server-->>Client: Tampilkan Hasil Rekomendasi di Form
+    Pasangan->>Client: Tinjau & Klik Simpan Transaksi
+    Client->>Server: Post Transaksi
+    Server->>DB: Kurangi Saldo Amplop Terkait
+    Server->>Client: Broadcast SSE Update ke Perangkat Partner secara Instan
+
+    %% 3. Rekonsiliasi
+    Note over Pasangan, DB: Fase 3: Rekonsiliasi Saldo Aktual (Setiap Akhir Pekan)
+    Pasangan->>Client: Masukkan Total Uang Riil (Bank + Dompet Digital + Kas)
+    Client->>Client: Hitung Selisih (Selisih = Uang Riil - Total Saldo Amplop)
+    Client-->>Pasangan: Tampilkan Indikator Varians (Minus = Terlewat Catat, Plus = Salah Catat)
+
+    %% 4. Akhir Periode
+    Note over Pasangan, DB: Fase 4: Tutup Periode & Rollover Bulan Baru
+    Pasangan->>Client: Klik Mulai Periode Bulan Selanjutnya
+    Client->>Server: Kirim Trigger Transisi Bulan Baru
+    Server->>DB: Evaluasi Sisa Dana Amplop (Reset / Rollover Menumpuk / Transfer ke Tabungan)
+    Server-->>Client: Inisialisasi Amplop Baru dengan Saldo Rollover Terhitung
+```
+
+---
+
+## 🤝 Panduan Sinkronisasi Akun Pasangan
+
+FamiVault dirancang untuk menjaga transparansi keuangan pasangan secara _real-time_. Berikut langkah untuk menghubungkan akun:
+
+1.  **Dapatkan Kode Undangan**:
+    - Buka menu **Pengaturan** (ikon gerigi di pojok kanan atas).
+    - Pada kartu **Rumah Tangga**, salin 6-karakter **Kode Undangan** Anda (misal: `G7Y2K1`).
+2.  **Hubungkan Akun Pasangan**:
+    - Buka aplikasi FamiVault di HP pasangan, masuk ke menu **Pengaturan**.
+    - Gulir ke kolom **Gabung Rumah Tangga Pasangan**, tempel kode tersebut lalu ketuk **Gabung**.
+3.  **Status Terhubung di UI**:
+    - **PartnerStatusBar**: Header dasbor utama akan berubah dari _"Menunggu Partner..."_ menjadi _"Alokasi Saling Terhubung"_ dengan avatar yang saling bertumpuk dan nama gabungan (contoh: _Ihsan & Partner_).
+    - **Daftar Anggota**: Daftar lengkap anggota keluarga berstatus aktif beserta foto profil dan peran (`Owner` / `Anggota`) kini dapat dilihat di menu Pengaturan.
+
+---
+
+## 🛠️ Spesifikasi Teknologi
+
+| Komponen                      | Teknologi                                   | Deskripsi                                                           |
+| :---------------------------- | :------------------------------------------ | :------------------------------------------------------------------ |
+| **Runtime & Package Manager** | [Bun](https://bun.sh/)                      | Eksekusi backend & client monorepo cepat secepat kilat              |
+| **Backend API**               | [ElysiaJS](https://elysiajs.com/)           | Framework API TypeScript dengan performa tinggi & type safety penuh |
+| **Database ORM**              | [Drizzle ORM](https://orm.drizzle.team/)    | Query builder SQL reaktif, ringan, dan bersahabat dengan migrasi    |
+| **Database Server**           | [PostgreSQL](https://www.postgresql.org/)   | Sistem penyimpanan data relasional tangguh                          |
+| **Kecerdasan Buatan (AI)**    | [Gemini Vision API](https://ai.google.dev/) | OCR cerdas pengekstrak struk belanja & klasifikasi barang           |
+| **Frontend Framework**        | [Vue 3](https://vuejs.org/)                 | Framework web reaktif menggunakan Composition API                   |
+| **UI Framework**              | [Framework7 v9](https://framework7.io/)     | Komponen antarmuka berciri khas native mobile iOS/Android           |
+| **Kompilator Aplikasi**       | [Capacitor](https://capacitorjs.com/)       | Pembungkus web app menjadi aplikasi native Android (APK)            |
+
+---
+
+## 🚀 Memulai Pengembangan Lokal
+
+### Prasyarat System
+
+- [Bun](https://bun.sh/) (Versi terbaru)
+- [Docker & Docker Compose](https://www.docker.com/) (Untuk database lokal PostgreSQL)
+- Google Cloud Console Project (Untuk Google OAuth)
+- Kunci API Google Gemini (Vision API)
+
+### 1. Salin Pengaturan Lingkungan (Environment)
+
+Buat file konfigurasi `.env` pada direktori root (salin template dari `.env.example`):
 
 ```bash
 cp .env.example .env
 ```
 
-Also configure the API environment:
+Lalu salin file konfigurasi `.env` untuk packages API:
 
 ```bash
 cp packages/api/.env.example packages/api/.env
 ```
 
-### Installation
+> [!IMPORTANT]
+> Pastikan Anda telah mengisi nilai variabel lingkungan penting di file `packages/api/.env` seperti `DATABASE_URL`, `GOOGLE_CLIENT_ID`, dan `GEMINI_API_KEY`.
 
-Install all dependencies using Bun:
+### 2. Pasang Dependensi Proyek
+
+Jalankan perintah berikut di direktori root untuk memasang dependensi monorepo:
 
 ```bash
 bun install
 ```
 
-### Run Locally (Safe Development Setup)
+### 3. Jalankan Server Pengembangan
 
-To start the database, run migrations, and spin up the frontend and backend servers, simply run:
+Kami telah menyediakan skrip automasi pengaktifan server pengembangan yang aman dari konflik port:
 
 ```bash
 ./dev.sh
 ```
 
-This script:
+**Kelebihan Skrip `./dev.sh`:**
 
-1. **Handles Port Conflicts**: Detects if port `5432` (or your configured DB port) is used by another project/container and warns you.
-2. **Cleans Orphan Processes**: Safely kills leftover Bun processes listening on ports `3001` (API) and `5173` (Client).
-3. **Graceful Terminations**: Presses `Ctrl+C` in the terminal to clean up all background processes concurrently.
-
-#### Overriding Ports
-
-If port `5432` is taken on your machine:
-
-1. Open `packages/api/.env`.
-2. Modify the port in your `DATABASE_URL` (e.g. `postgresql://fintr:fintr_secret@localhost:5433/fintr`).
-3. Running `./dev.sh` will automatically map your docker-compose database container to host port `5433`!
+1.  **Deteksi Konflik Port**: Mendeteksi jika port database (`5432` / port pilihan Anda) sudah digunakan oleh container atau postgres lokal lain.
+2.  **Pembersihan Otomatis**: Secara otomatis mematikan sisa proses Bun tidak berizin yang menggantung di port API (`3001`) dan Client (`5173`).
+3.  **Pemberhentian yang Bersih**: Menekan `Ctrl + C` pada terminal akan mematikan seluruh proses database docker dan server dev secara aman dan bersamaan.
 
 ---
 
-## Testing as a PWA / Mobile Web Share Target
+## 📱 Uji Coba PWA & Android Share Target
 
-To test the Web Share Target API locally (requires a secure context like `localhost`):
+Untuk mencoba fitur integrasi _Share Target_ (membagikan struk digital m-banking secara langsung dari galeri HP ke aplikasi FamiVault):
 
-### Android Emulator / USB Debugging:
+1.  Sambungkan perangkat Android asli Anda menggunakan USB debugging atau buka Android Emulator.
+2.  Lakukan port forwarding client dan API server lokal agar dapat diakses dari dalam perangkat Android:
+    ```bash
+    adb reverse tcp:5173 tcp:5173
+    adb reverse tcp:3001 tcp:3001
+    ```
+3.  Buka Google Chrome di Android, lalu navigasikan ke alamat `http://localhost:5173`.
+4.  Ketuk tombol menu Chrome lalu pilih **"Tambahkan ke Layar Utama" (Add to Home Screen)** untuk memasang PWA.
+5.  Kini Anda dapat memilih gambar struk di galeri Anda, klik bagikan (Share), lalu pilih ikon **FamiVault** untuk langsung masuk ke form pengeluaran dengan data struk yang diekstrak otomatis!
 
-1. Ensure your Android device/emulator is connected.
-2. Forward the local client and API ports:
-   ```bash
-   adb reverse tcp:5173 tcp:5173
-   adb reverse tcp:3001 tcp:3001
-   ```
-3. Open Chrome on Android and navigate to `http://localhost:5173`.
-4. Tap **Add to Home Screen** in Chrome to install the PWA.
-5. You can now share images (receipt screenshots) directly to FamiVault using Android's native share menu!
+---
+
+## 📦 Pipa Rilis Otomatis (Build Android APK)
+
+Repositori ini dilengkapi dengan **GitHub Actions Workflow** yang akan mengkompilasi aplikasi native Android Anda secara otomatis saat Anda merilis versi baru.
+
+- **Pemicu Build**: Cukup buat tag baru berawalan `v*` dan dorong ke repositori:
+  ```bash
+  git tag v1.0.14 -m "Rilis Fitur Baru"
+  git push origin v1.0.14
+  ```
+- **Hasil Output**: File APK siap pakai (`FamiVault-release.apk`) akan terkompilasi, ditandatangani, dan otomatis diunggah ke rilis baru di halaman GitHub Releases proyek Anda.
+
+---
+
+## 📜 Lisensi
+
+Proyek ini dilisensikan di bawah **MIT License**. Lihat berkas [LICENSE](LICENSE) untuk rincian selengkapnya.
