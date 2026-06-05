@@ -12,6 +12,7 @@
     "@capacitor/android": "^8.4.0",
     "@capacitor/core": "^8.4.0",
     "@capacitor/filesystem": "^8.1.2",
+    "@capawesome/capacitor-google-sign-in": "^0.1.2",
     "@capgo/capacitor-share-target": "^8.0.37",
     "framework7": "^9.0.5",
     "framework7-vue": "^9.0.5",

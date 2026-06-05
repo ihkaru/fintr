@@ -187,85 +187,104 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { f7, f7Page } from "framework7-vue";
+import { f7 } from "framework7-vue";
 import { auth, setToken, setUser } from "../js/api";
+import { GoogleSignIn } from "@capawesome/capacitor-google-sign-in";
+import { Capacitor } from "@capacitor/core";
 
 const loading = ref(false);
 
+const loginToBackend = async (idToken: string) => {
+  loading.value = true;
+  try {
+    const res = await auth.loginWithGoogle(idToken);
+    setToken(res.token);
+    setUser(res.user);
+    if (f7.views.main && f7.views.main.router) {
+      f7.views.main.router.navigate("/", { reloadAll: true });
+    }
+  } catch (err: any) {
+    f7.dialog.alert("Gagal masuk: " + err.message, "Error");
+  } finally {
+    loading.value = false;
+  }
+};
+
 onMounted(async () => {
+  // Untuk web PWA: tangkap id_token dari hash setelah redirect Google OAuth
   const hash = window.location.hash;
   if (hash.includes("id_token=")) {
     const params = new URLSearchParams(hash.substring(1));
     const idToken = params.get("id_token");
     if (idToken) {
-      loading.value = true;
-      try {
-        const res = await auth.loginWithGoogle(idToken);
-        setToken(res.token);
-        setUser(res.user);
-
-        // Bersihkan url hash
-        window.history.replaceState(null, "", window.location.pathname);
-
-        if (f7.views.main && f7.views.main.router) {
-          f7.views.main.router.navigate("/", { reloadAll: true });
-        }
-      } catch (err: any) {
-        f7.dialog.alert("Gagal masuk dengan Google: " + err.message, "Error");
-      } finally {
-        loading.value = false;
-      }
+      window.history.replaceState(null, "", window.location.pathname);
+      await loginToBackend(idToken);
     }
   }
 });
 
 const handleGoogleLogin = async () => {
-  loading.value = true;
-  try {
-    const config = await auth.getConfig();
-    if (config && config.googleClientId) {
-      const clientId = config.googleClientId;
-
-      const cap = (window as any).Capacitor;
-      const isNative = cap && cap.isNativePlatform && cap.isNativePlatform();
-
-      const redirectUri = isNative ? "https://fintr.dvlpid.my.id/" : window.location.origin + "/";
-
-      const nonce = Math.random().toString(36).substring(2);
-      const state = isNative ? "mobile" : "";
-      const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=id_token&scope=openid%20email%20profile&nonce=${nonce}${state ? `&state=${state}` : ""}`;
-
-      if (isNative) {
-        // Buka Google login di System Browser agar dapat mengalihkan kembali via Custom Scheme
-        window.open(url, "_system");
-      } else {
-        // Redirect langsung untuk PWA / Web App biasa
-        window.location.href = url;
+  if (Capacitor.isNativePlatform()) {
+    // ✅ Best practice Juni 2026: Native Credential Manager API via @capawesome/capacitor-google-sign-in
+    // Tidak membuka Chrome/browser — Google Sign-In muncul sebagai native bottom sheet
+    loading.value = true;
+    try {
+      const config = await auth.getConfig();
+      if (!config?.googleClientId) {
+        f7.dialog.alert(
+          "Google OAuth belum dikonfigurasi. Gunakan 'Mode Demo' untuk pengujian.",
+          "Setup Diperlukan"
+        );
+        return;
       }
-    } else {
-      f7.dialog.alert(
-        "Google OAuth belum dikonfigurasi di backend (.env). Silakan gunakan 'Mode Demo (Cepat)' untuk pengujian lokal, atau setup Google Cloud credentials.",
-        "Setup Diperlukan"
-      );
+
+      // Initialize wajib dilakukan sebelum signIn(), menggunakan Web Application Client ID
+      await GoogleSignIn.initialize({ clientId: config.googleClientId });
+      const result = await GoogleSignIn.signIn();
+
+      if (!result.idToken) {
+        throw new Error("Tidak dapat mengambil ID token dari Google.");
+      }
+
+      await loginToBackend(result.idToken);
+    } catch (e: any) {
+      // Abaikan jika user sengaja membatalkan sign-in
+      if (
+        e?.message?.toLowerCase().includes("cancel") ||
+        e?.code === "CANCELED" ||
+        e?.code === 12501
+      ) {
+        return;
+      }
+      f7.dialog.alert("Google Sign-In gagal: " + (e?.message ?? "Unknown error"), "Error");
+    } finally {
+      loading.value = false;
     }
-  } catch (err: any) {
-    f7.dialog.alert("Gagal mengambil konfigurasi Google Client ID: " + err.message, "Error");
-  } finally {
-    loading.value = false;
+  } else {
+    // Fallback untuk PWA / Web: redirect ke halaman Google OAuth
+    loading.value = true;
+    try {
+      const config = await auth.getConfig();
+      if (!config?.googleClientId) {
+        f7.dialog.alert(
+          "Google OAuth belum dikonfigurasi. Gunakan 'Mode Demo' untuk pengujian.",
+          "Setup Diperlukan"
+        );
+        return;
+      }
+      const nonce = Math.random().toString(36).substring(2);
+      const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(config.googleClientId)}&redirect_uri=${encodeURIComponent(window.location.origin + "/")}&response_type=id_token&scope=openid%20email%20profile&nonce=${nonce}`;
+      window.location.href = url;
+    } catch (e: any) {
+      f7.dialog.alert("Gagal memuat konfigurasi: " + (e?.message ?? "Unknown error"), "Error");
+      loading.value = false;
+    }
   }
 };
 
 const handleDemoLogin = async () => {
   loading.value = true;
   try {
-    // We mock a google token login directly to the backend
-    // Since our backend accepts idToken, we can pass a dummy string for demo if we bypass tokeninfo,
-    // but the backend verifyGoogleToken calls oauth2.googleapis.com which will fail with "Invalid Google ID token".
-    // Wait, to allow local developer bypass easily, let's check if the backend can be logged in with a dummy payload or if we should add a dev/demo auth method.
-    // Yes! Let's update backend route /auth/google to allow a mock flow if it receives a dev token.
-    // Or we can just create a custom token locally if we mock the backend.
-    // Wait, let's make the backend /auth/google allow "demo-token" bypass!
-    // Let's call /auth/google with a mock token "demo-token" and let backend handle it safely in dev mode.
     const res = await auth.loginWithGoogle("demo-token");
     setToken(res.token);
     setUser(res.user);
