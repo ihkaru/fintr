@@ -39,7 +39,8 @@ jobs:
       - name: Sync Capacitor
         run: |
           cd apps/client
-          npx cap sync android
+          bunx cap sync android
+
 
       - name: Decode Android Keystore
         if: env.HAS_KEYSTORE == 'true'
