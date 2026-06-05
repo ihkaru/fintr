@@ -39,6 +39,11 @@ const app = new Elysia()
     const message = (error as any)?.message || String(error);
     console.error(`[${code}]`, message);
 
+    if (code === "NOT_FOUND") {
+      set.status = 404;
+      return { error: "Not found" };
+    }
+
     if (code === "VALIDATION") {
       set.status = 400;
       return { error: "Validation error", details: message };
