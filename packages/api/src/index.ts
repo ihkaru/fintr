@@ -17,6 +17,7 @@ const app = new Elysia()
       origin: [
         ...(process.env.APP_URL || "http://localhost:5173").split(",").map(o => o.trim()),
         "http://localhost",
+        "https://localhost",
         "capacitor://localhost",
       ],
       credentials: true,

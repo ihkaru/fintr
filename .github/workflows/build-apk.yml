@@ -36,7 +36,7 @@ jobs:
           cd apps/client
           bun run build
         env:
-          VITE_API_URL: https://fintr-api.dvlpid.my.id/api
+          VITE_API_URL: https://fintr-api.dvlpid.my.id
 
       - name: Sync Capacitor
         run: |
