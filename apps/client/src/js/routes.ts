@@ -78,4 +78,10 @@ export const routes: Router.RouteParameters[] = [
     path: "/period-summary/",
     component: PeriodSummary,
   },
+  {
+    path: "/download/",
+    async() {
+      window.location.href = "https://github.com/ihkaru/fintr/releases/latest";
+    },
+  },
 ];

@@ -126,6 +126,57 @@
         Mode Demo (Cepat) 🚀
       </button>
 
+      <!-- App Download Options -->
+      <div
+        style="
+          margin-top: 40px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+          width: 100%;
+          max-width: 320px;
+          border-top: 1px dashed #bfc9c1;
+          padding-top: 24px;
+        "
+      >
+        <div
+          style="
+            font-size: 11px;
+            color: #404943;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+          "
+        >
+          Gunakan Aplikasi Android
+        </div>
+        <a
+          href="https://github.com/ihkaru/fintr/releases/latest"
+          target="_blank"
+          style="
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #0f5238;
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 12px 24px;
+            width: 100%;
+            box-sizing: border-box;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(15, 82, 56, 0.15);
+            transition: all 0.2s ease;
+          "
+        >
+          <span class="material-symbols-outlined" style="font-size: 18px">download</span>
+          Unduh Aplikasi (.APK)
+        </a>
+      </div>
+
       <p style="margin-top: 32px; font-size: 12px; color: #707973">
         Data kamu aman — terenkripsi penuh untuk keluarga.
       </p>
