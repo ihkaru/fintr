@@ -3,7 +3,9 @@
  * Handles JWT auth, error handling, and response parsing.
  */
 
-const API_BASE = "/api";
+// In production, VITE_API_URL is injected at build time by Coolify (e.g. https://fintr-api.dvlpid.my.id/api)
+// In local dev, falls back to "/api" which is proxied to localhost:3001 by Vite
+const API_BASE = (import.meta.env.VITE_API_URL as string) ?? "/api";
 
 function getToken(): string | null {
   return localStorage.getItem("fintr_token");

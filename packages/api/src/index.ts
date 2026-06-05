@@ -13,7 +13,8 @@ import { syncRoutes } from "./routes/sync";
 const app = new Elysia()
   .use(
     cors({
-      origin: process.env.APP_URL || "http://localhost:5173",
+      // Supports comma-separated origins: e.g. "https://fintr.dvlpid.my.id,http://localhost:5173"
+      origin: (process.env.APP_URL || "http://localhost:5173").split(",").map(o => o.trim()),
       credentials: true,
     })
   )

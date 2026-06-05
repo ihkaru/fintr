@@ -9,3 +9,5 @@ android/
 ios/
 packages/api/public/receipts/
 
+repo_dump.txt
+dump_repo.ts
