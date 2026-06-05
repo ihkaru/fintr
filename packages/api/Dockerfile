@@ -38,4 +38,5 @@ WORKDIR /app/packages/api
 EXPOSE 3001
 
 # Default: run directly. Override in Coolify with "bun run start:prod" to also run migrations.
-CMD ["bun", "run", "src/index.ts"]
+# Runs drizzle migrations then starts the server
+CMD ["bun", "run", "start:prod"]
