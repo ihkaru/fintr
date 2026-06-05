@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+uploads/
+drizzle/meta/
+android/
+ios/
+packages/api/public/receipts/
+

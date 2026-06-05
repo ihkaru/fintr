@@ -1,0 +1,135 @@
+<template>
+  <div
+    class="envelope-card animate-in"
+    :style="{
+      background: '#ffffff',
+      border: '1px solid #bfc9c1',
+      borderRadius: '16px',
+      padding: '16px',
+      marginBottom: '12px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+      cursor: 'pointer',
+    }"
+    @click="$emit('click')"
+  >
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+      "
+    >
+      <div
+        class="name"
+        style="
+          font-weight: 700;
+          color: #161a32;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+        "
+      >
+        <span
+          class="dot"
+          :style="{
+            background: allocation.envelopeColor,
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            display: 'inline-block',
+          }"
+        ></span>
+        {{ allocation.envelopeName }}
+      </div>
+      <div class="amount font-headline" style="font-weight: 800; color: #0f5238; font-size: 15px">
+        {{ formatRp(parseFloat(allocation.remaining)) }}
+      </div>
+    </div>
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        color: #707973;
+        margin-bottom: 8px;
+      "
+    >
+      <span>Terpakai: {{ formatRp(parseFloat(allocation.totalSpent)) }}</span>
+      <span
+        >Alokasi:
+        {{
+          formatRp(parseFloat(allocation.allocatedAmount) + parseFloat(allocation.rolloverAmount))
+        }}</span
+      >
+    </div>
+    <div
+      class="progress-bar"
+      style="height: 6px; background: #f3f1e9; border-radius: 3px; overflow: hidden"
+    >
+      <div
+        class="fill"
+        :style="{
+          width: `${progressPct}%`,
+          background: progressBarColor,
+          height: '100%',
+        }"
+      ></div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed } from "vue";
+import { formatRp } from "../js/routes";
+
+interface Allocation {
+  id: string;
+  envelopeName: string;
+  envelopeColor: string;
+  allocatedAmount: string;
+  rolloverAmount: string;
+  totalSpent: string;
+  remaining: string;
+}
+
+const props = defineProps<{
+  allocation: Allocation;
+}>();
+
+defineEmits<{
+  (e: "click"): void;
+}>();
+
+const progressPct = computed(() => {
+  const allocated =
+    parseFloat(props.allocation.allocatedAmount) + parseFloat(props.allocation.rolloverAmount);
+  const spent = parseFloat(props.allocation.totalSpent);
+  return allocated > 0 ? Math.min((spent / allocated) * 100, 100) : 0;
+});
+
+const progressBarColor = computed(() => {
+  const pct = progressPct.value;
+  if (pct > 90) return "var(--fintr-danger)";
+  if (pct > 70) return "var(--fintr-warning)";
+  return props.allocation.envelopeColor;
+});
+</script>
+
+<style scoped>
+.animate-in {
+  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>

@@ -1,0 +1,300 @@
+import { Elysia, t } from "elysia";
+import { authMiddleware } from "../middleware/auth";
+import { db } from "../db/index";
+import { budgetPeriods, budgetAllocations, envelopeTemplates, transactions } from "../db/schema";
+import { eq, and, desc, sql, inArray } from "drizzle-orm";
+import { closePeriodAndRollover } from "../services/rollover";
+
+export const periodRoutes = new Elysia({ prefix: "/periods" })
+  .use(authMiddleware)
+  .get("/", async ({ householdId, set }) => {
+    if (!householdId) {
+      set.status = 400;
+      return { error: "Household required" };
+    }
+
+    const periods = await db
+      .select()
+      .from(budgetPeriods)
+      .where(eq(budgetPeriods.householdId, householdId))
+      .orderBy(desc(budgetPeriods.year), desc(budgetPeriods.month));
+
+    return periods;
+  })
+  .post(
+    "/",
+    async ({ householdId, body, set }) => {
+      if (!householdId) {
+        set.status = 400;
+        return { error: "Household required" };
+      }
+
+      // Check if period already exists
+      const existing = await db
+        .select()
+        .from(budgetPeriods)
+        .where(
+          and(
+            eq(budgetPeriods.householdId, householdId),
+            eq(budgetPeriods.year, body.year),
+            eq(budgetPeriods.month, body.month)
+          )
+        );
+
+      if (existing.length > 0) {
+        set.status = 409;
+        return { error: "Periode ini sudah ada" };
+      }
+
+      // Create period
+      const [period] = await db
+        .insert(budgetPeriods)
+        .values({
+          householdId,
+          year: body.year,
+          month: body.month,
+          openingBalance: body.openingBalance?.toString(),
+        })
+        .returning();
+
+      // Clone allocations from templates
+      const templates = await db
+        .select()
+        .from(envelopeTemplates)
+        .where(
+          and(eq(envelopeTemplates.householdId, householdId), eq(envelopeTemplates.isActive, true))
+        );
+
+      if (templates.length > 0) {
+        await db.insert(budgetAllocations).values(
+          templates.map(t => ({
+            periodId: period.id,
+            templateId: t.id,
+            allocatedAmount: t.defaultAmount,
+            rolloverAmount: "0",
+          }))
+        );
+      }
+
+      return period;
+    },
+    {
+      body: t.Object({
+        year: t.Number(),
+        month: t.Number({ minimum: 1, maximum: 12 }),
+        openingBalance: t.Optional(t.Number()),
+      }),
+    }
+  )
+  .get("/compare", async ({ householdId, set }) => {
+    if (!householdId) {
+      set.status = 400;
+      return { error: "Household required" };
+    }
+
+    const periods = await db
+      .select()
+      .from(budgetPeriods)
+      .where(eq(budgetPeriods.householdId, householdId))
+      .orderBy(desc(budgetPeriods.year), desc(budgetPeriods.month))
+      .limit(6);
+
+    if (periods.length === 0) {
+      return { periods: [], categories: [] };
+    }
+
+    // Sort periods chronologically (oldest to newest)
+    const chronologicalPeriods = [...periods].reverse();
+    const periodIds = periods.map(p => p.id);
+
+    const allocations = await db
+      .select({
+        periodId: budgetAllocations.periodId,
+        allocatedAmount: budgetAllocations.allocatedAmount,
+        rolloverAmount: budgetAllocations.rolloverAmount,
+        templateId: budgetAllocations.templateId,
+        envelopeName: envelopeTemplates.name,
+        envelopeColor: envelopeTemplates.color,
+        totalSpent: sql<string>`COALESCE(SUM(${transactions.amount}), 0)`,
+      })
+      .from(budgetAllocations)
+      .innerJoin(envelopeTemplates, eq(budgetAllocations.templateId, envelopeTemplates.id))
+      .leftJoin(transactions, eq(transactions.allocationId, budgetAllocations.id))
+      .where(inArray(budgetAllocations.periodId, periodIds))
+      .groupBy(
+        budgetAllocations.periodId,
+        budgetAllocations.allocatedAmount,
+        budgetAllocations.rolloverAmount,
+        budgetAllocations.templateId,
+        envelopeTemplates.name,
+        envelopeTemplates.color
+      );
+
+    // Build period totals
+    const periodTotals = chronologicalPeriods.map(p => {
+      const pAllocs = allocations.filter(a => a.periodId === p.id);
+      const totalAllocated = pAllocs.reduce(
+        (sum, a) => sum + parseFloat(a.allocatedAmount) + parseFloat(a.rolloverAmount),
+        0
+      );
+      const totalSpent = pAllocs.reduce((sum, a) => sum + parseFloat(a.totalSpent), 0);
+
+      const MONTH_NAMES = [
+        "",
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "Mei",
+        "Jun",
+        "Jul",
+        "Agu",
+        "Sep",
+        "Okt",
+        "Nov",
+        "Des",
+      ];
+      const name = `${MONTH_NAMES[p.month]} ${p.year}`;
+
+      return {
+        id: p.id,
+        year: p.year,
+        month: p.month,
+        name,
+        totalAllocated: totalAllocated.toFixed(2),
+        totalSpent: totalSpent.toFixed(2),
+        totalRemaining: (totalAllocated - totalSpent).toFixed(2),
+      };
+    });
+
+    // Group categories/envelopes
+    const categoriesMap: Record<
+      string,
+      {
+        name: string;
+        color: string;
+        history: Array<{ periodId: string; allocated: string; spent: string }>;
+      }
+    > = {};
+
+    for (const alloc of allocations) {
+      if (!categoriesMap[alloc.envelopeName]) {
+        categoriesMap[alloc.envelopeName] = {
+          name: alloc.envelopeName,
+          color: alloc.envelopeColor || "#94a3b8",
+          history: [],
+        };
+      }
+
+      const allocatedValue = parseFloat(alloc.allocatedAmount) + parseFloat(alloc.rolloverAmount);
+      categoriesMap[alloc.envelopeName].history.push({
+        periodId: alloc.periodId,
+        allocated: allocatedValue.toFixed(2),
+        spent: parseFloat(alloc.totalSpent).toFixed(2),
+      });
+    }
+
+    // Standardize histories to contain entries for all periods in chronologicalPeriods
+    const categories = Object.values(categoriesMap).map(cat => {
+      const history = chronologicalPeriods.map(p => {
+        const found = cat.history.find(h => h.periodId === p.id);
+        return {
+          periodId: p.id,
+          allocated: found ? found.allocated : "0.00",
+          spent: found ? found.spent : "0.00",
+        };
+      });
+      return {
+        ...cat,
+        history,
+      };
+    });
+
+    return {
+      periods: periodTotals,
+      categories,
+    };
+  })
+  .get("/:id", async ({ params, householdId, set }) => {
+    if (!householdId) {
+      set.status = 400;
+      return { error: "Household required" };
+    }
+
+    // Get period
+    const [period] = await db
+      .select()
+      .from(budgetPeriods)
+      .where(and(eq(budgetPeriods.id, params.id), eq(budgetPeriods.householdId, householdId)));
+
+    if (!period) {
+      set.status = 404;
+      return { error: "Periode tidak ditemukan" };
+    }
+
+    // Get allocations with spending totals
+    const allocations = await db
+      .select({
+        id: budgetAllocations.id,
+        templateId: budgetAllocations.templateId,
+        allocatedAmount: budgetAllocations.allocatedAmount,
+        rolloverAmount: budgetAllocations.rolloverAmount,
+        envelopeName: envelopeTemplates.name,
+        envelopeColor: envelopeTemplates.color,
+        rolloverBehavior: envelopeTemplates.rolloverBehavior,
+        totalSpent: sql<string>`COALESCE(SUM(${transactions.amount}), 0)`,
+      })
+      .from(budgetAllocations)
+      .innerJoin(envelopeTemplates, eq(budgetAllocations.templateId, envelopeTemplates.id))
+      .leftJoin(transactions, eq(transactions.allocationId, budgetAllocations.id))
+      .where(eq(budgetAllocations.periodId, params.id))
+      .groupBy(
+        budgetAllocations.id,
+        budgetAllocations.templateId,
+        budgetAllocations.allocatedAmount,
+        budgetAllocations.rolloverAmount,
+        envelopeTemplates.name,
+        envelopeTemplates.color,
+        envelopeTemplates.rolloverBehavior,
+        envelopeTemplates.sortOrder
+      )
+      .orderBy(envelopeTemplates.sortOrder);
+
+    // Compute totals
+    const totalAllocated = allocations.reduce(
+      (sum, a) => sum + parseFloat(a.allocatedAmount) + parseFloat(a.rolloverAmount),
+      0
+    );
+    const totalSpent = allocations.reduce((sum, a) => sum + parseFloat(a.totalSpent), 0);
+
+    return {
+      period,
+      allocations: allocations.map(a => ({
+        ...a,
+        remaining: (
+          parseFloat(a.allocatedAmount) +
+          parseFloat(a.rolloverAmount) -
+          parseFloat(a.totalSpent)
+        ).toFixed(2),
+      })),
+      summary: {
+        totalAllocated: totalAllocated.toFixed(2),
+        totalSpent: totalSpent.toFixed(2),
+        totalRemaining: (totalAllocated - totalSpent).toFixed(2),
+      },
+    };
+  })
+  .post("/:id/close", async ({ params, householdId, set }) => {
+    if (!householdId) {
+      set.status = 400;
+      return { error: "Household required" };
+    }
+
+    try {
+      const result = await closePeriodAndRollover(params.id, householdId);
+      return result;
+    } catch (error) {
+      set.status = 400;
+      return { error: (error as Error).message };
+    }
+  });

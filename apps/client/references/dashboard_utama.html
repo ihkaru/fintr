@@ -1,0 +1,581 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-container": "#635f50",
+              "on-secondary": "#ffffff",
+              surface: "#fbf8ff",
+              "on-tertiary-fixed-variant": "#4a4739",
+              "inverse-on-surface": "#f0efff",
+              "inverse-surface": "#2b2f48",
+              "surface-container-highest": "#dee0ff",
+              "inverse-primary": "#95d4b3",
+              "on-surface": "#161a32",
+              "on-error-container": "#93000a",
+              "surface-tint": "#2c694e",
+              tertiary: "#4b473a",
+              "on-primary-container": "#a8e7c5",
+              "primary-fixed-dim": "#95d4b3",
+              "on-tertiary-fixed": "#1e1c10",
+              "outline-variant": "#bfc9c1",
+              "surface-container": "#ececff",
+              "on-tertiary": "#ffffff",
+              "secondary-fixed": "#d5e3ff",
+              "on-primary-fixed": "#002114",
+              "primary-container": "#2d6a4f",
+              "on-secondary-fixed-variant": "#30476a",
+              "on-primary": "#ffffff",
+              "secondary-fixed-dim": "#b0c7f1",
+              "on-tertiary-container": "#e0d9c7",
+              "secondary-container": "#bbd3fd",
+              "on-error": "#ffffff",
+              error: "#ba1a1a",
+              "surface-container-low": "#f4f2ff",
+              outline: "#707973",
+              "tertiary-fixed-dim": "#ccc6b4",
+              "surface-container-high": "#e5e6ff",
+              "surface-bright": "#fbf8ff",
+              "on-secondary-fixed": "#001b3c",
+              "on-background": "#161a32",
+              "on-secondary-container": "#445a7f",
+              "surface-container-lowest": "#ffffff",
+              "on-surface-variant": "#404943",
+              "error-container": "#ffdad6",
+              "tertiary-fixed": "#e9e2d0",
+              primary: "#0f5238",
+              "on-primary-fixed-variant": "#0e5138",
+              secondary: "#485f84",
+              background: "#fbf8ff",
+              "surface-dim": "#d5d8f9",
+              "primary-fixed": "#b1f0ce",
+              "surface-variant": "#dee0ff",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              "element-gap": "12px",
+              "section-margin": "24px",
+              base: "8px",
+              "container-padding": "16px",
+            },
+            fontFamily: {
+              "headline-lg": ["Manrope"],
+              "headline-md": ["Manrope"],
+              "body-lg": ["Inter"],
+              "body-md": ["Inter"],
+              "label-md": ["Inter"],
+              "numeric-display": ["Inter"],
+              "headline-xl": ["Manrope"],
+              "body-sm": ["Inter"],
+            },
+            fontSize: {
+              "headline-lg": [
+                "24px",
+                { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" },
+              ],
+              "headline-md": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+              "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+              "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "label-md": [
+                "14px",
+                { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" },
+              ],
+              "numeric-display": [
+                "28px",
+                { lineHeight: "32px", letterSpacing: "-0.04em", fontWeight: "700" },
+              ],
+              "headline-xl": [
+                "32px",
+                { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" },
+              ],
+              "body-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      .safe-pb {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+    </style>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body class="bg-[#FAF3E0] text-on-surface font-body-md min-h-screen">
+    <!-- TopAppBar -->
+    <header class="fixed top-0 w-full z-50 bg-surface dark:bg-surface-container-low shadow-sm">
+      <div
+        class="flex justify-between items-center px-container-padding h-16 w-full max-w-screen-xl mx-auto"
+      >
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-fixed">
+            <img
+              alt="Couple Avatar"
+              class="w-full h-full object-cover"
+              data-alt="A warm, high-quality portrait of a young professional couple smiling together, captured in soft natural morning light. The aesthetic is clean and minimalist with a palette of soft sands and muted greens, reflecting a nurturing and professional financial partnership. The lighting is bright and optimistic, suitable for a premium fintech dashboard avatar."
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtp3uWK4cVYS2kOQ_OUTzYv0hr6bEpkkvJ0Q8ZMe9--gqBOmtfQtAaJ6ylLYel-eK41n9UUTP9H_mJs9W2kzh6VelvQps89jF0AILbx5WCdAzXV0EUJsLjauWzQfqTyKgOAdbvLUa16HL7ZifdDJPBA0GeC-5Xot_Y3GTucDqimonCTBM4uauZEat1eY7-t_ArY5gV1jLWvMIDLtSFuU8qbrpRCYVIgaYMej58a3SZ-BQcDTLrf7qYpDkKIZw9mxsvMhyCy8wPCLRb"
+            />
+          </div>
+          <h1
+            class="font-headline-lg text-headline-lg font-bold text-primary dark:text-primary-fixed"
+          >
+            FamiVault
+          </h1>
+        </div>
+        <button
+          class="text-on-surface-variant hover:opacity-80 active:scale-95 transition-transform duration-200"
+        >
+          <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+        </button>
+      </div>
+    </header>
+    <main class="pt-20 pb-32 px-container-padding max-w-screen-xl mx-auto space-y-section-margin">
+      <!-- Collaborative Balance Overview -->
+      <section
+        class="relative overflow-hidden rounded-xl p-6 bg-gradient-to-br from-primary-container to-secondary shadow-lg text-on-primary"
+      >
+        <div class="relative z-10">
+          <p class="font-label-md text-label-md opacity-90 mb-1">Total Saldo Bersama</p>
+          <div class="flex items-baseline gap-2 mb-6">
+            <span class="font-headline-xl text-headline-xl">Rp</span>
+            <span class="font-numeric-display text-[40px] leading-none">42.850.000</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+              <p class="font-label-md text-label-md opacity-80">Anggaran Bln Ini</p>
+              <p class="font-headline-md text-headline-md">Rp 12.500k</p>
+            </div>
+            <div class="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+              <p class="font-label-md text-label-md opacity-80">Terpakai</p>
+              <p class="font-headline-md text-headline-md">Rp 8.120k</p>
+            </div>
+          </div>
+        </div>
+        <!-- Decorative Element -->
+        <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
+      </section>
+      <!-- Quick Actions -->
+      <section class="flex gap-element-gap overflow-x-auto pb-2 scrollbar-hide">
+        <button
+          class="flex-shrink-0 flex items-center gap-2 bg-primary text-on-primary px-5 py-3 rounded-full font-label-md text-label-md shadow-md active:scale-95 transition-transform"
+          onclick="openTransactionModal()"
+        >
+          <span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+          Input Manual
+        </button>
+        <button
+          class="flex-shrink-0 flex items-center gap-2 bg-surface-container-lowest text-on-surface border border-neutral-200 px-5 py-3 rounded-full font-label-md text-label-md shadow-sm active:scale-95 transition-transform"
+        >
+          <span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+          Scan Struk
+        </button>
+        <button
+          class="flex-shrink-0 flex items-center gap-2 bg-surface-container-lowest text-on-surface border border-neutral-200 px-5 py-3 rounded-full font-label-md text-label-md shadow-sm active:scale-95 transition-transform"
+        >
+          <span class="material-symbols-outlined" data-icon="account_balance_wallet"
+            >account_balance_wallet</span
+          >
+          Transfer
+        </button>
+      </section>
+      <!-- Envelope Cards Section -->
+      <section>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="font-headline-md text-headline-md text-on-surface">Amplop Anggaran</h2>
+          <button class="text-primary font-label-md text-label-md">Lihat Semua</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Card: Groceries -->
+          <div
+            class="bg-surface-container-lowest p-4 rounded-xl shadow-sm border border-neutral-100 space-y-4"
+          >
+            <div class="flex justify-between items-start">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container"
+                >
+                  <span class="material-symbols-outlined" data-icon="shopping_basket"
+                    >shopping_basket</span
+                  >
+                </div>
+                <div>
+                  <h3 class="font-label-md text-label-md text-on-surface">Groceries</h3>
+                  <p class="text-body-sm text-on-surface-variant">Sisa 8 hari lagi</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="font-numeric-display text-headline-md text-primary">Rp 1.250k</p>
+                <p class="text-body-sm text-on-surface-variant">dari Rp 4.500k</p>
+              </div>
+            </div>
+            <!-- Progress Bar -->
+            <div class="h-2 w-full bg-neutral-100 rounded-full overflow-hidden">
+              <div class="h-full bg-primary" style="width: 27.7%"></div>
+            </div>
+            <div class="flex justify-between items-center pt-2 border-t border-neutral-50">
+              <div class="flex -space-x-2">
+                <img
+                  alt="Partner A"
+                  class="w-6 h-6 rounded-full border-2 border-white"
+                  data-alt="Close up face of a smiling man in a clean office environment with soft lighting."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDk6q1HBBp3rzVgkClL55eFGtnCNw_hVUtx7G74x2qa-8QG3zoe4GGtGCUb8q-aHRSvsh8NQqI3y7jQBOzUiF9-feEmRoefJUmQ_OSqqAHrdgX-TLk4A9oFqw7twJYRNmDrjzpkm7XlqAyKXSiaZY4NONzVNhyf8XANrtTs8ICNCKBq_6WwwpHYCemI83XvOO85zWcXegZl53Qj-FnWlXvCwomr9faxMbdMRfi_5zAl0k1xCQohH040P63C6n9mJ_CBHdH1zgx0HIhq"
+                />
+                <img
+                  alt="Partner B"
+                  class="w-6 h-6 rounded-full border-2 border-white"
+                  data-alt="Close up face of a smiling woman in a warm home environment with natural sunlight."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBH-jMZqViVmlufdDzqN1vLULz3yINY7y6Dzp-q9v13viaYJIpFbt9AMNm0taZ7tt9H27PmT34YetIp5Zb_F2H5ebGY_8LVHBPin-NCchRvWHvFSZmUYc60A9wpwh6V4qPPvU0imkF0yLVyBbutZ1_faovn9ahsuSOgC_S0Tvs7npl_YH50grl2gctzKn3_9ImD798M44JiBm4VibAvLyJkw3hXG4ZhHRh05uAEfig2MPKlX1gUE8ZcCYoXi4Z0Ge3C8qqxvSyhyyHN"
+                />
+              </div>
+              <span class="text-body-sm text-on-surface-variant">3 transaksi minggu ini</span>
+            </div>
+          </div>
+          <!-- Card: Rent & Bills -->
+          <div
+            class="bg-surface-container-lowest p-4 rounded-xl shadow-sm border border-neutral-100 space-y-4"
+          >
+            <div class="flex justify-between items-start">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container"
+                >
+                  <span class="material-symbols-outlined" data-icon="home">home</span>
+                </div>
+                <div>
+                  <h3 class="font-label-md text-label-md text-on-surface">Rent &amp; Bills</h3>
+                  <p class="text-body-sm text-on-surface-variant">Sudah terbayar</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="font-numeric-display text-headline-md text-secondary">Rp 0</p>
+                <p class="text-body-sm text-on-surface-variant">dari Rp 8.000k</p>
+              </div>
+            </div>
+            <!-- Progress Bar (Full) -->
+            <div class="h-2 w-full bg-neutral-100 rounded-full overflow-hidden">
+              <div class="h-full bg-secondary" style="width: 100%"></div>
+            </div>
+            <div class="flex justify-between items-center pt-2 border-t border-neutral-50">
+              <span class="text-body-sm text-on-surface-variant italic"
+                >Lunas dibayar tgl 01 Mei</span
+              >
+              <span class="material-symbols-outlined text-primary text-sm" data-icon="check_circle"
+                >check_circle</span
+              >
+            </div>
+          </div>
+          <!-- Card: Fun Money -->
+          <div
+            class="bg-surface-container-lowest p-4 rounded-xl shadow-sm border border-neutral-100 space-y-4"
+          >
+            <div class="flex justify-between items-start">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center text-on-error-container"
+                >
+                  <span class="material-symbols-outlined" data-icon="celebration">celebration</span>
+                </div>
+                <div>
+                  <h3 class="font-label-md text-label-md text-on-surface">Fun Money</h3>
+                  <p class="text-body-sm text-error">Over budget!</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="font-numeric-display text-headline-md text-error">- Rp 450k</p>
+                <p class="text-body-sm text-on-surface-variant">Batas Rp 2.000k</p>
+              </div>
+            </div>
+            <!-- Progress Bar (Over) -->
+            <div class="h-2 w-full bg-error-container rounded-full overflow-hidden">
+              <div class="h-full bg-error" style="width: 100%"></div>
+            </div>
+            <div class="flex justify-between items-center pt-2 border-t border-neutral-50">
+              <p class="text-body-sm text-on-surface-variant">Kurangi anggaran bulan depan?</p>
+              <button class="text-primary font-label-md text-label-md">Sesuaikan</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Recent Transactions -->
+      <section>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="font-headline-md text-headline-md text-on-surface">Aktivitas Terbaru</h2>
+          <button class="text-primary font-label-md text-label-md">Filter</button>
+        </div>
+        <div
+          class="bg-surface-container-lowest rounded-xl overflow-hidden border border-neutral-100"
+        >
+          <div class="divide-y divide-neutral-50">
+            <!-- Transaction Item -->
+            <div
+              class="flex items-center justify-between p-4 hover:bg-neutral-50 transition-colors"
+            >
+              <div class="flex items-center gap-3">
+                <div class="relative">
+                  <div
+                    class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center"
+                  >
+                    <span class="material-symbols-outlined text-secondary" data-icon="restaurant"
+                      >restaurant</span
+                    >
+                  </div>
+                  <img
+                    alt="User B"
+                    class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white"
+                    data-alt="Small circular portrait avatar of a woman with a friendly expression."
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7hqrcG_KX1hbag-vUtQJtm8O9ySfFOx5SV6LopVOWrolQ_nO7r2hBDpIHvFd3_oq6rDZzxOZIkfmYdeDgBxQg-uoN__iUbjqgTMquclgUCVzXIs7x_8sIt5xav7AWN6x7MokF2fTNA9vetpxNDZs5MIr3QoD0tM-BwIdQm7N5RK5Ql18KjVw30boiTFm06RFA_0PGQQxvS23sHgWWRrCJ8n1auJkg0272xwYFO52uvYqaeZwqOEPmWUumI5Uovb78E4cbiyEek-Y7"
+                  />
+                </div>
+                <div>
+                  <p class="font-label-md text-label-md text-on-surface">Dinner at Sushi Tei</p>
+                  <p class="text-body-sm text-on-surface-variant">Tadi, 19:45 • Fun Money</p>
+                </div>
+              </div>
+              <p class="font-numeric-display text-body-lg text-error">- Rp 385.000</p>
+            </div>
+            <!-- Transaction Item -->
+            <div
+              class="flex items-center justify-between p-4 hover:bg-neutral-50 transition-colors"
+            >
+              <div class="flex items-center gap-3">
+                <div class="relative">
+                  <div
+                    class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center"
+                  >
+                    <span
+                      class="material-symbols-outlined text-secondary"
+                      data-icon="local_gas_station"
+                      >local_gas_station</span
+                    >
+                  </div>
+                  <img
+                    alt="User A"
+                    class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white"
+                    data-alt="Small circular portrait avatar of a man with a friendly expression."
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuChbppfJVBiO-6N4CaafhEggaDG4wUilmopFPHsHguT5DAJ8merNxOAJLIpVuTfnC_EPe7HdvP01_7ZBR0df3CRYPgvQNV94FdxEAO-FuHAwQEy0JSQ_atn-rflg8OFvP_YqcR4UevE6u4e1Vv4vSQvE3geFSGA-5dPehr3kAXpV5MBpY0tVIoVNN4YANuHk5lRbXYWqwajAtqqUMr8D2SHdvxcESOsPOC30OfmQxh4_AGSm23C01acLgoo96-8BjGxtkWui6_lE0u1"
+                  />
+                </div>
+                <div>
+                  <p class="font-label-md text-label-md text-on-surface">Pertamina Shell</p>
+                  <p class="text-body-sm text-on-surface-variant">Kemarin, 08:30 • Transport</p>
+                </div>
+              </div>
+              <p class="font-numeric-display text-body-lg text-error">- Rp 500.000</p>
+            </div>
+            <!-- Transaction Item -->
+            <div
+              class="flex items-center justify-between p-4 hover:bg-neutral-50 transition-colors"
+            >
+              <div class="flex items-center gap-3">
+                <div class="relative">
+                  <div
+                    class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center"
+                  >
+                    <span class="material-symbols-outlined text-primary" data-icon="add_card"
+                      >add_card</span
+                    >
+                  </div>
+                </div>
+                <div>
+                  <p class="font-label-md text-label-md text-on-surface">Top up: Gaji Mei</p>
+                  <p class="text-body-sm text-on-surface-variant">02 Mei • Main Wallet</p>
+                </div>
+              </div>
+              <p class="font-numeric-display text-body-lg text-primary">+ Rp 15.000.000</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <!-- BottomNavBar -->
+    <nav
+      class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 pb-safe pt-2 bg-surface-container-lowest dark:bg-inverse-surface shadow-[0_-4px_12px_rgba(0,0,0,0.04)] rounded-t-xl"
+    >
+      <a
+        class="flex flex-col items-center justify-center bg-secondary-container dark:bg-on-secondary-container text-on-secondary-container dark:text-secondary-container rounded-full px-4 py-1 Active: scale-90 transition-all duration-150"
+        href="#"
+      >
+        <span
+          class="material-symbols-outlined"
+          data-icon="home"
+          style="font-variation-settings: &quot;FILL&quot; 1"
+          >home</span
+        >
+        <span class="font-label-md text-label-md">Home</span>
+      </a>
+      <a
+        class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-tertiary-container transition-colors p-2"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="account_balance_wallet"
+          >account_balance_wallet</span
+        >
+        <span class="font-label-md text-label-md">Envelopes</span>
+      </a>
+      <a
+        class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-tertiary-container transition-colors p-2"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+        <span class="font-label-md text-label-md">Scan</span>
+      </a>
+      <a
+        class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-tertiary-container transition-colors p-2"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="sync_alt">sync_alt</span>
+        <span class="font-label-md text-label-md">Match</span>
+      </a>
+      <a
+        class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-tertiary-container transition-colors p-2"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="settings">settings</span>
+        <span class="font-label-md text-label-md">Settings</span>
+      </a>
+    </nav>
+    <!-- FAB for Quick Transaction (Contextual) -->
+    <button
+      class="fixed bottom-24 right-6 w-14 h-14 rounded-full bg-primary text-on-primary shadow-xl flex items-center justify-center active:scale-90 transition-all z-40"
+      onclick="openTransactionModal()"
+    >
+      <span class="material-symbols-outlined text-3xl" data-icon="edit">edit</span>
+    </button>
+    <!-- Modal Backdrop (Hidden by default) -->
+    <div
+      class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] hidden flex items-end sm:items-center justify-center transition-opacity duration-300 opacity-0"
+      id="modal-overlay"
+    >
+      <!-- Transaction Sheet -->
+      <div
+        class="bg-surface w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 transform translate-y-full transition-transform duration-300 shadow-2xl"
+        id="transaction-sheet"
+      >
+        <div class="w-12 h-1.5 bg-neutral-200 rounded-full mx-auto mb-6 sm:hidden"></div>
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="font-headline-md text-headline-md text-on-surface">Input Transaksi</h3>
+          <button class="text-on-surface-variant" onclick="closeTransactionModal()">
+            <span class="material-symbols-outlined" data-icon="close">close</span>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="font-label-md text-label-md text-on-surface-variant mb-1 block"
+              >Nominal</label
+            >
+            <div class="relative">
+              <span
+                class="absolute left-4 top-1/2 -translate-y-1/2 font-headline-md text-on-surface-variant"
+                >Rp</span
+              >
+              <input
+                class="w-full pl-12 pr-4 py-4 rounded-xl bg-surface-container-low border-none focus:ring-2 focus:ring-primary text-headline-md font-numeric-display"
+                placeholder="0"
+                type="number"
+              />
+            </div>
+          </div>
+          <div>
+            <label class="font-label-md text-label-md text-on-surface-variant mb-1 block"
+              >Amplop</label
+            >
+            <select
+              class="w-full px-4 py-4 rounded-xl bg-surface-container-low border-none focus:ring-2 focus:ring-primary font-body-md"
+            >
+              <option>Groceries</option>
+              <option>Fun Money</option>
+              <option>Rent &amp; Bills</option>
+              <option>Transport</option>
+            </select>
+          </div>
+          <div
+            class="flex items-center justify-between p-4 rounded-xl bg-primary-fixed/30 border border-primary-fixed"
+          >
+            <div class="flex items-center gap-2">
+              <span
+                class="material-symbols-outlined text-primary"
+                data-icon="group"
+                style="font-variation-settings: &quot;FILL&quot; 1"
+                >group</span
+              >
+              <span class="font-label-md text-label-md text-primary">Transaksi Bersama</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input checked="" class="sr-only peer" type="checkbox" />
+              <div
+                class="w-11 h-6 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"
+              ></div>
+            </label>
+          </div>
+          <button
+            class="w-full bg-primary text-on-primary py-4 rounded-xl font-headline-md shadow-md active:scale-95 transition-transform mt-4"
+          >
+            Simpan Transaksi
+          </button>
+        </div>
+      </div>
+    </div>
+    <script>
+      function openTransactionModal() {
+        const overlay = document.getElementById("modal-overlay");
+        const sheet = document.getElementById("transaction-sheet");
+        overlay.classList.remove("hidden");
+        setTimeout(() => {
+          overlay.classList.remove("opacity-0");
+          sheet.classList.remove("translate-y-full");
+        }, 10);
+      }
+
+      function closeTransactionModal() {
+        const overlay = document.getElementById("modal-overlay");
+        const sheet = document.getElementById("transaction-sheet");
+        overlay.classList.add("opacity-0");
+        sheet.classList.add("translate-y-full");
+        setTimeout(() => {
+          overlay.classList.add("hidden");
+        }, 300);
+      }
+    </script>
+  </body>
+</html>

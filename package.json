@@ -1,0 +1,33 @@
+{
+  "name": "fintr",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "bun run --filter @fintr/api dev",
+    "dev:client": "bun run --filter @fintr/client dev",
+    "dev": "bun run dev:api & bun run dev:client",
+    "db:generate": "bun run --filter @fintr/api db:generate",
+    "db:migrate": "bun run --filter @fintr/api db:migrate",
+    "db:seed": "bun run --filter @fintr/api db:seed",
+    "db:studio": "bun run --filter @fintr/api db:studio",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.4.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.9.2",
+    "framework7": "^9.0.5",
+    "framework7-vue": "^9.0.5",
+    "globals": "^17.6.0",
+    "prettier": "^3.8.3",
+    "typescript-eslint": "^8.60.1",
+    "vue": "^3.5.35"
+  }
+}

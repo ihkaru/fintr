@@ -1,0 +1,12 @@
+node_modules
+dist
+build
+.output
+coverage
+drizzle
+*.ico
+*.png
+*.jpg
+*.svg
+package-lock.json
+bun.lockb

@@ -1,0 +1,485 @@
+<!doctype html>
+
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport" />
+    <title>Rekonsiliasi Mingguan - FamiVault</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-container": "#635f50",
+              "on-secondary": "#ffffff",
+              surface: "#fbf8ff",
+              "on-tertiary-fixed-variant": "#4a4739",
+              "inverse-on-surface": "#f0efff",
+              "inverse-surface": "#2b2f48",
+              "surface-container-highest": "#dee0ff",
+              "inverse-primary": "#95d4b3",
+              "on-surface": "#161a32",
+              "on-error-container": "#93000a",
+              "surface-tint": "#2c694e",
+              tertiary: "#4b473a",
+              "on-primary-container": "#a8e7c5",
+              "primary-fixed-dim": "#95d4b3",
+              "on-tertiary-fixed": "#1e1c10",
+              "outline-variant": "#bfc9c1",
+              "surface-container": "#ececff",
+              "on-tertiary": "#ffffff",
+              "secondary-fixed": "#d5e3ff",
+              "on-primary-fixed": "#002114",
+              "primary-container": "#2d6a4f",
+              "on-secondary-fixed-variant": "#30476a",
+              "on-primary": "#ffffff",
+              "secondary-fixed-dim": "#b0c7f1",
+              "on-tertiary-container": "#e0d9c7",
+              "secondary-container": "#bbd3fd",
+              "on-error": "#ffffff",
+              error: "#ba1a1a",
+              "surface-container-low": "#f4f2ff",
+              outline: "#707973",
+              "tertiary-fixed-dim": "#ccc6b4",
+              "surface-container-high": "#e5e6ff",
+              "surface-bright": "#fbf8ff",
+              "on-secondary-fixed": "#001b3c",
+              "on-background": "#161a32",
+              "on-secondary-container": "#445a7f",
+              "surface-container-lowest": "#ffffff",
+              "on-surface-variant": "#404943",
+              "error-container": "#ffdad6",
+              "tertiary-fixed": "#e9e2d0",
+              primary: "#0f5238",
+              "on-primary-fixed-variant": "#0e5138",
+              secondary: "#485f84",
+              background: "#fbf8ff",
+              "surface-dim": "#d5d8f9",
+              "primary-fixed": "#b1f0ce",
+              "surface-variant": "#dee0ff",
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+            spacing: {
+              "element-gap": "12px",
+              "section-margin": "24px",
+              base: "8px",
+              "container-padding": "16px",
+            },
+            fontFamily: {
+              "headline-lg": ["Manrope"],
+              "headline-md": ["Manrope"],
+              "body-lg": ["Inter"],
+              "body-md": ["Inter"],
+              "label-md": ["Inter"],
+              "numeric-display": ["Inter"],
+              "headline-xl": ["Manrope"],
+              "body-sm": ["Inter"],
+            },
+            fontSize: {
+              "headline-lg": [
+                "24px",
+                { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" },
+              ],
+              "headline-md": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+              "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+              "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+              "label-md": [
+                "14px",
+                { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" },
+              ],
+              "numeric-display": [
+                "28px",
+                { lineHeight: "32px", letterSpacing: "-0.04em", fontWeight: "700" },
+              ],
+              "headline-xl": [
+                "32px",
+                { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" },
+              ],
+              "body-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        background-color: #faf3e0; /* Warm Minimalism base */
+        scroll-behavior: smooth;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+      }
+      .transaction-checkbox:checked + label {
+        background-color: #f0fdf4;
+        border-color: #22c55e;
+      }
+      .transaction-checkbox:checked + label .check-icon {
+        display: block;
+      }
+    </style>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body class="font-body-md text-on-surface">
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-surface shadow-sm h-16">
+      <div
+        class="flex justify-between items-center px-container-padding h-full w-full max-w-screen-xl mx-auto"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary"
+          >
+            <span class="material-symbols-outlined text-sm">balance</span>
+          </div>
+          <h1 class="font-headline-md text-headline-md text-primary font-bold">FamiVault</h1>
+        </div>
+        <div class="flex items-center gap-4">
+          <span
+            class="material-symbols-outlined text-on-surface-variant hover:opacity-80 cursor-pointer"
+            data-icon="notifications"
+            >notifications</span
+          >
+          <div
+            class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center overflow-hidden border border-outline-variant"
+          >
+            <img
+              alt="User"
+              data-alt="A warm, professional portrait of a young couple smiling, photographed with soft natural lighting in a modern, minimalist home office setting. The aesthetic is clean and high-end, featuring a color palette of soft creams, sage greens, and warm wood tones to evoke a sense of financial partnership and trust."
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpdFnunocvuDKdtbKUrfPK6bu62gN9Js44p6fMtG_vdUIS47KTQULBh6wNx-oODsmCI3jMj2yLT2svOQBHlRmUfti5iIgTbRiNJqyqG7-VQpnQw4DZZjzLMY1LSCBVaTq6zLV0A5nw6zYon7Azzg9nwkSMw1acwy3tKQyKwye8kfLHneiW-_-nOmzw6S2iwnbo-6esHFi7ovlBEGUAdip-36K3ZaxnyGR113OXzT3aOduE3VdWybxjeFr6XqWy0KXq9EuoJz9a5CxT"
+            />
+          </div>
+        </div>
+      </div>
+    </nav>
+    <main class="pt-20 pb-24 px-container-padding max-w-screen-md mx-auto">
+      <!-- Header Section -->
+      <header class="mb-section-margin text-center">
+        <h2 class="font-headline-xl text-headline-xl text-on-surface mb-2">
+          Rekonsiliasi Mingguan
+        </h2>
+        <p class="font-body-md text-on-surface-variant">
+          Pastikan keuangan keluarga tetap selaras dan terkendali.
+        </p>
+      </header>
+      <!-- Balance Comparison Card -->
+      <section class="mb-section-margin">
+        <div
+          class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-6 relative overflow-hidden"
+        >
+          <div class="absolute top-0 right-0 p-4 opacity-10">
+            <span class="material-symbols-outlined text-6xl" data-icon="account_balance"
+              >account_balance</span
+            >
+          </div>
+          <div class="grid grid-cols-2 gap-4 divide-x divide-outline-variant">
+            <div class="pr-2">
+              <p class="font-label-md text-on-surface-variant uppercase tracking-wider mb-1">
+                Saldo Aplikasi
+              </p>
+              <p class="font-numeric-display text-numeric-display text-primary">Rp 12.450.000</p>
+            </div>
+            <div class="pl-4">
+              <p class="font-label-md text-on-surface-variant uppercase tracking-wider mb-1">
+                Saldo Bank Asli
+              </p>
+              <div class="flex items-baseline gap-2">
+                <input
+                  class="w-full bg-transparent border-none p-0 font-numeric-display text-numeric-display text-secondary focus:ring-0"
+                  placeholder="0"
+                  type="text"
+                  value="12.450.000"
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            class="mt-6 pt-4 border-t border-dashed border-outline-variant flex justify-between items-center"
+          >
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-primary"></div>
+              <span class="font-body-sm text-on-surface-variant">Semua selaras</span>
+            </div>
+            <button class="flex items-center gap-1 font-label-md text-primary hover:underline">
+              <span class="material-symbols-outlined text-sm" data-icon="sync">sync</span>
+              Perbarui Saldo
+            </button>
+          </div>
+        </div>
+      </section>
+      <!-- Search & Filter -->
+      <div class="flex gap-2 mb-element-gap">
+        <div class="relative flex-1">
+          <span
+            class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm"
+            data-icon="search"
+            >search</span
+          >
+          <input
+            class="w-full pl-10 pr-4 py-2 bg-white rounded-full border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary transition-all text-body-sm"
+            placeholder="Cari transaksi..."
+            type="text"
+          />
+        </div>
+        <button
+          class="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-outline-variant text-on-surface-variant"
+        >
+          <span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
+        </button>
+      </div>
+      <!-- Transaction Reconciliation List -->
+      <div class="space-y-3">
+        <h3 class="font-label-md text-on-surface-variant flex items-center gap-2 px-2">
+          <span class="material-symbols-outlined text-sm" data-icon="history">history</span>
+          TRANSAKSI BELUM TERKONFIRMASI
+        </h3>
+        <!-- Transaction Item 1 -->
+        <div class="relative">
+          <input class="hidden transaction-checkbox peer" id="tx1" type="checkbox" />
+          <label
+            class="flex items-center gap-4 p-4 bg-white rounded-xl border border-outline-variant hover:border-primary cursor-pointer transition-all active:scale-[0.98]"
+            for="tx1"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center relative"
+            >
+              <span class="material-symbols-outlined text-primary" data-icon="shopping_cart"
+                >shopping_cart</span
+              >
+              <div
+                class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white overflow-hidden"
+              >
+                <img
+                  alt="Partner"
+                  data-alt="Close-up portrait of a woman with a gentle expression, wearing business casual attire. The lighting is soft and airy, creating a professional yet nurturing feel. The image uses a light mode aesthetic with soft pastels to represent a collaborative family financial environment."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuABXzTDhF2cnpHOk34Q34_gw_2yvtjmcLoOGhXABJ5_ppfe4Jpe4opauTh3oQFFIniS2Zl0K2bFg_5pNuJTEFiYd9rFXfNPAwW76ciBWGnNXTEMLB4YFhnc-mrnFz7gVCF3FGur3C498B3VGgfAsCDvsPyX8iDV-K9k7oE5ehTb374kBmu9V6L6drqeHiehtSE8ZqUuvRhu_mDMDTNrYeOArV2NGSWeeaXm_-DtOwHlkmCK4X66dVhxvSIdoIg7bDvAzI1wuMBQ0rRL"
+                />
+              </div>
+            </div>
+            <div class="flex-1">
+              <p class="font-body-md font-semibold text-on-surface">Supermarket Central</p>
+              <p class="font-body-sm text-on-surface-variant">14 Okt • Belanja Bulanan</p>
+            </div>
+            <div class="text-right">
+              <p class="font-body-md font-bold text-error">- Rp 450.000</p>
+              <div class="check-icon hidden text-primary">
+                <span
+                  class="material-symbols-outlined text-xl"
+                  data-icon="check_circle"
+                  data-weight="fill"
+                  >check_circle</span
+                >
+              </div>
+            </div>
+          </label>
+        </div>
+        <!-- Transaction Item 2 -->
+        <div class="relative">
+          <input class="hidden transaction-checkbox peer" id="tx2" type="checkbox" />
+          <label
+            class="flex items-center gap-4 p-4 bg-white rounded-xl border border-outline-variant hover:border-primary cursor-pointer transition-all active:scale-[0.98]"
+            for="tx2"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center relative"
+            >
+              <span class="material-symbols-outlined text-primary" data-icon="payments"
+                >payments</span
+              >
+              <div
+                class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white overflow-hidden"
+              >
+                <img
+                  alt="Partner"
+                  data-alt="Close-up portrait of a man with a friendly, reliable expression, wearing a clean linen shirt. The atmosphere is calm and modern, emphasizing clarity and financial stability. The lighting is bright and crisp, consistent with a premium digital banking experience for couples."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1CL0oPVuHeZTpoPFKpD-0HCO0XJE3e8lvAapPN5p06_3g5W8Fv-weGjwHuILjbysCrI4tZj-otD3glhd5iPjEb9zsUIg6KjXI9SiwgkPMHVwDbs5Y9kpoD3dHu79GlUsunSAWPT3_dukRRLIs3GYmoLsjAJsMepQqa3JGUue2IZBzXOok4OtwDv-MS-ObciQmPquaCA76xiehoddR2zjN-AE7XC4JogYVWfkHytoGdKqTBNxC7h3U1d5KnNosBjEKIZCK1HTmX87X"
+                />
+              </div>
+            </div>
+            <div class="flex-1">
+              <p class="font-body-md font-semibold text-on-surface">Gaji Bulanan</p>
+              <p class="font-body-sm text-on-surface-variant">13 Okt • Pendapatan Utama</p>
+            </div>
+            <div class="text-right">
+              <p class="font-body-md font-bold text-primary">+ Rp 8.000.000</p>
+              <div class="check-icon hidden text-primary">
+                <span
+                  class="material-symbols-outlined text-xl"
+                  data-icon="check_circle"
+                  data-weight="fill"
+                  >check_circle</span
+                >
+              </div>
+            </div>
+          </label>
+        </div>
+        <!-- Transaction Item 3 (Selected State Simulation) -->
+        <div class="relative">
+          <input checked="" class="hidden transaction-checkbox peer" id="tx3" type="checkbox" />
+          <label
+            class="flex items-center gap-4 p-4 bg-white rounded-xl border border-outline-variant hover:border-primary cursor-pointer transition-all active:scale-[0.98]"
+            for="tx3"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center relative"
+            >
+              <span class="material-symbols-outlined text-primary" data-icon="electric_bolt"
+                >electric_bolt</span
+              >
+              <div
+                class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white overflow-hidden"
+              >
+                <img
+                  alt="Partner"
+                  data-alt="Detailed professional avatar of a collaborative partner, showing a warm and helpful facial expression. The background is a soft, out-of-focus interior with modern architecture, suggesting a peaceful household. The aesthetic is clean, light, and focused on financial well-being."
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdn5OT_wMUoJeSVntxcMQHQfGbosBGJpW_WVCSYs3KZR0rYXpzzGZsTTz4UVbqhKJPPOVDQvPD7TlPX7dxxAWiQXV1uUiXSDp60qN2EoRJ3gM1NDh35-h_D9aMIiWSKSgC1L3Eno9fZTF1hS8GJS-8UB-TNxPnCVkgj7IFdaJY3ZyjhnZ687XJW_DkE-8nFBYoHv-vkzmngpmAwRv54qJJIvSHQP1NrqhPOezO3FNn4FAIPQWdqX977T9vkdziBHcV3NJutcxyx6sv"
+                />
+              </div>
+            </div>
+            <div class="flex-1">
+              <p class="font-body-md font-semibold text-on-surface">Tagihan Listrik</p>
+              <p class="font-body-sm text-on-surface-variant">12 Okt • Utilitas</p>
+            </div>
+            <div class="text-right">
+              <p class="font-body-md font-bold text-error">- Rp 850.000</p>
+              <div class="check-icon hidden text-primary">
+                <span
+                  class="material-symbols-outlined text-xl"
+                  data-icon="check_circle"
+                  data-weight="fill"
+                  >check_circle</span
+                >
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+      <!-- Discrepancy Action -->
+      <div
+        class="mt-8 p-6 bg-secondary-container/30 rounded-2xl border border-secondary-container/50 flex flex-col items-center text-center"
+      >
+        <span class="material-symbols-outlined text-secondary text-4xl mb-2" data-icon="info"
+          >info</span
+        >
+        <h4 class="font-headline-md text-secondary">Masih ada selisih?</h4>
+        <p class="font-body-sm text-on-secondary-container mb-4">
+          Jika saldo bank asli tidak sesuai dengan total transaksi di atas, tambahkan penyesuaian
+          otomatis.
+        </p>
+        <button
+          class="bg-primary text-on-primary px-6 py-3 rounded-full font-label-md flex items-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-md"
+        >
+          <span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+          Buat Penyesuaian Saldo
+        </button>
+      </div>
+    </main>
+    <!-- Bottom Navigation Bar -->
+    <nav
+      class="fixed bottom-0 left-0 w-full z-50 bg-surface-container-lowest shadow-[0_-4px_12px_rgba(0,0,0,0.04)] flex justify-around items-center px-2 pb-safe pt-2 rounded-t-xl h-20"
+    >
+      <button
+        class="flex flex-col items-center justify-center text-on-surface-variant transition-all duration-150 active:scale-90 px-4 py-1"
+      >
+        <span class="material-symbols-outlined" data-icon="home">home</span>
+        <span class="font-label-md text-label-md">Home</span>
+      </button>
+      <button
+        class="flex flex-col items-center justify-center text-on-surface-variant transition-all duration-150 active:scale-90 px-4 py-1"
+      >
+        <span class="material-symbols-outlined" data-icon="account_balance_wallet"
+          >account_balance_wallet</span
+        >
+        <span class="font-label-md text-label-md">Envelopes</span>
+      </button>
+      <button
+        class="flex flex-col items-center justify-center text-on-surface-variant transition-all duration-150 active:scale-90 px-4 py-1"
+      >
+        <div
+          class="w-12 h-12 bg-primary rounded-full flex items-center justify-center -mt-8 shadow-lg text-on-primary"
+        >
+          <span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+        </div>
+        <span class="font-label-md text-label-md mt-1">Scan</span>
+      </button>
+      <button
+        class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 transition-all duration-150 active:scale-90"
+      >
+        <span class="material-symbols-outlined" data-icon="sync_alt">sync_alt</span>
+        <span class="font-label-md text-label-md">Match</span>
+      </button>
+      <button
+        class="flex flex-col items-center justify-center text-on-surface-variant transition-all duration-150 active:scale-90 px-4 py-1"
+      >
+        <span class="material-symbols-outlined" data-icon="settings">settings</span>
+        <span class="font-label-md text-label-md">Settings</span>
+      </button>
+    </nav>
+    <!-- Success Toast (Hidden by default) -->
+    <div
+      class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-on-surface text-surface px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl transition-all duration-500 opacity-0 translate-y-4 pointer-events-none"
+      id="reconcileToast"
+    >
+      <span class="material-symbols-outlined text-primary-fixed" data-icon="verified"
+        >verified</span
+      >
+      <span class="font-body-sm">Minggu ini berhasil disinkronkan!</span>
+    </div>
+    <script>
+      // Simple Interaction Logic
+      const checkboxes = document.querySelectorAll(".transaction-checkbox");
+      const toast = document.getElementById("reconcileToast");
+
+      checkboxes.forEach(checkbox => {
+        checkbox.addEventListener("change", () => {
+          const checkedCount = Array.from(checkboxes).filter(c => c.checked).length;
+
+          if (checkedCount === checkboxes.length) {
+            // Show success state
+            toast.classList.remove("opacity-0", "translate-y-4", "pointer-events-none");
+            toast.classList.add("opacity-100", "translate-y-0");
+
+            setTimeout(() => {
+              toast.classList.add("opacity-0", "translate-y-4", "pointer-events-none");
+              toast.classList.remove("opacity-100", "translate-y-0");
+            }, 3000);
+          }
+        });
+      });
+
+      // Mobile-first balance edit simulation
+      const balanceInput = document.querySelector('input[type="text"]');
+      balanceInput.addEventListener("focus", function () {
+        this.parentElement.parentElement.classList.add("border-primary");
+      });
+      balanceInput.addEventListener("blur", function () {
+        this.parentElement.parentElement.classList.remove("border-primary");
+      });
+    </script>
+  </body>
+</html>
