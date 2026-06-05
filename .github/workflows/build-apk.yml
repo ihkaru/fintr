@@ -1,0 +1,95 @@
+name: Build Android APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build & Sign APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Monorepo Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build Web Client
+        run: |
+          cd apps/client
+          bun run build
+        env:
+          VITE_API_URL: https://fintr-api.dvlpid.my.id
+
+      - name: Sync Capacitor
+        run: |
+          cd apps/client
+          npx cap sync android
+
+      - name: Decode Android Keystore
+        if: env.HAS_KEYSTORE == 'true'
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > apps/client/android/app/famivault-release.keystore
+        env:
+          HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+
+      - name: Grant Execute Permission to Gradle Wrapper
+        run: chmod +x apps/client/android/gradlew
+
+      - name: Build Android Release APK
+        run: |
+          cd apps/client/android
+          ./gradlew assembleRelease
+        env:
+          RELEASE_STORE_FILE: famivault-release.keystore
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+
+      - name: Rename APK for Release
+        run: |
+          APK_PATH="apps/client/android/app/build/outputs/apk/release/app-release.apk"
+          UNSIGNED_APK_PATH="apps/client/android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          
+          if [ -f "$APK_PATH" ]; then
+            # If signed successfully
+            cp "$APK_PATH" FamiVault-release.apk
+          elif [ -f "$UNSIGNED_APK_PATH" ]; then
+            # Fallback to unsigned if secrets were not configured yet
+            cp "$UNSIGNED_APK_PATH" FamiVault-release-unsigned.apk
+          else
+            echo "Error: No APK file generated!"
+            exit 1
+          fi
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FamiVault-Android-APK
+          path: FamiVault-release*.apk
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: FamiVault-release*.apk
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

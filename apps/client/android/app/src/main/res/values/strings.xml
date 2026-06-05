@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FamiVault</string>
+    <string name="title_activity_main">FamiVault</string>
+    <string name="package_name">com.fintr.famivault</string>
+    <string name="custom_url_scheme">com.fintr.famivault</string>
+</resources>

@@ -226,18 +226,41 @@
         Keluar Akun (Logout)
       </button>
 
-      <!-- App Version -->
+      <!-- App Version & Update Link -->
       <div
         style="
           text-align: center;
           margin-top: 32px;
           padding-bottom: 24px;
-          font-size: 12px;
-          color: var(--fintr-text-dim);
-          letter-spacing: 0.02em;
         "
       >
-        FamiVault v{{ appVersion }}
+        <div
+          style="
+            font-size: 12px;
+            color: var(--fintr-text-dim);
+            letter-spacing: 0.02em;
+          "
+        >
+          FamiVault v{{ appVersion }}
+        </div>
+        <a
+          href="https://github.com/ihkaru/fintr/releases"
+          target="_blank"
+          class="external"
+          style="
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--f7-theme-color-tint);
+            margin-top: 8px;
+            text-decoration: none;
+            font-weight: 600;
+          "
+        >
+          <span class="material-symbols-outlined" style="font-size: 14px;">download</span>
+          Unduh APK / Cek Update
+        </a>
       </div>
     </div>
   </f7-page>

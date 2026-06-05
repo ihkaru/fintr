@@ -5,8 +5,8 @@ dist/
 .DS_Store
 uploads/
 drizzle/meta/
-android/
-ios/
+/android/
+/ios/
 packages/api/public/receipts/
 
 repo_dump.txt
