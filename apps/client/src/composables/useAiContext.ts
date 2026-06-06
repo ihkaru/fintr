@@ -181,6 +181,7 @@ Gunakan data ini sebagai konteks utama untuk menjawab pertanyaan saya. Berikan j
 3. Jika ada selisih rekonsiliasi, pertimbangkan itu sebagai kondisi keuangan aktual
 4. Jika saya menanyakan pembelian besar, hitung dampaknya secara spesifik per amplop
 5. Berikan saran alternatif jika kondisi keuangan tidak memungkinkan
+6. Gunakan istilah "Sisa Anggaran (%)" dan "Sisa Anggaran Rata-rata" (bukan "Saving Rate" atau "Rata-rata Menabung") agar selaras dengan UI yang dilihat pengguna.
 
 Pertanyaan saya:
 `;
