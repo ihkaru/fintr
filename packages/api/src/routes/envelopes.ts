@@ -106,6 +106,28 @@ export const envelopeRoutes = new Elysia({ prefix: "/envelopes" })
         return { error: "Amplop tidak ditemukan" };
       }
 
+      // Automatically update the allocation in the active period if there is one and defaultAmount is updated
+      if (body.defaultAmount !== undefined) {
+        const [activePeriod] = await db
+          .select()
+          .from(budgetPeriods)
+          .where(
+            and(eq(budgetPeriods.householdId, householdId), eq(budgetPeriods.isClosed, false))
+          );
+
+        if (activePeriod) {
+          await db
+            .update(budgetAllocations)
+            .set({ allocatedAmount: body.defaultAmount.toString() })
+            .where(
+              and(
+                eq(budgetAllocations.periodId, activePeriod.id),
+                eq(budgetAllocations.templateId, params.id)
+              )
+            );
+        }
+      }
+
       broadcastToHousehold(householdId, userId, "envelope_changed");
 
       return updated;
