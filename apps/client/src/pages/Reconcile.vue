@@ -188,25 +188,35 @@
             <div
               v-for="(wallet, idx) in wallets"
               :key="idx"
-              style="display: flex; gap: 8px; align-items: center"
+              style="display: flex; gap: 8px; align-items: center; width: 100%"
             >
-              <input
-                type="text"
-                v-model="wallet.label"
-                placeholder="Nama Dompet (e.g. Tabungan)"
+              <div style="flex: 1.4; min-width: 0">
+                <input
+                  type="text"
+                  v-model="wallet.label"
+                  placeholder="Nama Dompet (e.g. Tabungan)"
+                  style="
+                    width: 100%;
+                    background: #ffffff;
+                    border: 1px solid #bfc9c1;
+                    color: #161a32;
+                    padding: 8px 10px;
+                    border-radius: 8px;
+                    font-size: 12px;
+                    box-sizing: border-box;
+                  "
+                  @input="syncCalculator"
+                />
+              </div>
+              <div
                 style="
-                  flex: 1.2;
-                  background: #ffffff;
-                  border: 1px solid #bfc9c1;
-                  color: #161a32;
-                  padding: 8px 10px;
-                  border-radius: 8px;
-                  font-size: 12px;
-                  box-sizing: border-box;
+                  position: relative;
+                  flex: 1;
+                  min-width: 90px;
+                  display: flex;
+                  align-items: center;
                 "
-                @input="syncCalculator"
-              />
-              <div style="position: relative; flex: 1; display: flex; align-items: center">
+              >
                 <span
                   style="
                     position: absolute;
@@ -214,6 +224,7 @@
                     font-size: 11px;
                     font-weight: 700;
                     color: var(--fintr-text-muted);
+                    pointer-events: none;
                   "
                   >Rp</span
                 >
@@ -247,6 +258,7 @@
                   display: flex;
                   align-items: center;
                   justify-content: center;
+                  flex-shrink: 0;
                 "
               >
                 <span class="material-symbols-outlined" style="font-size: 18px">delete</span>
