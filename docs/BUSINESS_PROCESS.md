@@ -1,5 +1,19 @@
 # ⚙️ Dokumentasi Proses Bisnis & Analisis Alur FamiVault
 
+## 📌 Riwayat Versi & Perubahan (Changelog)
+
+- **v1.0.25 (Rilis Saat Ini)**:
+  - Penambahan parameter bypass `forceDeleteTransactions` pada `/auth/join-household` untuk mempermudah pembersihan data lama pengguna secara sadar.
+  - Implementasi konfirmasi visual pra-aksi (pre-action confirmation) saat melakukan perubahan batas anggaran default (Scenario B).
+  - Penambahan flag `keptInActivePeriod` pada CRUD amplop untuk mendukung soft-delete amplop yang memiliki riwayat transaksi (Scenario C).
+  - **Pembersihan Rumah Tangga Kosong**: Rumah tangga lama otomatis dihapus dari database jika ditinggalkan oleh anggota terakhirnya guna mencegah terjadinya data yatim/ghost households.
+- **v1.0.22**:
+  - Penambahan fitur pratinjau rollover (rollover preview) pada UI pengaturan.
+- **v1.0.21**:
+  - Penambahan tabel `rollover_logs` untuk mencatat riwayat perpindahan dana secara auditabel.
+
+---
+
 Dokumen ini memetakan seluruh proses bisnis aplikasi FamiVault dari onboarding pertama kali, aktivitas harian, hingga penutupan siklus bulanan (rollover). Dokumen ini juga menganalisis skenario **Happy Path** (kondisi ideal) dan **Unhappy Path** (kondisi anomali/eror) untuk memastikan perilaku (_behavior_) sistem tetap logis, aman, dan konsisten bagi pengguna.
 
 ---

@@ -204,7 +204,20 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 
       // Remove from current household if any
       if (existing.length > 0) {
+        const oldHouseholdId = existing[0].householdId;
         await db.delete(householdMembers).where(eq(householdMembers.userId, userId));
+
+        // Check if there are any members left in the old household
+        const remainingMembers = await db
+          .select()
+          .from(householdMembers)
+          .where(eq(householdMembers.householdId, oldHouseholdId));
+
+        if (remainingMembers.length === 0) {
+          // Delete the old household entirely to prevent orphan/ghost households
+          await db.delete(households).where(eq(households.id, oldHouseholdId));
+          console.log(`[Auth] Empty household ${oldHouseholdId} deleted successfully.`);
+        }
       }
 
       // Join the household

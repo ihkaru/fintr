@@ -14,6 +14,7 @@ export default tseslint.config(
       "**/.output/**",
       "**/drizzle/**",
       "**/packages/api/drizzle.config.ts",
+      "**/android/**",
     ],
   },
   // Base eslint rules
