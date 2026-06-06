@@ -3,6 +3,8 @@ import { f7, f7ready } from "framework7-vue";
 import { useBackButton } from "./useBackButton";
 import { useSync } from "./useSync";
 import { isLoggedInReactive, auth, setToken, setUser } from "../js/api";
+import { App as CapacitorApp } from "@capacitor/app";
+import { Capacitor } from "@capacitor/core";
 
 let lastTimeBackButtonWasPressed = 0;
 
@@ -12,14 +14,10 @@ export function useHardwareBack() {
 
   onMounted(() => {
     f7ready(async () => {
-      const cap = (window as any).Capacitor;
-      if (!cap) return;
-
-      const AppPlugin = cap.Plugins?.App;
-      if (!AppPlugin) return;
+      if (!Capacitor.isNativePlatform()) return;
 
       // Register Capacitor Back Button Listener
-      await AppPlugin.addListener("backButton", async () => {
+      await CapacitorApp.addListener("backButton", async () => {
         try {
           const $ = f7.$;
 
@@ -80,7 +78,7 @@ export function useHardwareBack() {
             const timeDiff = currentTime - lastTimeBackButtonWasPressed;
 
             if (timeDiff < 2000) {
-              AppPlugin.exitApp();
+              CapacitorApp.exitApp();
             } else {
               lastTimeBackButtonWasPressed = currentTime;
               f7.toast
@@ -98,7 +96,7 @@ export function useHardwareBack() {
       });
 
       // Register App State Lifecycle Listener (Pause/Resume SSE)
-      await AppPlugin.addListener("appStateChange", ({ isActive }: { isActive: boolean }) => {
+      await CapacitorApp.addListener("appStateChange", ({ isActive }: { isActive: boolean }) => {
         console.log(`[Lifecycle] App state changed, isActive: ${isActive}`);
         if (isActive) {
           if (isLoggedInReactive.value) {
@@ -112,7 +110,7 @@ export function useHardwareBack() {
       });
 
       // Register Custom URL Scheme Deep Link Listener
-      await AppPlugin.addListener("appUrlOpen", async (data: { url: string }) => {
+      await CapacitorApp.addListener("appUrlOpen", async (data: { url: string }) => {
         console.log("[DeepLink] App opened with URL:", data.url);
         if (data.url.includes("id_token=")) {
           const cleanUrl = data.url.replace("com.fintr.famivault://", "http://localhost/");
@@ -143,9 +141,8 @@ export function useHardwareBack() {
   });
 
   onBeforeUnmount(() => {
-    const cap = (window as any).Capacitor;
-    if (cap && cap.Plugins?.App) {
-      cap.Plugins.App.removeAllListeners();
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.removeAllListeners();
     }
   });
 }
