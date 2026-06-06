@@ -22,6 +22,16 @@ while (retries > 0) {
     const migrationClient = createMigrationClient();
     const migrationDb = drizzle(migrationClient);
     await migrate(migrationDb, { migrationsFolder: join(__dirname, "../drizzle") });
+
+    // Self-healing check: Ensure is_savings_target column exists
+    console.log("🔍 Verifying database columns...");
+    try {
+      await migrationClient`ALTER TABLE "envelope_templates" ADD COLUMN IF NOT EXISTS "is_savings_target" boolean DEFAULT false NOT NULL;`;
+      console.log("✅ Column 'is_savings_target' verified/added.");
+    } catch (columnError) {
+      console.error("⚠️ Failed to verify/add 'is_savings_target' column:", columnError);
+    }
+
     await migrationClient.end();
     console.log("✅ Database migrations completed successfully.");
     break;
