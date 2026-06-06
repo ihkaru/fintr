@@ -39,7 +39,7 @@
 - 🛍️ **Split Transactions**: Pecah pengeluaran dari satu struk belanja besar ke beberapa amplop anggaran berbeda secara fleksibel dalam satu form input tunggal dengan validasi saldo sisa yang ketat.
 - 🤖 **AI OCR & Smart Receipt Scanning**: Unggah foto struk, bukti transfer, atau gunakan fitur _Share Target_ Android. Ditenagai oleh **Gemini Vision AI** untuk mengekstrak nominal, merchant, tanggal secara otomatis, serta mengklasifikasikan barang belanjaan ke rekomendasi amplop yang paling sesuai. Mendukung pemrosesan batch (hingga 5 struk sekaligus), deteksi duplikasi sekuensial intra-batch, normalisasi nama merchant (pembersihan regex PT/CV), serta tombol inline drawer untuk membuat amplop baru instan saat tingkat keyakinan klasifikasi AI rendah.
 - ⚡ **Sinkronisasi Real-Time (SSE)**: Sinkronisasi instan data transaksi dan amplop anggaran antar perangkat pasangan menggunakan koneksi _Server-Sent Events_ (SSE) berkeamanan tinggi dengan notifikasi reaktif teratribusi nama partner.
-- 🔄 **Rekonsiliasi Saldo Aktual**: Widget interaktif yang membandingkan total anggaran tercatat di aplikasi dengan uang riil (bank + dompet digital + kas fisik) secara periodik demi menjaga keakuratan data 100%, lengkap dengan tombol tindakan instan (_guided action_) untuk membukukan selisih negatif sebagai pengeluaran penyesuaian.
+- 🔄 **Rekonsiliasi Saldo Aktual**: Widget interaktif yang membandingkan total anggaran tercatat di aplikasi dengan uang riil (bank + dompet digital + kas fisik) secara periodik demi menjaga keakuratan data 100%. Saldo tercatat aplikasi dihitung dinamis sebagai `Total Alokasi Amplop (allocated + rollover) - Total Pengeluaran` demi menjaga keselarasan pembukuan. Dilengkapi tombol tindakan instan (_guided action_) untuk membukukan selisih negatif sebagai pengeluaran penyesuaian.
 - 📱 **PWA & Android Native Optimization**: Integrasi Capacitor penuh dengan penanganan tombol kembali perangkat keras (_hardware back button_), _dirty-form checks_, penyimpanan antrean transaksi luring, antrean kegagalan sinkronisasi persisten (_Offline Failed Sync Queue_) dengan banner peringatan interaktif di dasbor, serta mekanisme _auto-retry_ sinkronisasi otomatis hingga 3 kali.
 - 🔔 **Nudge & Smart Budgeting**: Deteksi otomatis pola penumpukan alokasi anggaran pada amplop umum "Lain-lain" (>60% anggaran dengan filter min. 10 transaksi dan 7 hari aktif) disertai rekomendasi taktis (nudge dasbor) untuk memecahnya ke amplop baru yang relevan dari item belanja terpopuler.
 
@@ -276,10 +276,10 @@ Untuk mencoba fitur integrasi _Share Target_ (membagikan struk digital m-banking
 
 Repositori ini dilengkapi dengan **GitHub Actions Workflow** yang akan mengkompilasi aplikasi native Android Anda secara otomatis saat Anda merilis versi baru.
 
-- **Pemicu Build**: Cukup buat tag baru berawalan `v*` dan dorong ke repositori:
+- **Pemicu Build**: Pipa rilis build-apk **hanya** berjalan pada push **Git Tag** dengan pola `v*`. Mendorong commit biasa ke branch `main` tidak memicu build. Cukup buat tag baru dan dorong ke repositori:
   ```bash
-  git tag v1.0.14 -m "Rilis Fitur Baru"
-  git push origin v1.0.14
+  git tag v1.0.37 -m "Rilis Versi 1.0.37"
+  git push origin v1.0.37
   ```
 - **Hasil Output**: File APK siap pakai (`FamiVault-release.apk`) akan terkompilasi, ditandatangani, dan otomatis diunggah ke rilis baru di halaman GitHub Releases proyek Anda.
 

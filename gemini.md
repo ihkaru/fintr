@@ -185,3 +185,24 @@ bun run ~/.gemini/antigravity/brain/ae78dcc6-8b77-4022-a756-f874e9ffd0ab/scratch
 # Jalankan pengujian ekstraksi struk OCR dan rekomendasi kategori amplop beserta barang belanjaan
 bun run ~/.gemini/antigravity/brain/ae78dcc6-8b77-4022-a756-f874e9ffd0ab/scratch/test-ocr-recommender.ts
 ```
+
+---
+
+## 7. Rekonsiliasi Saldo & Pipa Rilis APK (Catatan Penting)
+
+### A. Rumus Saldo Tercatat Rekonsiliasi
+
+Sesuai dengan `BUSINESS_PROCESS.md` Bagian F, perhitungan saldo tercatat aplikasi (`expectedBalance`) tidak diambil dari `openingBalance` di data periode karena nilainya sering kali kosong (`0`/`null`) saat rollover otomatis.
+
+Perhitungan yang benar dihitung secara dinamis di level API (`reconcile.ts`):
+$$\text{Saldo Tercatat} = \text{Total Alokasi Amplop (allocatedAmount + rolloverAmount)} - \text{Total Pengeluaran}$$
+
+### B. Memicu Pipa Rilis APK Android
+
+Pipa rilis otomatis APK Android (`build-apk.yml`) **hanya** dipicu saat Anda mendorong **Git Tag** baru dengan pola `v*`. Mendorong commit biasa ke branch `main` tidak akan memicu build otomatis.
+
+Langkah rilis versi baru:
+
+1. Naikkan versi client di `apps/client/package.json`.
+2. Buat tag baru: `git tag v1.0.xx` (misal: `git tag v1.0.37`).
+3. Dorong tag ke remote: `git push origin v1.0.xx`.
