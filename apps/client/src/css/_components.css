@@ -1,3 +1,13 @@
+/* ── Toast Position Fix (above bottom tabbar) ────────────────── */
+/*
+ * Framework7 best practice: use --f7-toolbar-height CSS variable
+ * so toast always clears the tab bar automatically on all platforms.
+ * Fallback 0px ensures correct behavior on push pages (no tabbar).
+ */
+.toast {
+  bottom: calc(12px + var(--f7-toolbar-height, 0px) + var(--f7-safe-area-bottom)) !important;
+}
+
 /* ── Glassmorphism Cards ─────────────────────────────────────── */
 .card-glass {
   background: rgba(255, 255, 255, 0.7);
@@ -18,9 +28,27 @@
 /* ── Envelope Card ───────────────────────────────────────────── */
 .envelope-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
   padding: 0 16px;
+}
+
+@media (min-width: 527px) {
+  .envelope-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .envelope-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .envelope-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .envelope-card {

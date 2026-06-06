@@ -11,7 +11,7 @@
 }
 
 .animate-in {
-  animation: fadeInUp 0.4s ease forwards;
+  animation: fadeInUp 0.4s ease both;
 }
 
 .animate-in:nth-child(1) {
@@ -57,4 +57,126 @@
 .pulse-highlight {
   animation: yellow-pulse 2s infinite ease-in-out;
   border: 1px solid #ffd600 !important;
+}
+
+/* ── Ambient Aura & Scanner Effects ── */
+@keyframes ambient-glow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+body {
+  background: linear-gradient(-45deg, #faf3e0, #e2f5ec, #eae6f8, #e0f0fd, #faf3e0) !important;
+  background-size: 400% 400% !important;
+  animation: ambient-glow 18s ease infinite !important;
+}
+
+#app,
+.framework7-root,
+.views {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Only the 4 main tab pages are transparent — pushed pages within the same view are NOT affected */
+.page[data-name="home"],
+.page[data-name="transactions"],
+.page[data-name="envelopes"],
+.page[data-name="settings"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  --f7-page-bg-color: transparent !important;
+}
+
+.page[data-name="home"] > .page-content,
+.page[data-name="transactions"] > .page-content,
+.page[data-name="envelopes"] > .page-content,
+.page[data-name="settings"] > .page-content {
+  background: transparent !important;
+  background-color: transparent !important;
+  --f7-page-content-bg-color: transparent !important;
+}
+
+@keyframes laser-sweep {
+  0% {
+    top: 0%;
+  }
+  50% {
+    top: 100%;
+  }
+  100% {
+    top: 0%;
+  }
+}
+
+@keyframes scanner-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(15, 82, 56, 0.15) inset;
+    background: rgba(15, 82, 56, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(15, 82, 56, 0.35) inset;
+    background: rgba(15, 82, 56, 0.2);
+  }
+}
+
+.scanner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  pointer-events: none;
+  animation: scanner-glow 2.5s infinite ease-in-out;
+}
+
+.scanner-laser-line {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #22c55e, #0f5238, #22c55e, transparent);
+  box-shadow:
+    0 0 8px #22c55e,
+    0 0 16px #0f5238;
+  z-index: 11;
+  pointer-events: none;
+  animation: laser-sweep 3s infinite ease-in-out;
+}
+
+@keyframes step-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.step-item-animate {
+  animation: step-fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  display: inline-block;
+  animation: spin 1s linear infinite;
 }

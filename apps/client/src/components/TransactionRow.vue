@@ -128,7 +128,7 @@ const formattedDate = computed(() => {
 
 <style scoped>
 .animate-in {
-  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .txn-row-clickable:hover {
   background: var(--fintr-bg-card-hover) !important;

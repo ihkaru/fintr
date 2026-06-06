@@ -57,6 +57,11 @@
             "
           />
 
+          <!-- Scanner overlay and laser sweep line -->
+          <div v-if="isScanning" class="scanner-overlay">
+            <div class="scanner-laser-line"></div>
+          </div>
+
           <!-- Overlay to change image -->
           <div
             style="
@@ -183,9 +188,9 @@
       />
     </div>
 
-    <!-- OCR Status banner -->
+    <!-- OCR Status banner (only when finished/idle) -->
     <div
-      v-if="ocrStatus"
+      v-if="ocrStatus && !isScanning"
       style="
         margin-top: 10px;
         padding: 10px;
@@ -199,11 +204,113 @@
     >
       {{ ocrStatus }}
     </div>
+
+    <!-- OCR Step-by-Step Progress Log (Labor Illusion) -->
+    <div
+      v-if="isScanning && scannerSteps.length > 0"
+      class="animate-in"
+      style="
+        margin-top: 12px;
+        padding: 16px;
+        background: #ffffff;
+        border: 1px solid #bfc9c1;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+      "
+    >
+      <div
+        style="
+          font-size: 13px;
+          font-weight: 700;
+          color: #161a32;
+          margin-bottom: 12px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        "
+      >
+        <span class="material-symbols-outlined" style="font-size: 18px; color: #0f5238"
+          >analytics</span
+        >
+        Proses Analisis AI Struk Belanja
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <div
+          v-for="step in scannerSteps"
+          :key="step.id"
+          class="step-item-animate"
+          :style="{
+            opacity: step.status === 'pending' ? 0.5 : 1,
+            transition: 'opacity 0.3s ease',
+          }"
+          style="display: flex; align-items: center; gap: 12px"
+        >
+          <!-- Step Icon/Status indicator -->
+          <div
+            style="
+              position: relative;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 24px;
+              height: 24px;
+            "
+          >
+            <span
+              v-if="step.status === 'completed'"
+              class="material-symbols-outlined"
+              style="font-size: 20px; color: #22c55e"
+            >
+              check_circle
+            </span>
+            <span
+              v-else-if="step.status === 'active'"
+              class="material-symbols-outlined animate-spin"
+              style="font-size: 20px; color: #0f5238; display: inline-block"
+            >
+              progress_activity
+            </span>
+            <span
+              v-else-if="step.status === 'failed'"
+              class="material-symbols-outlined"
+              style="font-size: 20px; color: #ba1a1a"
+            >
+              cancel
+            </span>
+            <span v-else class="material-symbols-outlined" style="font-size: 20px; color: #bfc9c1">
+              circle
+            </span>
+          </div>
+
+          <!-- Step Label -->
+          <div style="flex: 1; display: flex; flex-direction: column">
+            <span
+              :style="{
+                fontSize: '12px',
+                fontWeight: step.status === 'active' ? '700' : '500',
+                color:
+                  step.status === 'active'
+                    ? '#0f5238'
+                    : step.status === 'completed'
+                      ? '#161a32'
+                      : '#707973',
+                transition: 'color 0.3s ease',
+              }"
+            >
+              {{ step.label }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{
+import { computed } from "vue";
+
+const props = defineProps<{
   ocrStatus: string;
   localImagePreviewUrl: string;
   confidence?: "high" | "medium" | "low" | "";
@@ -221,4 +328,55 @@ const onFileChange = (e: Event) => {
 const onClearFile = () => {
   emit("clear-file");
 };
+
+// Check if scanning is in progress
+const isScanning = computed(() => {
+  return props.ocrStatus && !props.ocrStatus.startsWith("✅") && !props.ocrStatus.startsWith("❌");
+});
+
+// Map simple ocrStatus message to step-by-step progress checklist (Labor Illusion)
+const scannerSteps = computed(() => {
+  const status = props.ocrStatus || "";
+  if (!status) return [];
+
+  const isFailed = status.startsWith("❌");
+  const isCompleted = status.startsWith("✅");
+
+  const getStepStatus = (stepId: number) => {
+    if (isCompleted) return "completed";
+    if (isFailed) return "failed";
+
+    // Detect progress step status based on current ocrStatus content
+    if (status.includes("Mengambil") || status.includes("share target")) {
+      if (stepId === 1) return "active";
+      return "pending";
+    }
+    if (status.includes("Mengirim")) {
+      if (stepId < 2) return "completed";
+      if (stepId === 2) return "active";
+      return "pending";
+    }
+    if (
+      status.includes("antrean") ||
+      status.includes("menganalisis") ||
+      status.includes("Gemini")
+    ) {
+      if (stepId < 3) return "completed";
+      if (stepId === 3 || stepId === 4) return "active"; // parallel category mapping & OCR parsing
+      return "pending";
+    }
+
+    // Default/fallback: if status has started, mark previous steps as completed
+    if (stepId < 3) return "completed";
+    return "active";
+  };
+
+  return [
+    { id: 1, label: "Mengambil bukti transaksi / struk", status: getStepStatus(1) },
+    { id: 2, label: "Mengunggah data struk ke FamiVault Cloud", status: getStepStatus(2) },
+    { id: 3, label: "Ekstraksi nominal & merchant via Gemini AI", status: getStepStatus(3) },
+    { id: 4, label: "Mencocokkan rekomendasi kategori amplop anggaran", status: getStepStatus(4) },
+    { id: 5, label: "Penyelesaian ekstraksi form pengeluaran", status: getStepStatus(5) },
+  ];
+});
 </script>
