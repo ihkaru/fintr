@@ -184,85 +184,91 @@
             Pecah Saldo per Rekening / Dompet
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px">
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px">
             <div
               v-for="(wallet, idx) in wallets"
               :key="idx"
-              style="display: flex; gap: 8px; align-items: center; width: 100%"
+              style="
+                background: #f8faf9;
+                border: 1px solid #dde4de;
+                border-radius: 10px;
+                padding: 10px 12px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+              "
             >
-              <div style="flex: 1.4; min-width: 0">
-                <input
-                  type="text"
-                  v-model="wallet.label"
-                  placeholder="Nama Dompet (e.g. Tabungan)"
-                  style="
-                    width: 100%;
-                    background: #ffffff;
-                    border: 1px solid #bfc9c1;
-                    color: #161a32;
-                    padding: 8px 10px;
-                    border-radius: 8px;
-                    font-size: 12px;
-                    box-sizing: border-box;
-                  "
-                  @input="syncCalculator"
-                />
-              </div>
-              <div
+              <!-- Baris 1: Label nama dompet -->
+              <input
+                type="text"
+                v-model="wallet.label"
+                placeholder="Nama Dompet (e.g. BRI, Dompet Tunai)"
                 style="
-                  position: relative;
-                  flex: 1;
-                  min-width: 90px;
-                  display: flex;
-                  align-items: center;
+                  width: 100%;
+                  background: #ffffff;
+                  border: 1px solid #bfc9c1;
+                  color: #161a32;
+                  padding: 8px 10px;
+                  border-radius: 8px;
+                  font-size: 13px;
+                  box-sizing: border-box;
+                  outline: none;
                 "
-              >
-                <span
+                @input="syncCalculator"
+              />
+              <!-- Baris 2: Input jumlah + tombol hapus -->
+              <div style="display: flex; gap: 8px; align-items: center">
+                <div style="position: relative; flex: 1; display: flex; align-items: center">
+                  <span
+                    style="
+                      position: absolute;
+                      left: 10px;
+                      font-size: 12px;
+                      font-weight: 700;
+                      color: var(--fintr-text-muted);
+                      pointer-events: none;
+                    "
+                    >Rp</span
+                  >
+                  <input
+                    type="number"
+                    v-model="wallet.amount"
+                    placeholder="0"
+                    style="
+                      width: 100%;
+                      background: #ffffff;
+                      border: 1px solid #bfc9c1;
+                      color: #0f5238;
+                      padding: 8px 10px;
+                      padding-left: 28px;
+                      border-radius: 8px;
+                      font-size: 14px;
+                      font-weight: 700;
+                      box-sizing: border-box;
+                      outline: none;
+                    "
+                    @input="syncCalculator"
+                  />
+                </div>
+                <button
+                  type="button"
+                  @click="removeWallet(idx)"
                   style="
-                    position: absolute;
-                    left: 8px;
-                    font-size: 11px;
-                    font-weight: 700;
-                    color: var(--fintr-text-muted);
-                    pointer-events: none;
+                    background: #fff0f0;
+                    border: 1px solid #f5c6c6;
+                    color: var(--fintr-danger);
+                    cursor: pointer;
+                    padding: 8px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
                   "
-                  >Rp</span
                 >
-                <input
-                  type="number"
-                  v-model="wallet.amount"
-                  placeholder="Jumlah"
-                  style="
-                    width: 100%;
-                    background: #ffffff;
-                    border: 1px solid #bfc9c1;
-                    color: #161a32;
-                    padding: 8px 10px;
-                    padding-left: 26px;
-                    border-radius: 8px;
-                    font-size: 12px;
-                    box-sizing: border-box;
-                  "
-                  @input="syncCalculator"
-                />
+                  <span class="material-symbols-outlined" style="font-size: 16px">delete</span>
+                </button>
               </div>
-              <button
-                type="button"
-                @click="removeWallet(idx)"
-                style="
-                  background: none;
-                  border: none;
-                  color: var(--fintr-danger);
-                  cursor: pointer;
-                  padding: 4px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  flex-shrink: 0;
-                "
-              >
-                <span class="material-symbols-outlined" style="font-size: 18px">delete</span>
-              </button>
             </div>
           </div>
 
