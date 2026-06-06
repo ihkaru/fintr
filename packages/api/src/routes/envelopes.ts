@@ -174,6 +174,7 @@ export const envelopeRoutes = new Elysia({ prefix: "/envelopes" })
       .from(budgetPeriods)
       .where(and(eq(budgetPeriods.householdId, householdId), eq(budgetPeriods.isClosed, false)));
 
+    let keptInActivePeriod = false;
     if (activePeriod) {
       const [allocation] = await db
         .select()
@@ -195,13 +196,15 @@ export const envelopeRoutes = new Elysia({ prefix: "/envelopes" })
         if (txs.length === 0) {
           // Safe to delete allocation in active period as there are no transactions
           await db.delete(budgetAllocations).where(eq(budgetAllocations.id, allocation.id));
+        } else {
+          keptInActivePeriod = true;
         }
       }
     }
 
     broadcastToHousehold(householdId, userId, "envelope_changed");
 
-    return { message: "Amplop dihapus" };
+    return { message: "Amplop dihapus", keptInActivePeriod };
   })
   .post(
     "/reorder",

@@ -244,9 +244,12 @@ const openCreateSheet = () => {
   sheetOpened.value = true;
 };
 
+const editingItem = ref<any>(null);
+
 const openEditSheet = (item: any) => {
   isEditing.value = true;
   editingId.value = item.id;
+  editingItem.value = item;
   form.name = item.name;
   form.defaultAmount = Number(item.defaultAmount);
   form.color = item.color || colorPresets[0];
@@ -254,16 +257,7 @@ const openEditSheet = (item: any) => {
   sheetOpened.value = true;
 };
 
-const saveEnvelope = async () => {
-  if (!form.name.trim()) {
-    f7.dialog.alert("Masukkan nama amplop", "Oops");
-    return;
-  }
-  if (form.defaultAmount === "" || form.defaultAmount <= 0) {
-    f7.dialog.alert("Masukkan jumlah default yang valid", "Oops");
-    return;
-  }
-
+const submitSaveEnvelope = async () => {
   creating.value = true;
   try {
     if (isEditing.value && editingId.value) {
@@ -302,16 +296,54 @@ const saveEnvelope = async () => {
   }
 };
 
+const saveEnvelope = async () => {
+  if (!form.name.trim()) {
+    f7.dialog.alert("Masukkan nama amplop", "Oops");
+    return;
+  }
+  if (form.defaultAmount === "" || form.defaultAmount <= 0) {
+    f7.dialog.alert("Masukkan jumlah default yang valid", "Oops");
+    return;
+  }
+
+  // Pre-action preview confirmation for Scenario B
+  if (isEditing.value && editingId.value && editingItem.value) {
+    const oldAmount = Number(editingItem.value.defaultAmount);
+    const newAmount = Number(form.defaultAmount);
+    if (oldAmount !== newAmount) {
+      f7.dialog.confirm(
+        `Anda mengubah nominal anggaran dari <strong>${formatRp(oldAmount)}</strong> menjadi <strong>${formatRp(newAmount)}</strong>.<br><br>` +
+          `Perubahan ini akan memperbarui alokasi anggaran periode berjalan secara retroaktif.<br><br>` +
+          `Apakah Anda ingin melanjutkan?`,
+        "Konfirmasi Edit Anggaran",
+        async () => {
+          await submitSaveEnvelope();
+        }
+      );
+      return;
+    }
+  }
+
+  await submitSaveEnvelope();
+};
+
 const deleteEnvelope = async (id: string) => {
   try {
-    await envelopes.remove(id);
+    const res: any = await envelopes.remove(id);
     items.value = items.value.filter(item => item.id !== id);
-    f7.toast
-      .create({
-        text: "Amplop dihapus",
-        closeTimeout: 2000,
-      })
-      .open();
+    if (res?.keptInActivePeriod) {
+      f7.dialog.alert(
+        "Amplop dinonaktifkan dari daftar master. Karena sudah ada transaksi tercatat pada periode ini, amplop akan tetap muncul dengan status 'Ditutup' di halaman utama hingga periode berakhir.",
+        "Amplop Dinonaktifkan"
+      );
+    } else {
+      f7.toast
+        .create({
+          text: "Amplop berhasil dihapus",
+          closeTimeout: 2000,
+        })
+        .open();
+    }
   } catch (err: any) {
     f7.dialog.alert("Gagal menghapus: " + err.message);
   }

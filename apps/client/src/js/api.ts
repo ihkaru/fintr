@@ -75,12 +75,18 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
         const json = await response.json();
-        errorMessage = json.error || errorMessage;
+        const err = new Error(json.message || json.error || errorMessage);
+        if (json.code) (err as any).code = json.code;
+        if (json.details) (err as any).details = json.details;
+        throw err;
       } else {
         errorMessage = await response.text();
       }
-    } catch {
-      errorMessage = "Network error";
+    } catch (e: any) {
+      if (e.code || e.details) {
+        throw e;
+      }
+      errorMessage = e.message || "Network error";
     }
 
     if (response.status === 401) {
@@ -114,10 +120,10 @@ export const auth = {
     });
   },
 
-  async joinHousehold(inviteCode: string) {
+  async joinHousehold(inviteCode: string, forceDeleteTransactions?: boolean) {
     return request("/auth/join-household", {
       method: "POST",
-      body: JSON.stringify({ inviteCode }),
+      body: JSON.stringify({ inviteCode, forceDeleteTransactions }),
     });
   },
 };

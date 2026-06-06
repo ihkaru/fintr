@@ -643,16 +643,45 @@ const joinHousehold = async () => {
 
   joining.value = true;
   try {
-    await auth.joinHousehold(joinCode.value.trim().toUpperCase());
+    const res: any = await auth.joinHousehold(joinCode.value.trim().toUpperCase());
+    const householdName = res.household?.name || "keluarga baru";
     f7.dialog.alert(
-      "Berhasil bergabung ke rumah tangga baru! Silakan login ulang untuk sinkronisasi.",
+      `Berhasil bergabung dengan ${householdName}! Anda sekarang berbagi anggaran dengan pasangan. Silakan login ulang untuk sinkronisasi periode aktif.`,
       "Sukses",
       () => {
         handleLogout();
       }
     );
   } catch (err: any) {
-    f7.dialog.alert("Gagal bergabung: " + err.message);
+    if (err.code === "HOUSEHOLD_JOIN_BLOCKED_EXISTING_DATA") {
+      const txCount = err.details?.existingTransactionsCount || 0;
+      f7.dialog.confirm(
+        `Anda memiliki <strong>${txCount} catatan transaksi</strong> di rumah tangga saat ini.<br><br>` +
+          `Bergabung dengan rumah tangga baru akan <strong>menghapus seluruh catatan transaksi ini secara permanen</strong> dan memindahkan Anda ke periode aktif pasangan.<br><br>` +
+          `Apakah Anda yakin ingin menghapus data lama dan bergabung?`,
+        "Konfirmasi Hapus Transaksi & Join",
+        async () => {
+          joining.value = true;
+          try {
+            const res: any = await auth.joinHousehold(joinCode.value.trim().toUpperCase(), true);
+            const householdName = res.household?.name || "keluarga baru";
+            f7.dialog.alert(
+              `Berhasil menghapus data lama dan bergabung dengan ${householdName}! Silakan login ulang untuk sinkronisasi.`,
+              "Sukses",
+              () => {
+                handleLogout();
+              }
+            );
+          } catch (innerErr: any) {
+            f7.dialog.alert("Gagal bergabung: " + innerErr.message);
+          } finally {
+            joining.value = false;
+          }
+        }
+      );
+    } else {
+      f7.dialog.alert("Gagal bergabung: " + err.message);
+    }
   } finally {
     joining.value = false;
   }

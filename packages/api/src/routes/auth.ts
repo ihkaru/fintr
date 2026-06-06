@@ -185,11 +185,21 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
         .where(eq(transactions.createdBy, userId));
 
       if (userTxCount && userTxCount.count > 0) {
-        set.status = 400;
-        return {
-          error:
-            "Anda tidak dapat bergabung ke rumah tangga lain karena sudah memiliki catatan transaksi di rumah tangga saat ini.",
-        };
+        if (body.forceDeleteTransactions) {
+          // Delete all transactions created by this user
+          await db.delete(transactions).where(eq(transactions.createdBy, userId));
+        } else {
+          set.status = 400;
+          return {
+            success: false,
+            code: "HOUSEHOLD_JOIN_BLOCKED_EXISTING_DATA",
+            message:
+              "Tidak dapat bergabung ke rumah tangga baru karena Anda sudah memiliki catatan transaksi pada rumah tangga saat ini.",
+            details: {
+              existingTransactionsCount: userTxCount.count,
+            },
+          };
+        }
       }
 
       // Remove from current household if any
@@ -212,6 +222,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
     {
       body: t.Object({
         inviteCode: t.String(),
+        forceDeleteTransactions: t.Optional(t.Boolean()),
       }),
     }
   );
