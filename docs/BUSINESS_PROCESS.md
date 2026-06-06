@@ -193,7 +193,7 @@ Setiap kali ada perubahan data (transaksi baru, edit anggaran, hapus amplop), se
 }
 ```
 
-- **Pemetaan ID (`envelopeId`)**: Parameter `envelopeId` yang dikirimkan di dalam payload SSE merujuk secara langsung pada kolom primary key `envelopes.id` (bukan ID baris alokasi periodik). Hal ini menjamin frontend dapat mencocokkan amplop dan meng-invalidate cache visual dashboard dengan konsisten tanpa adanya mismatch data.
+- **Pemetaan ID (`envelopeId`)**: Parameter `envelopeId` yang dikirimkan di dalam payload SSE merujuk secara langsung pada kolom primary key `envelope_templates.id` (bukan ID baris alokasi periodik). Hal ini menjamin frontend dapat mencocokkan amplop dan meng-invalidate cache visual dashboard dengan konsisten tanpa adanya mismatch data.
 
 #### 2. Kontrak Error `400 Bad Request` pada `/join-household`
 
