@@ -43,12 +43,14 @@ graph TD
 
 ### Fase D: Rollover & Looping Bulanan
 
-1. Di akhir bulan, pengguna mengeklik **"Tutup Periode"** untuk bertransisi ke bulan baru.
-2. Sistem mengevaluasi sisa saldo pada masing-masing amplop berdasarkan perilaku rollover masing-masing:
+1. Di akhir bulan, pengguna mengeklik **"Tutup Periode"** pada menu Pengaturan.
+2. Aplikasi memunculkan **Pratinjau Rollover & Smart Insights Sheet** yang mengkalkulasi total dana tersisa secara real-time, dana yang akan otomatis dipindahkan ke Tabungan, dana yang akan tetap di amplop, serta memperingatkan jika ada sisa dana yang akan hangus/di-reset ke nol.
+3. Setelah dikonfirmasi, sistem mengevaluasi sisa saldo pada masing-masing amplop berdasarkan perilaku rollover masing-masing:
    - **Reset**: Sisa saldo dihanguskan (kembali ke `0.00`).
    - **Rollover**: Sisa saldo diakumulasikan ke bulan berikutnya sebagai dana tambahan.
    - **Transfer ke Tabungan**: Sisa saldo dipindahkan ke amplop khusus kategori Tabungan/Investasi (jika template amplop "Tabungan" tidak aktif atau tidak ditemukan, sistem otomatis memulihkan/membuat ulang template tersebut agar dana sisa tidak hilang secara diam-diam).
-3. Sistem membuka periode baru dan menyalin template amplop aktif beserta sisa saldo rollover yang dihitung.
+4. Sistem mencatat seluruh histori pemindahan sisa dana ini ke tabel audit `rollover_logs` untuk dianalisis oleh pengguna pada menu analisis anggaran.
+5. Sistem membuka periode baru dan menyalin template amplop aktif beserta sisa saldo rollover yang dihitung.
 
 ---
 
@@ -110,5 +112,6 @@ Berdasarkan analisis Happy & Unhappy Path di atas, berikut adalah beberapa perba
 
 1. **Validasi Sebelum Gabung Rumah Tangga (Terimplementasi v1.0.19)**: Validasi filter backend telah diterapkan pada endpoint `/join-household` untuk memblokir aksi penggabungan apabila terdapat catatan transaksi pada household lama guna melindungi integritas data.
 2. **Keamanan Saldo Rollover saat Amplop "Tabungan" Hilang (Terimplementasi v1.0.20)**: Apabila terdapat alokasi dengan behavior `rollover_to_savings` namun template amplop `"Tabungan"` telah dihapus/dinonaktifkan oleh pengguna, sistem secara otomatis akan memulihkan atau membuat ulang template `"Tabungan"` baru di akhir periode agar sisa saldo tidak hilang secara diam-diam.
-3. **Riwayat Rollover Terpusat**: Menyimpan log khusus rollover yang mencatat berapa sisa dana yang di-reset, di-rollover, atau ditransfer ke tabungan di setiap akhir bulan sebagai bahan laporan audit tahunan pengguna.
-4. **Mekanisme Sinkronisasi Offline**: Menambahkan antrean transaksi di local storage (IndexedDB) di sisi client PWA agar pengguna tetap bisa mencatat pengeluaran saat tidak ada sinyal internet, dan otomatis melakukan sinkronisasi (_sync back_) saat koneksi terdeteksi kembali.
+3. **Riwayat Rollover Terpusat & Log Audit UI (Terimplementasi v1.0.21)**: Menyimpan log khusus rollover yang mencatat berapa sisa dana yang di-reset, di-rollover, atau ditransfer ke tabungan di setiap akhir bulan sebagai bahan laporan audit tahunan pengguna, serta menyajikannya dalam tab Log Rollover di analisis anggaran.
+4. **Pratinjau Rollover & Smart Insights UI (Terimplementasi v1.0.22)**: Menghadirkan bottom sheet pratinjau rollover interaktif saat pengguna menekan tombol Tutup Periode. Fitur ini menyajikan visualisasi rincian nasib sisa anggaran tiap amplop, total dana yang akan ditabung/dipertahankan, serta alarm peringatan dinamis jika ada sisa anggaran yang akan terbuang sia-sia akibat perilaku reset ke nol.
+5. **Mekanisme Sinkronisasi Offline**: Menambahkan antrean transaksi di local storage (IndexedDB) di sisi client PWA agar pengguna tetap bisa mencatat pengeluaran saat tidak ada sinyal internet, dan otomatis melakukan sinkronisasi (_sync back_) saat koneksi terdeteksi kembali.
