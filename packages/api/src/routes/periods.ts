@@ -385,20 +385,32 @@ export const periodRoutes = new Elysia({ prefix: "/periods" })
       },
     };
   })
-  .post("/:id/close", async ({ params, householdId, set }) => {
-    if (!householdId) {
-      set.status = 400;
-      return { error: "Household required" };
-    }
+  .post(
+    "/:id/close",
+    async ({ params, householdId, body, set }) => {
+      if (!householdId) {
+        set.status = 400;
+        return { error: "Household required" };
+      }
 
-    try {
-      const result = await closePeriodAndRollover(params.id, householdId);
-      return result;
-    } catch (error) {
-      set.status = 400;
-      return { error: (error as Error).message };
+      try {
+        const result = await closePeriodAndRollover(params.id, householdId, {
+          fastForward: body?.fastForward,
+        });
+        return result;
+      } catch (error) {
+        set.status = 400;
+        return { error: (error as Error).message };
+      }
+    },
+    {
+      body: t.Optional(
+        t.Object({
+          fastForward: t.Optional(t.Boolean()),
+        })
+      ),
     }
-  })
+  )
   .get("/:id/rollover-logs", async ({ params, householdId, set }) => {
     if (!householdId) {
       set.status = 400;

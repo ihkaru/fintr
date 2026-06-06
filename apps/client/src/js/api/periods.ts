@@ -74,8 +74,11 @@ export const periods = {
     }>("/periods/compare");
   },
 
-  async close(id: string) {
-    return request(`/periods/${id}/close`, { method: "POST" });
+  async close(id: string, options?: { fastForward?: boolean }) {
+    return request(`/periods/${id}/close`, {
+      method: "POST",
+      body: options ? JSON.stringify(options) : undefined,
+    });
   },
 
   async getRolloverLogs(id: string) {

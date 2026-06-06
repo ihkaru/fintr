@@ -47,12 +47,12 @@
           v-if="allocation.isActive === false"
           style="
             font-size: 10px;
-            background: #e9ecef;
-            color: #495057;
+            background: #fff8e1;
+            color: #b25e00;
             padding: 2px 6px;
             border-radius: 4px;
             font-weight: 700;
-            border: 1px solid #dee2e6;
+            border: 1px solid #ffe0b2;
             margin-left: 4px;
           "
         >
@@ -96,6 +96,41 @@
           height: '100%',
         }"
       ></div>
+    </div>
+
+    <!-- Over-budgeting warning -->
+    <div
+      v-if="parseFloat(allocation.remaining) < 0"
+      style="
+        margin-top: 10px;
+        font-size: 11px;
+        color: var(--fintr-danger);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      "
+    >
+      ⚠️ Anggaran bulan ini lebih kecil dari belanjaan berjalan
+    </div>
+
+    <!-- Closed envelope warning -->
+    <div
+      v-if="allocation.isActive === false"
+      style="
+        margin-top: 10px;
+        font-size: 11px;
+        color: #b25e00;
+        background: #fff8e1;
+        border: 1px solid #ffe0b2;
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-weight: 500;
+        line-height: 1.4;
+      "
+    >
+      ⚠️ <strong>Amplop Ditutup.</strong> Pengeluaran bulan ini tetap tercatat, namun amplop tidak
+      akan muncul di bulan depan.
     </div>
   </div>
 </template>

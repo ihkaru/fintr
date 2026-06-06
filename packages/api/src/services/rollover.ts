@@ -29,7 +29,8 @@ interface RolloverResult {
  */
 export async function closePeriodAndRollover(
   periodId: string,
-  householdId: string
+  householdId: string,
+  options?: { fastForward?: boolean }
 ): Promise<RolloverResult> {
   // 1. Get the period being closed
   const [period] = await db.select().from(budgetPeriods).where(eq(budgetPeriods.id, periodId));
@@ -37,12 +38,24 @@ export async function closePeriodAndRollover(
   if (!period) throw new Error("Period not found");
   if (period.isClosed) throw new Error("Period already closed");
 
+  // Calculate month difference with current local time
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1; // 1-indexed
+  const monthDiff = (currentYear - period.year) * 12 + (currentMonth - period.month);
+
   // 2. Calculate next month/year
   let nextMonth = period.month + 1;
   let nextYear = period.year;
   if (nextMonth > 12) {
     nextMonth = 1;
     nextYear += 1;
+  }
+
+  // If the user wants to jump directly (fast-forward) or is forced to (gap > 6 months)
+  if (monthDiff > 1 && (options?.fastForward || monthDiff > 6)) {
+    nextMonth = currentMonth;
+    nextYear = currentYear;
   }
 
   // 3. Get all allocations with their template info and spent totals

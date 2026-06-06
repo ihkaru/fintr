@@ -2,7 +2,7 @@ import { Elysia, t } from "elysia";
 import { authMiddleware } from "../middleware/auth";
 import { db } from "../db/index";
 import { transactions, budgetAllocations, budgetPeriods, envelopeTemplates } from "../db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { extractTransactionFromImage, extractTransactionFromText } from "../services/ocr";
 import { broadcastToHousehold } from "../services/sync";
 import fs from "node:fs";
@@ -71,7 +71,22 @@ export const transactionRoutes = new Elysia({ prefix: "/transactions" })
   )
   .post(
     "/",
-    async ({ body, userId, householdId }) => {
+    async ({ body, userId, householdId, set }) => {
+      // Check if period is closed
+      const [period] = await db
+        .select({ isClosed: budgetPeriods.isClosed })
+        .from(budgetPeriods)
+        .where(eq(budgetPeriods.id, body.periodId));
+
+      if (!period) {
+        set.status = 404;
+        return { error: "Periode tidak ditemukan" };
+      }
+      if (period.isClosed) {
+        set.status = 400;
+        return { error: "PERIOD_CLOSED" };
+      }
+
       const [txn] = await db
         .insert(transactions)
         .values({
@@ -108,7 +123,22 @@ export const transactionRoutes = new Elysia({ prefix: "/transactions" })
   )
   .post(
     "/split",
-    async ({ body, userId, householdId }) => {
+    async ({ body, userId, householdId, set }) => {
+      const periodIds = Array.from(new Set(body.transactions.map(t => t.periodId)));
+      if (periodIds.length > 0) {
+        const periods = await db
+          .select({ id: budgetPeriods.id, isClosed: budgetPeriods.isClosed })
+          .from(budgetPeriods)
+          .where(inArray(budgetPeriods.id, periodIds));
+
+        for (const p of periods) {
+          if (p.isClosed) {
+            set.status = 400;
+            return { error: "PERIOD_CLOSED" };
+          }
+        }
+      }
+
       const results = await db.transaction(async tx => {
         const txns = [];
         for (const item of body.transactions) {
@@ -292,6 +322,27 @@ export const transactionRoutes = new Elysia({ prefix: "/transactions" })
   .patch(
     "/:id",
     async ({ params, body, userId, householdId, set }) => {
+      const [existingTxn] = await db
+        .select({ periodId: transactions.periodId })
+        .from(transactions)
+        .where(eq(transactions.id, params.id));
+
+      if (!existingTxn) {
+        set.status = 404;
+        return { error: "Transaksi tidak ditemukan" };
+      }
+
+      // Check if period is closed
+      const [period] = await db
+        .select({ isClosed: budgetPeriods.isClosed })
+        .from(budgetPeriods)
+        .where(eq(budgetPeriods.id, existingTxn.periodId));
+
+      if (period?.isClosed) {
+        set.status = 400;
+        return { error: "PERIOD_CLOSED" };
+      }
+
       const updates: Record<string, unknown> = {};
       if (body.amount !== undefined) updates.amount = body.amount.toString();
       if (body.merchant !== undefined) updates.merchant = body.merchant;
@@ -329,6 +380,27 @@ export const transactionRoutes = new Elysia({ prefix: "/transactions" })
     }
   )
   .delete("/:id", async ({ params, userId, householdId, set }) => {
+    const [existingTxn] = await db
+      .select({ periodId: transactions.periodId })
+      .from(transactions)
+      .where(eq(transactions.id, params.id));
+
+    if (!existingTxn) {
+      set.status = 404;
+      return { error: "Transaksi tidak ditemukan" };
+    }
+
+    // Check if period is closed
+    const [period] = await db
+      .select({ isClosed: budgetPeriods.isClosed })
+      .from(budgetPeriods)
+      .where(eq(budgetPeriods.id, existingTxn.periodId));
+
+    if (period?.isClosed) {
+      set.status = 400;
+      return { error: "PERIOD_CLOSED" };
+    }
+
     const [deleted] = await db
       .delete(transactions)
       .where(eq(transactions.id, params.id))

@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { authMiddleware } from "../middleware/auth";
 import { db } from "../db/index";
-import { budgetAllocations } from "../db/schema";
+import { budgetAllocations, budgetPeriods } from "../db/schema";
 import { eq } from "drizzle-orm";
 
 export const allocationRoutes = new Elysia({ prefix: "/allocations" }).use(authMiddleware).patch(
@@ -21,6 +21,16 @@ export const allocationRoutes = new Elysia({ prefix: "/allocations" }).use(authM
     if (!allocation) {
       set.status = 404;
       return { error: "Alokasi tidak ditemukan" };
+    }
+
+    const [period] = await db
+      .select({ isClosed: budgetPeriods.isClosed })
+      .from(budgetPeriods)
+      .where(eq(budgetPeriods.id, allocation.periodId));
+
+    if (period?.isClosed) {
+      set.status = 400;
+      return { error: "PERIOD_CLOSED" };
     }
 
     const [updated] = await db

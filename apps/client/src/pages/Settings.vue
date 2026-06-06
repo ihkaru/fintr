@@ -74,6 +74,7 @@
         :preview-data="previewData"
         :preview-summary="previewSummary"
         :closing-period="closingPeriod"
+        :active-period="activePeriod"
         @closed="showRolloverSheet = false"
         @confirm="confirmClosePeriod"
       />
@@ -228,10 +229,10 @@ const closeActivePeriod = async () => {
   }
 };
 
-const confirmClosePeriod = async () => {
+const confirmClosePeriod = async (options: { fastForward: boolean }) => {
   closingPeriod.value = true;
   try {
-    await periods.close(activePeriod.value.id);
+    await periods.close(activePeriod.value.id, { fastForward: options.fastForward });
     showRolloverSheet.value = false;
     f7.dialog.alert(
       "Periode berhasil ditutup dan rollover selesai! Periode baru telah dibuka secara otomatis.",

@@ -202,10 +202,23 @@
       <div
         v-if="historyList.length === 0"
         class="empty-state animate-in"
-        style="background: white; border: 1px solid #bfc9c1; border-radius: 16px; padding: 32px"
+        style="
+          margin: 0 16px 16px;
+          background: white;
+          border: 1px solid #bfc9c1;
+          border-radius: 16px;
+          padding: 32px;
+          text-align: center;
+        "
       >
-        <div class="icon">📊</div>
-        <div class="message">Belum ada riwayat snapshot saldo.</div>
+        <div style="font-size: 48px; margin-bottom: 16px">📊</div>
+        <div style="font-size: 15px; font-weight: 700; color: #161a32; margin-bottom: 8px">
+          Belum Ada Riwayat Rekonsiliasi
+        </div>
+        <div style="font-size: 12px; color: #707973; line-height: 1.6">
+          Rekonsiliasi saldo mencocokkan jumlah uang riil Anda (di dompet/rekening) dengan saldo
+          digital di aplikasi. Lakukan secara berkala untuk menjaga akurasi catatan keuangan.
+        </div>
       </div>
 
       <f7-list
@@ -263,7 +276,7 @@ const form = reactive({
 });
 
 let initialBalance: number | "" = "";
-let initialNote = "";
+const initialNote = "";
 
 const loadReconcileData = async () => {
   try {

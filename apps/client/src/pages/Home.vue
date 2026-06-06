@@ -95,10 +95,32 @@
           border: 1px solid #bfc9c1;
           border-radius: 16px;
           padding: 32px;
+          text-align: center;
         "
       >
-        <div class="icon">📦</div>
-        <div class="message">Belum ada amplop aktif.</div>
+        <div style="font-size: 48px; margin-bottom: 16px">📦</div>
+        <div style="font-size: 15px; font-weight: 700; color: #161a32; margin-bottom: 8px">
+          Belum Ada Amplop Aktif
+        </div>
+        <div style="font-size: 12px; color: #707973; margin-bottom: 20px; line-height: 1.6">
+          Amplop digunakan untuk membagi anggaran belanja rumah tangga ke pos-pos tertentu agar
+          pengeluaran terkendali bersama pasangan.
+        </div>
+        <f7-link
+          href="/envelopes/"
+          style="
+            display: inline-block;
+            font-size: 13px;
+            font-weight: 700;
+            color: white;
+            background: #0f5238;
+            padding: 10px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(15, 82, 56, 0.2);
+          "
+        >
+          Buat Amplop Pertama
+        </f7-link>
       </div>
 
       <div v-else class="envelope-grid" style="padding: 0 16px">
@@ -133,12 +155,32 @@
           border: 1px solid #bfc9c1;
           border-radius: 16px;
           padding: 32px;
+          text-align: center;
         "
       >
-        <div class="icon">📝</div>
-        <div class="message">
-          Belum ada transaksi bulan ini.<br />Tap tombol + di kanan bawah untuk mencatat.
+        <div style="font-size: 48px; margin-bottom: 16px">📝</div>
+        <div style="font-size: 15px; font-weight: 700; color: #161a32; margin-bottom: 8px">
+          Belum Ada Catatan Transaksi
         </div>
+        <div style="font-size: 12px; color: #707973; margin-bottom: 20px; line-height: 1.6">
+          Mulai catat setiap pengeluaran rumah tangga secara real-time untuk melihat sisa saldo
+          amplop anggaran terupdate secara instan.
+        </div>
+        <f7-link
+          @click="navigateToAddTransaction"
+          style="
+            display: inline-block;
+            font-size: 13px;
+            font-weight: 700;
+            color: white;
+            background: #0f5238;
+            padding: 10px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(15, 82, 56, 0.2);
+          "
+        >
+          ✍️ Catat Pengeluaran Pertama
+        </f7-link>
       </div>
 
       <div v-else id="recent-transactions" style="padding: 0 16px">
