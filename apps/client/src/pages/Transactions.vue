@@ -267,7 +267,7 @@ const handleTransactionSaved = async (e: Event) => {
   const typeText = isSplit ? "Pecahan transaksi" : "Transaksi";
 
   const toast = f7.toast.create({
-    text: `✅ ${typeText} Rp ${formatRp(amount)}${merchantText} disimpan!`,
+    text: `✅ ${typeText} ${formatRp(amount)}${merchantText} disimpan!`,
     closeButton: true,
     closeButtonText: "Batal (Undo)",
     closeButtonColor: "yellow",

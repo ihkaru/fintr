@@ -1,7 +1,5 @@
 /* ── Framework7 CSS (Isolated in Layer) ─────────────────────── */
-@layer framework7 {
-  @import "framework7/css/bundle";
-}
+@import "framework7/css/bundle" layer(framework7);
 
 /* ── Custom Partials (Unlayered, always overrides framework7) ── */
 @import "./_variables.css";

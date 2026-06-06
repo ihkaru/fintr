@@ -29,7 +29,7 @@
             >psychology</span
           >
         </f7-link>
-        <f7-link href="/settings/" icon-only>
+        <f7-link @click="switchToTab('#view-settings')" icon-only>
           <span
             class="material-symbols-outlined"
             style="font-size: 24px; color: var(--fintr-primary)"
@@ -171,162 +171,22 @@
       </div>
 
       <!-- Budget Analytics Shortcut -->
-      <div
-        style="
-          margin: 0 16px 12px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          background: #ffffff;
-          border: 1px solid #bfc9c1;
-          border-radius: 16px;
-          padding: 12px 16px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01);
-        "
-      >
-        <div style="display: flex; align-items: center; gap: 12px">
-          <span style="font-size: 20px">📊</span>
-          <div>
-            <div style="font-size: 13px; font-weight: 700; color: #161a32">
-              Analisis & Tren Anggaran
-            </div>
-            <div style="font-size: 11px; color: #707973">
-              Lihat riwayat perbandingan antar periode
-            </div>
-          </div>
-        </div>
-        <f7-link
-          href="/period-summary/"
-          style="
-            font-size: 12px;
-            font-weight: 700;
-            color: #0f5238;
-            border: 1px solid #0f5238;
-            padding: 4px 12px;
-            border-radius: 8px;
-          "
-          >Buka</f7-link
-        >
-      </div>
+      <DashboardAnalyticsShortcut />
 
       <!-- Envelope Grid -->
-      <div class="section-header" style="padding: 12px 20px 8px">
-        <div class="title font-headline" style="font-size: 17px; font-weight: 800; color: #161a32">
-          Amplop Anggaran Pasangan
-        </div>
-        <f7-link
-          href="/envelopes/"
-          class="action"
-          style="font-size: 13px; font-weight: 700; color: #0f5238"
-          >Semua →</f7-link
-        >
-      </div>
-
-      <div
-        v-if="allocationsData.length === 0"
-        class="empty-state"
-        style="
-          margin: 16px;
-          background: white;
-          border: 1px solid #bfc9c1;
-          border-radius: 16px;
-          padding: 32px;
-          text-align: center;
-        "
-      >
-        <div style="font-size: 48px; margin-bottom: 16px">📦</div>
-        <div style="font-size: 15px; font-weight: 700; color: #161a32; margin-bottom: 8px">
-          Belum Ada Amplop Aktif
-        </div>
-        <div style="font-size: 12px; color: #707973; margin-bottom: 20px; line-height: 1.6">
-          Amplop digunakan untuk membagi anggaran belanja rumah tangga ke pos-pos tertentu agar
-          pengeluaran terkendali bersama pasangan.
-        </div>
-        <f7-link
-          href="/envelopes/"
-          style="
-            display: inline-block;
-            font-size: 13px;
-            font-weight: 700;
-            color: white;
-            background: #0f5238;
-            padding: 10px 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(15, 82, 56, 0.2);
-          "
-        >
-          Buat Amplop Pertama
-        </f7-link>
-      </div>
-
-      <div v-else class="envelope-grid" style="padding: 0 16px">
-        <EnvelopeCard
-          v-for="(a, idx) in allocationsData"
-          :key="a.id"
-          :allocation="a"
-          :delay="idx * 0.05"
-          @click="openAddTransactionWithEnvelope(a.id)"
-        />
-      </div>
+      <EnvelopeGridSection
+        :allocations-data="allocationsData"
+        @switch-tab="switchToTab"
+        @select-envelope="openAddTransactionWithEnvelope"
+      />
 
       <!-- Recent Transactions -->
-      <div class="section-header" style="margin-top: 16px; padding: 12px 20px 8px">
-        <div class="title font-headline" style="font-size: 17px; font-weight: 800; color: #161a32">
-          Pengeluaran Terakhir
-        </div>
-        <f7-link
-          href="/transactions/"
-          class="action"
-          style="font-size: 13px; font-weight: 700; color: #0f5238"
-          >Semua →</f7-link
-        >
-      </div>
-
-      <div
-        v-if="recentTxns.length === 0"
-        class="empty-state"
-        style="
-          margin: 16px;
-          background: white;
-          border: 1px solid #bfc9c1;
-          border-radius: 16px;
-          padding: 32px;
-          text-align: center;
-        "
-      >
-        <div style="font-size: 48px; margin-bottom: 16px">📝</div>
-        <div style="font-size: 15px; font-weight: 700; color: #161a32; margin-bottom: 8px">
-          Belum Ada Catatan Transaksi
-        </div>
-        <div style="font-size: 12px; color: #707973; margin-bottom: 20px; line-height: 1.6">
-          Mulai catat setiap pengeluaran rumah tangga secara real-time untuk melihat sisa saldo
-          amplop anggaran terupdate secara instan.
-        </div>
-        <f7-link
-          @click="navigateToAddTransaction"
-          style="
-            display: inline-block;
-            font-size: 13px;
-            font-weight: 700;
-            color: white;
-            background: #0f5238;
-            padding: 10px 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(15, 82, 56, 0.2);
-          "
-        >
-          ✍️ Catat Pengeluaran Pertama
-        </f7-link>
-      </div>
-
-      <div v-else id="recent-transactions" style="padding: 0 16px">
-        <TransactionRow
-          v-for="txn in recentTxns"
-          :key="txn.id"
-          :transaction="txn"
-          @click="showTransactionDetail(txn)"
-        />
-      </div>
+      <RecentTransactionsSection
+        :recent-txns="recentTxns"
+        @switch-tab="switchToTab"
+        @add-transaction="navigateToAddTransaction"
+        @select-transaction="showTransactionDetail"
+      />
 
       <!-- Reconcile Widget -->
       <div class="section-header" style="margin-top: 16px; padding: 12px 20px 8px">
@@ -382,148 +242,12 @@
     />
 
     <!-- AI Context Bottom Sheet -->
-    <f7-sheet
+    <AiContextSheet
       v-model:opened="aiSheetOpened"
-      style="height: 82vh; --f7-sheet-bg-color: #ffffff"
-      swipe-to-close
-      backdrop
-    >
-      <div style="display: flex; flex-direction: column; height: 100%">
-        <!-- Header -->
-        <div
-          style="
-            padding: 20px 20px 16px;
-            border-bottom: 1px solid #e8ede9;
-            background: #ffffff;
-            flex-shrink: 0;
-          "
-        >
-          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px">
-            <div
-              style="
-                width: 40px;
-                height: 40px;
-                border-radius: 12px;
-                background: linear-gradient(135deg, #0f5238, #1a7a54);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                flex-shrink: 0;
-              "
-            >
-              <span class="material-symbols-outlined" style="color: white; font-size: 22px"
-                >psychology</span
-              >
-            </div>
-            <div>
-              <div style="font-size: 16px; font-weight: 800; color: #161a32">
-                Tanya AI Financial Advisor
-              </div>
-              <div style="font-size: 11px; color: #707973; margin-top: 2px">
-                Salin konteks → tempel ke ChatGPT, Claude, atau Gemini
-              </div>
-            </div>
-          </div>
-
-          <!-- Step indicators -->
-          <div style="display: flex; gap: 6px; margin-top: 12px">
-            <div
-              v-for="(step, i) in ['Salin konteks', 'Buka AI favoritmu', 'Tempel & tanya']"
-              :key="i"
-              style="
-                display: flex;
-                align-items: center;
-                gap: 5px;
-                font-size: 10px;
-                color: #707973;
-                font-weight: 600;
-              "
-            >
-              <div
-                style="
-                  width: 18px;
-                  height: 18px;
-                  border-radius: 50%;
-                  background: #e8ede9;
-                  color: #0f5238;
-                  font-weight: 800;
-                  font-size: 10px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  flex-shrink: 0;
-                "
-              >
-                {{ i + 1 }}
-              </div>
-              {{ step }}
-              <span v-if="i < 2" style="color: #bfc9c1; margin-left: 1px">›</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Scrollable context preview -->
-        <div
-          style="
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px 20px;
-            background: #f7f9f8;
-            font-family:
-              &quot;JetBrains Mono&quot;, &quot;Fira Code&quot;, &quot;Courier New&quot;, monospace;
-            font-size: 11px;
-            line-height: 1.7;
-            color: #2d3748;
-            white-space: pre-wrap;
-            word-break: break-word;
-          "
-        >
-          {{ aiContextText }}
-        </div>
-
-        <!-- Sticky CTA -->
-        <div
-          style="
-            padding: 16px 20px;
-            padding-bottom: calc(16px + env(safe-area-inset-bottom));
-            background: #ffffff;
-            border-top: 1px solid #e8ede9;
-            flex-shrink: 0;
-          "
-        >
-          <button
-            @click="copyContext"
-            :style="{
-              width: '100%',
-              padding: '14px',
-              borderRadius: '14px',
-              border: 'none',
-              background: copied ? '#16a34a' : 'linear-gradient(135deg, #0f5238, #1a7a54)',
-              color: 'white',
-              fontSize: '15px',
-              fontWeight: '800',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-              boxShadow: copied
-                ? '0 4px 16px rgba(22, 163, 74, 0.35)'
-                : '0 4px 16px rgba(15, 82, 56, 0.25)',
-            }"
-          >
-            <span class="material-symbols-outlined" style="font-size: 20px">
-              {{ copied ? "check_circle" : "content_copy" }}
-            </span>
-            {{ copied ? "Tersalin! Buka AI dan tempel 🚀" : "Salin Konteks Keuangan" }}
-          </button>
-          <div style="text-align: center; font-size: 10px; color: #b0b8b3; margin-top: 8px">
-            Konteks ini tidak mengandung password atau data sensitif
-          </div>
-        </div>
-      </div>
-    </f7-sheet>
+      :context-text="aiContextText"
+      :copied="copied"
+      @copy="copyContext"
+    />
   </f7-page>
 </template>
 
@@ -542,6 +266,11 @@ import {
 import { formatRp } from "../js/routes";
 import { useShareStore } from "../js/shareStore";
 
+const switchToTab = (tabId: string) => {
+  const linkSelector = `.bottom-nav-toolbar a[tab-link="${tabId}"], .bottom-nav-toolbar a[data-tab="${tabId}"]`;
+  f7.tab.show(tabId, linkSelector, true);
+};
+
 // Composables
 import { useDashboard } from "../composables/useDashboard";
 import { useNudge } from "../composables/useNudge";
@@ -551,12 +280,14 @@ import { useAiContext } from "../composables/useAiContext";
 // Modular UI Components
 import PartnerStatusBar from "../components/PartnerStatusBar.vue";
 import BudgetHeroCard from "../components/BudgetHeroCard.vue";
-import EnvelopeCard from "../components/EnvelopeCard.vue";
-import TransactionRow from "../components/TransactionRow.vue";
+import DashboardAnalyticsShortcut from "../components/DashboardAnalyticsShortcut.vue";
+import EnvelopeGridSection from "../components/EnvelopeGridSection.vue";
+import RecentTransactionsSection from "../components/RecentTransactionsSection.vue";
 import ReconcileWidget from "../components/ReconcileWidget.vue";
 import TransactionDetailSheet from "../components/TransactionDetailSheet.vue";
 import NudgeEnvelopeSheet from "../components/NudgeEnvelopeSheet.vue";
 import FailedQueueSheet from "../components/FailedQueueSheet.vue";
+import AiContextSheet from "../components/AiContextSheet.vue";
 
 const {
   loading,

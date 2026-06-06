@@ -1,5 +1,6 @@
 <template>
   <f7-sheet
+    v-if="transaction"
     v-model:opened="isOpened"
     style="height: auto; --f7-sheet-bg-color: var(--fintr-bg-card); border-radius: 24px 24px 0 0"
     swipe-to-close
@@ -17,7 +18,7 @@
         "
       ></div>
 
-      <div v-if="transaction">
+      <div>
         <!-- Header -->
         <div
           style="
@@ -95,7 +96,7 @@
               class="font-headline"
               style="font-size: 24px; font-weight: 900; color: var(--fintr-primary)"
             >
-              Rp {{ formatRp(transaction.amount) }}
+              {{ formatRp(transaction.amount) }}
             </div>
           </div>
           <div style="text-align: right">

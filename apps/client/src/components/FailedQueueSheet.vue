@@ -90,7 +90,7 @@
               </div>
             </div>
             <div style="font-size: 14px; font-weight: 800; color: #161a32">
-              Rp {{ formatRp(item.data.amount || getSplitTotal(item.data)) }}
+              {{ formatRp(item.data.amount || getSplitTotal(item.data)) }}
             </div>
           </div>
 

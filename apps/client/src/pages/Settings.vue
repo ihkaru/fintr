@@ -49,6 +49,9 @@
         @join="joinHousehold"
       />
 
+      <!-- AI Persona & Preferences Card -->
+      <AiPersonaCard />
+
       <!-- Period / Rollover Operations Card -->
       <PeriodManagementCard
         :active-period="activePeriod"
@@ -117,6 +120,7 @@ import { household, auth, periods, getUser, clearToken } from "../js/api";
 
 import ProfileCard from "../components/settings/ProfileCard.vue";
 import HouseholdCard from "../components/settings/HouseholdCard.vue";
+import AiPersonaCard from "../components/settings/AiPersonaCard.vue";
 import PeriodManagementCard from "../components/settings/PeriodManagementCard.vue";
 import RolloverPreviewSheet from "../components/settings/RolloverPreviewSheet.vue";
 
