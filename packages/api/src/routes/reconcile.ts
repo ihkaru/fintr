@@ -7,6 +7,7 @@ import {
   transactions,
   budgetAllocations,
   users,
+  envelopeTemplates,
 } from "../db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 
@@ -60,25 +61,35 @@ export const reconcileRoutes = new Elysia({ prefix: "/reconcile" })
       return { error: "Tidak ada periode aktif" };
     }
 
-    // Get total allocated in current period (allocated amount + rollover amount)
-    const [allocatedResult] = await db
+    // Get allocations with spending totals and template active state, matching filtered logic in periods.ts
+    const allocations = await db
       .select({
-        totalAllocated: sql<string>`COALESCE(SUM(${budgetAllocations.allocatedAmount} + ${budgetAllocations.rolloverAmount}), 0)`,
+        id: budgetAllocations.id,
+        allocatedAmount: budgetAllocations.allocatedAmount,
+        rolloverAmount: budgetAllocations.rolloverAmount,
+        totalSpent: sql<string>`COALESCE(SUM(${transactions.amount}), 0)`,
+        isActive: envelopeTemplates.isActive,
+        transactionCount: sql<number>`CAST(COUNT(${transactions.id}) AS INTEGER)`,
       })
       .from(budgetAllocations)
-      .where(eq(budgetAllocations.periodId, currentPeriod.id));
+      .innerJoin(envelopeTemplates, eq(budgetAllocations.templateId, envelopeTemplates.id))
+      .leftJoin(transactions, eq(transactions.allocationId, budgetAllocations.id))
+      .where(eq(budgetAllocations.periodId, currentPeriod.id))
+      .groupBy(
+        budgetAllocations.id,
+        budgetAllocations.allocatedAmount,
+        budgetAllocations.rolloverAmount,
+        envelopeTemplates.isActive
+      );
 
-    const totalAllocated = parseFloat(allocatedResult.totalAllocated);
+    const filteredAllocations = allocations.filter(a => a.isActive || a.transactionCount > 0);
 
-    // Get total spent in current period
-    const [spentResult] = await db
-      .select({
-        totalSpent: sql<string>`COALESCE(SUM(${transactions.amount}), 0)`,
-      })
-      .from(transactions)
-      .where(eq(transactions.periodId, currentPeriod.id));
+    const totalAllocated = filteredAllocations.reduce(
+      (sum, a) => sum + parseFloat(a.allocatedAmount) + parseFloat(a.rolloverAmount),
+      0
+    );
 
-    const totalSpent = parseFloat(spentResult.totalSpent);
+    const totalSpent = filteredAllocations.reduce((sum, a) => sum + parseFloat(a.totalSpent), 0);
 
     // Get the latest snapshot
     const [latestSnapshot] = await db
