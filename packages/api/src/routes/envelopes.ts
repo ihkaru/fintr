@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { authMiddleware } from "../middleware/auth";
 import { db } from "../db/index";
-import { envelopeTemplates } from "../db/schema";
+import { envelopeTemplates, budgetPeriods, budgetAllocations, transactions } from "../db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { broadcastToHousehold } from "../services/sync";
 
@@ -42,6 +42,21 @@ export const envelopeRoutes = new Elysia({ prefix: "/envelopes" })
           sortOrder: body.sortOrder || 0,
         })
         .returning();
+
+      // Automatically create allocation in the current active period if there is one
+      const [activePeriod] = await db
+        .select()
+        .from(budgetPeriods)
+        .where(and(eq(budgetPeriods.householdId, householdId), eq(budgetPeriods.isClosed, false)));
+
+      if (activePeriod) {
+        await db.insert(budgetAllocations).values({
+          periodId: activePeriod.id,
+          templateId: template.id,
+          allocatedAmount: template.defaultAmount,
+          rolloverAmount: "0",
+        });
+      }
 
       broadcastToHousehold(householdId, userId, "envelope_changed");
 
@@ -117,7 +132,7 @@ export const envelopeRoutes = new Elysia({ prefix: "/envelopes" })
       return { error: "Household required" };
     }
 
-    // Soft delete
+    // Soft delete template
     const [deactivated] = await db
       .update(envelopeTemplates)
       .set({ isActive: false })
@@ -129,6 +144,37 @@ export const envelopeRoutes = new Elysia({ prefix: "/envelopes" })
     if (!deactivated) {
       set.status = 404;
       return { error: "Amplop tidak ditemukan" };
+    }
+
+    // Check if there's an active period to clean up the allocation if unused
+    const [activePeriod] = await db
+      .select()
+      .from(budgetPeriods)
+      .where(and(eq(budgetPeriods.householdId, householdId), eq(budgetPeriods.isClosed, false)));
+
+    if (activePeriod) {
+      const [allocation] = await db
+        .select()
+        .from(budgetAllocations)
+        .where(
+          and(
+            eq(budgetAllocations.periodId, activePeriod.id),
+            eq(budgetAllocations.templateId, params.id)
+          )
+        );
+
+      if (allocation) {
+        const txs = await db
+          .select()
+          .from(transactions)
+          .where(eq(transactions.allocationId, allocation.id))
+          .limit(1);
+
+        if (txs.length === 0) {
+          // Safe to delete allocation in active period as there are no transactions
+          await db.delete(budgetAllocations).where(eq(budgetAllocations.id, allocation.id));
+        }
+      }
     }
 
     broadcastToHousehold(householdId, userId, "envelope_changed");

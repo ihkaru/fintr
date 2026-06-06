@@ -376,6 +376,7 @@ const handleTransactionSaved = async (e: Event) => {
 
 onMounted(async () => {
   window.addEventListener("fintr:transaction-saved", handleTransactionSaved);
+  window.addEventListener("fintr:envelope-changed", loadDashboard);
 
   f7ready(async () => {
     // Intercept shared receipt image or text from PWA share target and auto-redirect
@@ -412,5 +413,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener("fintr:transaction-saved", handleTransactionSaved);
+  window.removeEventListener("fintr:envelope-changed", loadDashboard);
 });
 </script>

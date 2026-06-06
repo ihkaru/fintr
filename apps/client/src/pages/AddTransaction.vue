@@ -268,8 +268,13 @@ const handleNavbarBack = () => {
 const { registerHandler } = useBackButton();
 let unregisterBack: (() => void) | null = null;
 
+const handleEnvelopeChanged = async () => {
+  await loadEnvelopes(showAlert);
+};
+
 onMounted(async () => {
   await loadEnvelopes(showAlert);
+  window.addEventListener("fintr:envelope-changed", handleEnvelopeChanged);
 
   unregisterBack = registerHandler(10, () => {
     if (isDirty()) {
@@ -289,6 +294,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  window.removeEventListener("fintr:envelope-changed", handleEnvelopeChanged);
   if (unregisterBack) {
     unregisterBack();
   }

@@ -269,9 +269,11 @@ const handleTransactionSaved = async (e: Event) => {
 
 onMounted(() => {
   window.addEventListener("fintr:transaction-saved", handleTransactionSaved);
+  window.addEventListener("fintr:envelope-changed", loadTransactions);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("fintr:transaction-saved", handleTransactionSaved);
+  window.removeEventListener("fintr:envelope-changed", loadTransactions);
 });
 </script>
