@@ -18,6 +18,34 @@
     </div>
 
     <div v-else>
+      <!-- Info Alert Box -->
+      <div
+        style="
+          margin: 16px;
+          padding: 14px 16px;
+          background: #eef7f4;
+          border: 1px solid #c2e5d9;
+          border-radius: 12px;
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+        "
+      >
+        <span
+          class="material-symbols-outlined"
+          style="color: #0f5238; font-size: 20px; margin-top: 2px; flex-shrink: 0"
+          >info</span
+        >
+        <div style="font-size: 12px; color: #1e3d30; line-height: 1.5">
+          <strong style="font-weight: 700; display: block; margin-bottom: 2px"
+            >Template Anggaran Rumah Tangga</strong
+          >
+          Daftar ini adalah template default bulanan. Perubahan (tambah, ubah, hapus) di sini hanya
+          berlaku untuk Rumah Tangga kamu (tersinkronisasi dengan pasangan) dan tidak akan mengubah
+          data/transaksi periode sebelumnya.
+        </div>
+      </div>
+
       <div class="block-title">Amplop Aktif (Template Bulanan)</div>
       <div v-if="items.length === 0" class="empty-state">
         <div class="icon">✉️</div>

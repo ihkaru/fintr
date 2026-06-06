@@ -172,6 +172,8 @@ export const periodRoutes = new Elysia({ prefix: "/periods" })
         envelopeName: envelopeTemplates.name,
         envelopeColor: envelopeTemplates.color,
         totalSpent: sql<string>`COALESCE(SUM(${transactions.amount}), 0)`,
+        isActive: envelopeTemplates.isActive,
+        transactionCount: sql<number>`CAST(COUNT(${transactions.id}) AS INTEGER)`,
       })
       .from(budgetAllocations)
       .innerJoin(envelopeTemplates, eq(budgetAllocations.templateId, envelopeTemplates.id))
@@ -183,12 +185,15 @@ export const periodRoutes = new Elysia({ prefix: "/periods" })
         budgetAllocations.rolloverAmount,
         budgetAllocations.templateId,
         envelopeTemplates.name,
-        envelopeTemplates.color
+        envelopeTemplates.color,
+        envelopeTemplates.isActive
       );
+
+    const filteredAllocations = allocations.filter(a => a.isActive || a.transactionCount > 0);
 
     // Build period totals
     const periodTotals = chronologicalPeriods.map(p => {
-      const pAllocs = allocations.filter(a => a.periodId === p.id);
+      const pAllocs = filteredAllocations.filter(a => a.periodId === p.id);
       const totalAllocated = pAllocs.reduce(
         (sum, a) => sum + parseFloat(a.allocatedAmount) + parseFloat(a.rolloverAmount),
         0
@@ -233,7 +238,7 @@ export const periodRoutes = new Elysia({ prefix: "/periods" })
       }
     > = {};
 
-    for (const alloc of allocations) {
+    for (const alloc of filteredAllocations) {
       if (!categoriesMap[alloc.envelopeName]) {
         categoriesMap[alloc.envelopeName] = {
           name: alloc.envelopeName,
@@ -299,6 +304,8 @@ export const periodRoutes = new Elysia({ prefix: "/periods" })
         envelopeColor: envelopeTemplates.color,
         rolloverBehavior: envelopeTemplates.rolloverBehavior,
         totalSpent: sql<string>`COALESCE(SUM(${transactions.amount}), 0)`,
+        isActive: envelopeTemplates.isActive,
+        transactionCount: sql<number>`CAST(COUNT(${transactions.id}) AS INTEGER)`,
       })
       .from(budgetAllocations)
       .innerJoin(envelopeTemplates, eq(budgetAllocations.templateId, envelopeTemplates.id))
@@ -312,20 +319,23 @@ export const periodRoutes = new Elysia({ prefix: "/periods" })
         envelopeTemplates.name,
         envelopeTemplates.color,
         envelopeTemplates.rolloverBehavior,
-        envelopeTemplates.sortOrder
+        envelopeTemplates.sortOrder,
+        envelopeTemplates.isActive
       )
       .orderBy(envelopeTemplates.sortOrder);
 
+    const filteredAllocations = allocations.filter(a => a.isActive || a.transactionCount > 0);
+
     // Compute totals
-    const totalAllocated = allocations.reduce(
+    const totalAllocated = filteredAllocations.reduce(
       (sum, a) => sum + parseFloat(a.allocatedAmount) + parseFloat(a.rolloverAmount),
       0
     );
-    const totalSpent = allocations.reduce((sum, a) => sum + parseFloat(a.totalSpent), 0);
+    const totalSpent = filteredAllocations.reduce((sum, a) => sum + parseFloat(a.totalSpent), 0);
 
     return {
       period,
-      allocations: allocations.map(a => ({
+      allocations: filteredAllocations.map(a => ({
         ...a,
         remaining: (
           parseFloat(a.allocatedAmount) +
