@@ -1,5 +1,4 @@
 import { ref } from "vue";
-import { f7 } from "framework7-vue";
 import { formatRp } from "../js/routes";
 
 export function useAiContext() {

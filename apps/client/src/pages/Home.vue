@@ -263,7 +263,6 @@ import {
   f7ready,
   f7,
 } from "framework7-vue";
-import { formatRp } from "../js/routes";
 import { useShareStore } from "../js/shareStore";
 
 const switchToTab = (tabId: string) => {
