@@ -43,7 +43,10 @@
         ></span>
         {{ allocation.envelopeName }}
       </div>
-      <div class="amount font-headline" style="font-weight: 800; color: #0f5238; font-size: 15px">
+      <div
+        class="amount font-headline"
+        :style="{ fontWeight: '800', color: remainingColor, fontSize: '15px' }"
+      >
         {{ formatRp(parseFloat(allocation.remaining)) }}
       </div>
     </div>
@@ -108,6 +111,10 @@ const progressPct = computed(() => {
     parseFloat(props.allocation.allocatedAmount) + parseFloat(props.allocation.rolloverAmount);
   const spent = parseFloat(props.allocation.totalSpent);
   return allocated > 0 ? Math.min((spent / allocated) * 100, 100) : 0;
+});
+
+const remainingColor = computed(() => {
+  return parseFloat(props.allocation.remaining) < 0 ? "var(--fintr-danger)" : "#0f5238";
 });
 
 const progressBarColor = computed(() => {

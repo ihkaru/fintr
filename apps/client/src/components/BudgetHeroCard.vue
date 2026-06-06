@@ -1,14 +1,14 @@
 <template>
   <div
     class="hero-stats animate-in"
-    style="
-      margin: 12px 16px;
-      background: linear-gradient(135deg, #0f5238, #2d6a4f);
-      box-shadow: 0 8px 24px rgba(15, 82, 56, 0.15);
-      border-radius: 20px;
-      padding: 24px;
-      color: white;
-    "
+    :style="{
+      margin: '12px 16px',
+      background: cardBackground,
+      boxShadow: cardShadow,
+      borderRadius: '20px',
+      padding: '24px',
+      color: 'white',
+    }"
   >
     <div
       class="label"
@@ -54,13 +54,26 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { formatRp } from "../js/routes";
 
-defineProps<{
+const props = defineProps<{
   remaining: number;
   allocated: number;
   spent: number;
 }>();
+
+const cardBackground = computed(() => {
+  return props.remaining < 0
+    ? "linear-gradient(135deg, #ba1a1a, #8c1111)"
+    : "linear-gradient(135deg, #0f5238, #2d6a4f)";
+});
+
+const cardShadow = computed(() => {
+  return props.remaining < 0
+    ? "0 8px 24px rgba(186, 26, 26, 0.15)"
+    : "0 8px 24px rgba(15, 82, 56, 0.15)";
+});
 </script>
 
 <style scoped>

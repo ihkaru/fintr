@@ -2,8 +2,8 @@ import { Elysia, t } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 import { bearer } from "@elysiajs/bearer";
 import { db } from "../db/index";
-import { users, households, householdMembers } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { users, households, householdMembers, transactions } from "../db/schema";
+import { eq, sql } from "drizzle-orm";
 import { verifyGoogleToken } from "../services/google-auth";
 import { seedDefaultEnvelopes, seedInitialPeriod } from "../db/seed";
 import fs from "node:fs";
@@ -176,6 +176,20 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 
       if (existing.length > 0 && existing[0].householdId === household.id) {
         return { message: "Sudah tergabung di rumah tangga ini" };
+      }
+
+      // Prevent joining another household if they already have transaction history
+      const [userTxCount] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(transactions)
+        .where(eq(transactions.createdBy, userId));
+
+      if (userTxCount && userTxCount.count > 0) {
+        set.status = 400;
+        return {
+          error:
+            "Anda tidak dapat bergabung ke rumah tangga lain karena sudah memiliki catatan transaksi di rumah tangga saat ini.",
+        };
       }
 
       // Remove from current household if any
