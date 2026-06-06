@@ -208,24 +208,12 @@
               />
               <!-- Baris 2: Input jumlah + tombol hapus -->
               <div style="display: flex; gap: 8px; align-items: center">
-                <div style="position: relative; flex: 1">
-                  <span
-                    style="
-                      position: absolute;
-                      left: 10px;
-                      top: 50%;
-                      transform: translateY(-50%);
-                      font-size: 12px;
-                      font-weight: 700;
-                      color: var(--fintr-text-muted);
-                      pointer-events: none;
-                      z-index: 1;
-                    "
-                    >Rp</span
-                  >
+                <!-- Outer box menjadi visual "input field" (border + bg di sini) -->
+                <div class="wallet-amount-box">
+                  <span class="wallet-rp-prefix">Rp</span>
                   <input
                     type="number"
-                    class="wallet-amount-input"
+                    class="wallet-amount-inner"
                     v-model="wallet.amount"
                     placeholder="0"
                     @input="syncCalculator"
