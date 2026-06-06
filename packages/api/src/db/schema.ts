@@ -98,6 +98,7 @@ export const envelopeTemplates = pgTable("envelope_templates", {
   rolloverBehavior: rolloverBehaviorEnum("rollover_behavior").notNull().default("reset"),
   sortOrder: integer("sort_order").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
+  isSavingsTarget: boolean("is_savings_target").notNull().default(false),
   color: text("color").notNull().default("#6366f1"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });

@@ -7,6 +7,7 @@ export interface PeriodDetail {
     month: number;
     openingBalance: string | null;
     isClosed: boolean;
+    createdAt?: string;
   };
   allocations: Array<{
     id: string;
@@ -36,6 +37,7 @@ export const periods = {
         month: number;
         isClosed: boolean;
         openingBalance: string | null;
+        createdAt?: string;
       }>
     >("/periods");
   },

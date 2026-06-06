@@ -36,6 +36,15 @@ export function initShareHandler() {
       };
 
       if (event.files && event.files.length > 0) {
+        if (event.files.length > 5) {
+          if (f7.dialog) {
+            f7.dialog.alert(
+              "Batas maksimal pengunggahan adalah 5 file sekaligus. Pengunggahan dibatalkan.",
+              "Batas File Terlampaui"
+            );
+          }
+          return;
+        }
         const file = event.files[0];
         const mime = file.mimeType || "";
 

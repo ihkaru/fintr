@@ -63,6 +63,7 @@ export async function seedDefaultEnvelopes(householdId: string) {
       color: "#22c55e",
       rolloverBehavior: "rollover_self" as const,
       sortOrder: 7,
+      isSavingsTarget: true,
     },
   ];
 
@@ -74,6 +75,7 @@ export async function seedDefaultEnvelopes(householdId: string) {
       rolloverBehavior: d.rolloverBehavior,
       sortOrder: d.sortOrder,
       color: d.color,
+      isSavingsTarget: (d as any).isSavingsTarget ?? false,
     }))
   );
 

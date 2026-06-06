@@ -37,10 +37,11 @@
 - 🎯 **Zero-Based Budgeting**: Alokasi penuh pendapatan bulanan ke dalam amplop anggaran secara presisi hingga sisa dana tidak teralokasi (_Unallocated Fund_) bernilai Rp 0.
 - ✉️ **Sistem Amplop Reaktif**: Pantau sisa dana per kategori amplop secara reaktif lengkap dengan indikator batas aman anggaran, visualisasi warna, dan kustomisasi aturan _rollover_ akhir bulan.
 - 🛍️ **Split Transactions**: Pecah pengeluaran dari satu struk belanja besar ke beberapa amplop anggaran berbeda secara fleksibel dalam satu form input tunggal dengan validasi saldo sisa yang ketat.
-- 🤖 **AI OCR & Smart Receipt Scanning**: Unggah foto struk, bukti transfer, atau gunakan fitur _Share Target_ Android. Ditenagai oleh **Gemini Vision AI** untuk mengekstrak nominal, merchant, tanggal secara otomatis, serta mengklasifikasikan barang belanjaan ke rekomendasi amplop yang paling sesuai.
-- ⚡ **Sinkronisasi Real-Time (SSE)**: Sinkronisasi instan data transaksi dan amplop anggaran antar perangkat pasangan menggunakan koneksi _Server-Sent Events_ (SSE) berkeamanan tinggi.
-- 🔄 **Rekonsiliasi Saldo Aktual**: Widget interaktif yang membandingkan total anggaran tercatat di aplikasi dengan uang riil (bank + dompet digital + kas fisik) secara periodik demi menjaga keakuratan data 100%.
-- 📱 **PWA & Android Native Optimization**: Integrasi Capacitor penuh dengan penanganan tombol kembali perangkat keras (_hardware back button_), _dirty-form checks_, dan dukungan _offline caching_.
+- 🤖 **AI OCR & Smart Receipt Scanning**: Unggah foto struk, bukti transfer, atau gunakan fitur _Share Target_ Android. Ditenagai oleh **Gemini Vision AI** untuk mengekstrak nominal, merchant, tanggal secara otomatis, serta mengklasifikasikan barang belanjaan ke rekomendasi amplop yang paling sesuai. Mendukung pemrosesan batch (hingga 5 struk sekaligus), deteksi duplikasi sekuensial intra-batch, normalisasi nama merchant (pembersihan regex PT/CV), serta tombol inline drawer untuk membuat amplop baru instan saat tingkat keyakinan klasifikasi AI rendah.
+- ⚡ **Sinkronisasi Real-Time (SSE)**: Sinkronisasi instan data transaksi dan amplop anggaran antar perangkat pasangan menggunakan koneksi _Server-Sent Events_ (SSE) berkeamanan tinggi dengan notifikasi reaktif teratribusi nama partner.
+- 🔄 **Rekonsiliasi Saldo Aktual**: Widget interaktif yang membandingkan total anggaran tercatat di aplikasi dengan uang riil (bank + dompet digital + kas fisik) secara periodik demi menjaga keakuratan data 100%, lengkap dengan tombol tindakan instan (_guided action_) untuk membukukan selisih negatif sebagai pengeluaran penyesuaian.
+- 📱 **PWA & Android Native Optimization**: Integrasi Capacitor penuh dengan penanganan tombol kembali perangkat keras (_hardware back button_), _dirty-form checks_, penyimpanan antrean transaksi luring, antrean kegagalan sinkronisasi persisten (_Offline Failed Sync Queue_) dengan banner peringatan interaktif di dasbor, serta mekanisme _auto-retry_ sinkronisasi otomatis hingga 3 kali.
+- 🔔 **Nudge & Smart Budgeting**: Deteksi otomatis pola penumpukan alokasi anggaran pada amplop umum "Lain-lain" (>60% anggaran dengan filter min. 10 transaksi dan 7 hari aktif) disertai rekomendasi taktis (nudge dasbor) untuk memecahnya ke amplop baru yang relevan dari item belanja terpopuler.
 
 ---
 
@@ -161,6 +162,16 @@ FamiVault dilengkapi dengan serangkaian fungsi otomatis di backend dan frontend 
    - Saat periode anggaran ditutup (`/periods/:id/close`), sistem akan memproses rollover untuk **seluruh template amplop yang aktif** di rumah tangga tersebut, bukan hanya yang memiliki transaksi di periode lalu. Ini memastikan konsistensi struktur amplop di bulan baru.
 5. **Sinkronisasi Reaktif Lintas Layar**:
    - Setiap penambahan, perubahan, atau penghapusan amplop memicu siaran event global `fintr:envelope-changed`. Halaman Home, Riwayat Transaksi, dan Formulir Tambah Transaksi akan memperbarui datanya secara instan tanpa perlu memuat ulang aplikasi.
+6. **Antrean Kegagalan Sinkronisasi Offline (Failed Sync Queue)**:
+   - Transaksi offline yang gagal disinkronkan akibat kesalahan validasi bisnis/server akan disimpan ke antrean kegagalan persisten di `localStorage`. Dasbor utama menampilkan banner merah cerah interaktif untuk memberi tahu pengguna, yang ketika diketuk akan membuka Bottom Sheet peninjauan detail eror dengan opsi _retry_ (coba lagi) atau _delete_ (hapus).
+7. **Pencobaan Ulang Otomatis Sinkronisasi (Auto-Retry)**:
+   - Transaksi luring yang gagal disinkronkan karena validasi bisnis akan dicoba ulang secara otomatis hingga maksimal 3 kali sebelum akhirnya dipindahkan secara permanen ke antrean kegagalan persisten untuk tinjauan pengguna.
+8. **Deteksi Duplikasi Sekuensial & Intra-Batch**:
+   - Deteksi transaksi ganda membandingkan nominal, merchant, dan waktu terjadi transaksi (`transactionAt`) dalam jendela ±24 jam. Pada pemrosesan batch struk (maksimal 5 struk), setiap transaksi dicocokkan tidak hanya dengan database, tetapi juga dengan transaksi lain dalam batch yang sama yang sudah sukses diproses (deteksi duplikasi intra-batch sekuensial) untuk memblokir berkas identik.
+9. **Normalisasi Nama Merchant (Legal Entity vs Brand)**:
+   - Untuk memperkuat akurasi deteksi transaksi ganda, sistem membersihkan suffix/prefix legalitas umum (seperti PT, CV, Tbk, Corp, Co, Ltd) menggunakan pembersihan regex sebelum melakukan fuzzy matching.
+10. **Nudge Interaktif Overuse Amplop**:
+    - Deteksi otomatis pola penumpukan anggaran pada amplop umum "Lain-lain" (>60% anggaran dengan filter min. 10 transaksi dan 7 hari aktif) memicu banner dasbor interaktif yang membantu pengguna memecah alokasi tersebut ke amplop baru yang disarankan secara otomatis berdasarkan analisis data item belanja terpopuler.
 
 ---
 

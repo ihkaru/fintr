@@ -94,25 +94,70 @@
               justify-content: space-between;
               align-items: center;
               margin-bottom: 8px;
+              flex-wrap: wrap;
+              gap: 8px;
             "
           >
-            <span style="font-size: 12px; color: var(--fintr-text-muted); font-weight: 600">
-              Alokasi Pengeluaran
-            </span>
             <span
-              @click="onToggleSplit"
               style="
                 font-size: 12px;
-                color: #0f5238;
-                font-weight: 700;
-                cursor: pointer;
-                display: flex;
+                color: var(--fintr-text-muted);
+                font-weight: 600;
+                display: inline-flex;
                 align-items: center;
-                gap: 4px;
+                gap: 6px;
               "
             >
-              {{ isSplit ? "✍️ Mode Tunggal" : "🥞 Bagi Kategori (Split)" }}
+              Alokasi Pengeluaran
+              <span
+                v-if="form.source === 'ocr' && ocrConfidence === 'low'"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 4px;
+                  background: #fff8e1;
+                  border: 1px solid #ffe082;
+                  color: #b78103;
+                  padding: 2px 8px;
+                  border-radius: 999px;
+                  font-size: 10px;
+                  font-weight: 700;
+                  line-height: 1;
+                "
+              >
+                ⚠️ Amplop Belum Yakin
+              </span>
             </span>
+            <div style="display: flex; gap: 12px; align-items: center">
+              <span
+                @click="openCreateEnvelopeSheet"
+                style="
+                  font-size: 12px;
+                  color: #0f5238;
+                  font-weight: 700;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                "
+              >
+                ➕ Buat Amplop Baru
+              </span>
+              <span
+                @click="onToggleSplit"
+                style="
+                  font-size: 12px;
+                  color: #0f5238;
+                  font-weight: 700;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                "
+              >
+                {{ isSplit ? "✍️ Mode Tunggal" : "🥞 Bagi Kategori (Split)" }}
+              </span>
+            </div>
           </div>
 
           <div v-if="loadingEnvelopes" style="padding: 12px 0; text-align: center">
@@ -220,14 +265,23 @@
         </button>
       </div>
     </div>
+
+    <!-- Create Envelope Sheet -->
+    <NewEnvelopeSheet
+      v-model:opened="newEnvelopeOpened"
+      :creating-envelope="creatingEnvelope"
+      :new-envelope-form="newEnvelopeForm"
+      :color-presets="colorPresets"
+      @update-form="Object.assign(newEnvelopeForm, $event)"
+      @submit="handleCreateEnvelope"
+    />
   </f7-page>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, watch, nextTick } from "vue";
-import { f7Page, f7Navbar, f7Preloader, f7, f7NavLeft, f7Link, f7NavTitle } from "framework7-vue";
+import { f7Page, f7Navbar, f7Preloader, f7NavLeft, f7Link, f7NavTitle } from "framework7-vue";
 import { useAddTransaction } from "../composables/useAddTransaction";
-import { useBackButton } from "../composables/useBackButton";
+import { useAddTransactionFlow } from "../composables/useAddTransactionFlow";
 
 import AmountInputCard from "../components/transaction/AmountInputCard.vue";
 import SourceToggle from "../components/transaction/SourceToggle.vue";
@@ -235,6 +289,7 @@ import OcrUploadArea from "../components/transaction/OcrUploadArea.vue";
 import EnvelopeSelector from "../components/transaction/EnvelopeSelector.vue";
 import SplitEditor from "../components/transaction/SplitEditor.vue";
 import TransactionFormCard from "../components/transaction/TransactionFormCard.vue";
+import NewEnvelopeSheet from "../components/transaction/NewEnvelopeSheet.vue";
 
 const props = defineProps<{
   f7route: any;
@@ -267,13 +322,29 @@ const {
   clearReceipt,
 } = useAddTransaction(props.f7route.query.allocationId as string);
 
-const showAlert = (msg: string, title: string) => {
-  f7.dialog.alert(msg, title);
-};
-
 const goBack = () => {
   props.f7router.back();
 };
+
+const {
+  newEnvelopeOpened,
+  creatingEnvelope,
+  newEnvelopeForm,
+  colorPresets,
+  openCreateEnvelopeSheet,
+  handleCreateEnvelope,
+  handleNavbarBack,
+  showAlert,
+} = useAddTransactionFlow(
+  form,
+  ocrStatus,
+  ocrConfidence,
+  allocations,
+  isSplit,
+  splitItems,
+  loadEnvelopes,
+  goBack
+);
 
 const handleOcrFile = (e: Event) => {
   onOcrFileChange(e, showAlert);
@@ -284,7 +355,7 @@ const handleAutoSplit = () => {
     isSplit.value = true;
     splitItems.value = ocrItems.value.map(item => {
       const matched = allocations.value.find(
-        a =>
+        (a: any) =>
           a.id === item.recommendedEnvelopeId ||
           a.envelopeName.toLowerCase() === item.name?.toLowerCase()
       );
@@ -327,79 +398,4 @@ const handleReset = () => {
 const handleSave = () => {
   saveTransaction(showAlert, goBack);
 };
-
-const isDirty = () => {
-  return (
-    form.amount !== "" ||
-    form.merchant !== "" ||
-    form.note !== "" ||
-    ocrStatus.value === "processing" ||
-    ocrStatus.value === "success"
-  );
-};
-
-const handleNavbarBack = () => {
-  if (isDirty()) {
-    f7.dialog.confirm("Ada transaksi belum tersimpan. Batalkan pencatatan?", "Batal Catat?", () => {
-      goBack();
-    });
-  } else {
-    goBack();
-  }
-};
-
-const { registerHandler } = useBackButton();
-let unregisterBack: (() => void) | null = null;
-
-const handleEnvelopeChanged = async () => {
-  await loadEnvelopes(showAlert);
-};
-
-// Auto focus amount if ocr confidence is low or amount is null/empty
-watch(
-  () => ocrConfidence.value,
-  newConf => {
-    if (newConf) {
-      if (newConf === "low" || form.amount === "") {
-        nextTick(() => {
-          const input = document.querySelector(".amount-input") as HTMLInputElement;
-          if (input) {
-            input.focus();
-            if (typeof form.amount === "number") {
-              input.select();
-            }
-          }
-        });
-      }
-    }
-  }
-);
-
-onMounted(async () => {
-  await loadEnvelopes(showAlert);
-  window.addEventListener("fintr:envelope-changed", handleEnvelopeChanged);
-
-  unregisterBack = registerHandler(10, () => {
-    if (isDirty()) {
-      f7.dialog.confirm(
-        "Ada transaksi belum tersimpan. Batalkan pencatatan?",
-        "Batal Catat?",
-        () => {
-          // Unregister temporarily to allow propagation to pop the route
-          if (unregisterBack) unregisterBack();
-          goBack();
-        }
-      );
-      return true; // handled
-    }
-    return false; // propagate
-  });
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("fintr:envelope-changed", handleEnvelopeChanged);
-  if (unregisterBack) {
-    unregisterBack();
-  }
-});
 </script>

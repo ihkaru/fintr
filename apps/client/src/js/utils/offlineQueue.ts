@@ -7,9 +7,12 @@ export interface OfflineTransaction {
   type: "normal" | "split" | "text_ocr";
   data: any;
   createdAt: string;
+  errorMessage?: string;
+  retryCount?: number;
 }
 
 const QUEUE_KEY = "fintr_offline_queue";
+const FAILED_QUEUE_KEY = "fintr_offline_failed_queue";
 const isSyncing = ref(false);
 
 function getQueue(): OfflineTransaction[] {
@@ -27,6 +30,78 @@ function saveQueue(queue: OfflineTransaction[]) {
     localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
   } catch (err) {
     console.error("[OfflineSync] Failed to write queue to localStorage:", err);
+  }
+}
+
+export function getFailedQueue(): OfflineTransaction[] {
+  try {
+    const raw = localStorage.getItem(FAILED_QUEUE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (err) {
+    console.error("[OfflineSync] Failed to read failed queue from localStorage:", err);
+    return [];
+  }
+}
+
+export function saveFailedQueue(queue: OfflineTransaction[]) {
+  try {
+    localStorage.setItem(FAILED_QUEUE_KEY, JSON.stringify(queue));
+  } catch (err) {
+    console.error("[OfflineSync] Failed to write failed queue to localStorage:", err);
+  }
+}
+
+export function pushToFailedQueue(item: OfflineTransaction, errorMessage: string) {
+  const failedQueue = getFailedQueue();
+  if (!failedQueue.some(x => x.id === item.id)) {
+    failedQueue.push({
+      ...item,
+      errorMessage,
+    });
+    saveFailedQueue(failedQueue);
+    window.dispatchEvent(new CustomEvent("fintr:offline-failed-changed"));
+  }
+}
+
+export function removeFailedItem(id: string) {
+  const failedQueue = getFailedQueue();
+  const filtered = failedQueue.filter(x => x.id !== id);
+  saveFailedQueue(filtered);
+  window.dispatchEvent(new CustomEvent("fintr:offline-failed-changed"));
+}
+
+export function clearFailedQueue() {
+  saveFailedQueue([]);
+  window.dispatchEvent(new CustomEvent("fintr:offline-failed-changed"));
+}
+
+export function retryFailedItem(id: string) {
+  const failedQueue = getFailedQueue();
+  const itemIndex = failedQueue.findIndex(x => x.id === id);
+  if (itemIndex === -1) return;
+
+  const item = failedQueue[itemIndex];
+  failedQueue.splice(itemIndex, 1);
+  saveFailedQueue(failedQueue);
+  window.dispatchEvent(new CustomEvent("fintr:offline-failed-changed"));
+
+  const queue = getQueue();
+  const cleanItem = { ...item };
+  delete (cleanItem as any).errorMessage;
+  cleanItem.retryCount = 0;
+  queue.push(cleanItem);
+  saveQueue(queue);
+
+  if (navigator.onLine) {
+    syncOfflineTransactions();
+  } else {
+    f7.toast
+      .create({
+        text: "Kembali dimasukkan ke antrean. Akan disinkronkan saat online.",
+        closeTimeout: 3000,
+        position: "bottom",
+      })
+      .open();
   }
 }
 
@@ -240,13 +315,8 @@ export async function syncOfflineTransactions() {
             break;
           } else {
             console.error(`[OfflineSync] Recovery failed for transaction ${item.id}:`, recoveryErr);
-            f7.toast
-              .create({
-                text: `Gagal memindahkan transaksi offline ke periode baru: ${recoveryErr.message}`,
-                closeTimeout: 5000,
-                position: "bottom",
-              })
-              .open();
+            // Format message so the unified toast below is descriptive
+            syncError.message = `Gagal pemulihan periode: ${recoveryErr.message}`;
           }
         }
       }
@@ -277,17 +347,27 @@ export async function syncOfflineTransactions() {
         }
         break;
       } else if (syncError && syncError.message !== "PERIOD_CLOSED") {
-        console.error(
-          `[OfflineSync] Business/Validation error for transaction ${item.id}. Discarding item.`,
-          syncError
-        );
-        f7.toast
-          .create({
-            text: `Gagal menyinkronkan transaksi offline (${item.data.merchant || "Pengeluaran"}): ${syncError.message}`,
-            closeTimeout: 5000,
-            position: "bottom",
-          })
-          .open();
+        item.retryCount = (item.retryCount || 0) + 1;
+        if (item.retryCount < 3) {
+          console.warn(
+            `[OfflineSync] Business/Validation error for transaction ${item.id}. Retry attempt ${item.retryCount}/3. Postponing.`,
+            syncError
+          );
+          remainingQueue.push(item);
+        } else {
+          console.error(
+            `[OfflineSync] Business/Validation error for transaction ${item.id} after 3 attempts. Pushing to failed queue.`,
+            syncError
+          );
+          pushToFailedQueue(item, syncError.message);
+          f7.toast
+            .create({
+              text: `Gagal menyinkronkan transaksi offline (${item.data.merchant || "Pengeluaran"}) setelah 3 kali mencoba: ${syncError.message}`,
+              closeTimeout: 5000,
+              position: "bottom",
+            })
+            .open();
+        }
       }
     }
   }

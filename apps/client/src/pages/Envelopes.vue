@@ -96,15 +96,51 @@
           @click="openEditSheet(item)"
         >
           <template #media>
-            <div
-              :style="{
-                width: '16px',
-                height: '16px',
-                borderRadius: '50%',
-                background: item.color,
-                marginTop: '12px',
-              }"
-            ></div>
+            <div style="position: relative">
+              <div
+                :style="{
+                  width: '16px',
+                  height: '16px',
+                  borderRadius: '50%',
+                  background: item.color,
+                  marginTop: '12px',
+                }"
+              ></div>
+              <!-- Savings target indicator -->
+              <span
+                v-if="item.isSavingsTarget"
+                class="material-symbols-outlined"
+                style="
+                  position: absolute;
+                  bottom: -6px;
+                  right: -8px;
+                  font-size: 12px;
+                  color: #22c55e;
+                  background: white;
+                  border-radius: 50%;
+                "
+                title="Target Tabungan"
+                >savings</span
+              >
+            </div>
+          </template>
+
+          <!-- Savings target badge inline -->
+          <template #after>
+            <span
+              v-if="item.isSavingsTarget"
+              style="
+                font-size: 10px;
+                font-weight: 700;
+                color: #166534;
+                background: #dcfce7;
+                border: 1px solid #86efac;
+                border-radius: 999px;
+                padding: 2px 8px;
+                white-space: nowrap;
+              "
+              >🏦 Target Tabungan</span
+            >
           </template>
 
           <f7-swipeout-actions right>
@@ -114,7 +150,7 @@
             <f7-swipeout-button
               delete
               confirm-text="Hapus template amplop ini?"
-              @click.stop="deleteEnvelope(item.id)"
+              @click.stop="deleteEnvelope(item)"
             >
               Hapus
             </f7-swipeout-button>
@@ -185,7 +221,7 @@
           </div>
         </div>
 
-        <div style="margin-bottom: 24px">
+        <div style="margin-bottom: 16px">
           <div style="font-size: 13px; color: var(--fintr-text-muted); margin-bottom: 6px">
             Perilaku Sisa Dana (Rollover)
           </div>
@@ -196,6 +232,136 @@
           </select>
         </div>
 
+        <!-- Savings target section (edit mode only) -->
+        <div v-if="isEditing" style="margin-bottom: 24px">
+          <!-- Case 1: This envelope IS the current savings target -->
+          <div
+            v-if="editingItem?.isSavingsTarget"
+            style="
+              padding: 12px 14px;
+              background: #f0fdf4;
+              border: 1px solid #86efac;
+              border-radius: 10px;
+              display: flex;
+              align-items: flex-start;
+              gap: 10px;
+            "
+          >
+            <span
+              class="material-symbols-outlined"
+              style="font-size: 20px; color: #16a34a; flex-shrink: 0; margin-top: 1px"
+              >savings</span
+            >
+            <div>
+              <div style="font-size: 13px; font-weight: 700; color: #166534">
+                Ini adalah Target Tabungan aktif
+              </div>
+              <div style="font-size: 11px; color: #4d7c5f; margin-top: 3px; line-height: 1.5">
+                Semua amplop dengan rollover <em>"Transfer ke Tabungan"</em> akan mengirimkan
+                sisanya ke sini setiap pergantian periode. Untuk memindahkan peran ini, buka amplop
+                lain dan jadikan sebagai target baru.
+              </div>
+            </div>
+          </div>
+
+          <!-- Case 2: Another envelope is the savings target → offer to switch -->
+          <div
+            v-else-if="currentSavingsTarget"
+            style="
+              padding: 12px 14px;
+              background: #fafafa;
+              border: 1px solid #e2e8f0;
+              border-radius: 10px;
+            "
+          >
+            <div style="font-size: 12px; color: #64748b; margin-bottom: 8px">
+              Target tabungan saat ini:
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 4px;
+                  font-weight: 700;
+                  color: #166534;
+                  background: #dcfce7;
+                  border: 1px solid #86efac;
+                  border-radius: 999px;
+                  padding: 1px 8px;
+                  font-size: 12px;
+                "
+              >
+                <span
+                  :style="{
+                    display: 'inline-block',
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: currentSavingsTarget.color,
+                  }"
+                ></span>
+                {{ currentSavingsTarget.name }}
+              </span>
+            </div>
+            <button
+              type="button"
+              @click="promptSetAsSavingsTarget"
+              style="
+                width: 100%;
+                padding: 9px 14px;
+                background: white;
+                border: 1.5px solid #22c55e;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 600;
+                color: #166534;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+              "
+            >
+              <span class="material-symbols-outlined" style="font-size: 16px">swap_horiz</span>
+              Pindahkan target ke amplop ini
+            </button>
+          </div>
+
+          <!-- Case 3: No savings target exists yet -->
+          <div
+            v-else
+            style="
+              padding: 12px 14px;
+              background: #fefce8;
+              border: 1px solid #fde047;
+              border-radius: 10px;
+            "
+          >
+            <div style="font-size: 12px; color: #713f12; margin-bottom: 8px; line-height: 1.4">
+              ⚠️ Belum ada target tabungan. Amplop dengan rollover
+              <em>"Transfer ke Tabungan"</em> tidak punya tujuan pengiriman dana.
+            </div>
+            <button
+              type="button"
+              @click="promptSetAsSavingsTarget"
+              style="
+                width: 100%;
+                padding: 9px 14px;
+                background: #fef9c3;
+                border: 1.5px solid #eab308;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 600;
+                color: #713f12;
+                cursor: pointer;
+              "
+            >
+              🏦 Jadikan amplop ini sebagai target tabungan
+            </button>
+          </div>
+        </div>
+
+        <div v-else style="margin-bottom: 24px"></div>
+
         <button class="btn-primary" :disabled="creating" @click="saveEnvelope">
           {{ creating ? "Memproses..." : isEditing ? "Simpan Perubahan" : "Buat Amplop" }}
         </button>
@@ -205,7 +371,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted } from "vue";
+import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
 import {
   f7Page,
   f7Navbar,
@@ -246,6 +412,9 @@ const form = reactive({
   color: colorPresets[0],
   rolloverBehavior: "reset",
 });
+
+// Derived: which envelope is currently the savings target
+const currentSavingsTarget = computed(() => items.value.find(i => i.isSavingsTarget) ?? null);
 
 const loadEnvelopes = async () => {
   try {
@@ -288,6 +457,25 @@ const openEditSheet = (item: any) => {
   sheetOpened.value = true;
 };
 
+// Prompt user to confirm switching savings target
+const promptSetAsSavingsTarget = () => {
+  const old = currentSavingsTarget.value;
+  const msg = old
+    ? `Saat ini <strong>${old.name}</strong> adalah target tabungan.<br><br>Apakah kamu ingin memindahkannya ke <strong>${form.name || editingItem.value?.name}</strong>? Dana rollover bulan depan akan dikirim ke amplop ini.`
+    : `Jadikan <strong>${form.name || editingItem.value?.name}</strong> sebagai target tabungan? Dana sisa dari semua amplop berperilaku "Transfer ke Tabungan" akan dikirim ke sini setiap akhir periode.`;
+
+  f7.dialog.confirm(msg, "Konfirmasi Target Tabungan", async () => {
+    try {
+      await envelopes.setSavingsTarget(editingId.value!);
+      f7.toast.create({ text: "Target tabungan diperbarui 🏦", closeTimeout: 2000 }).open();
+      sheetOpened.value = false;
+      loadEnvelopes();
+    } catch (err: any) {
+      f7.dialog.alert("Gagal memperbarui target tabungan: " + err.message);
+    }
+  });
+};
+
 const submitSaveEnvelope = async () => {
   creating.value = true;
   try {
@@ -297,6 +485,7 @@ const submitSaveEnvelope = async () => {
         defaultAmount: Number(form.defaultAmount),
         color: form.color,
         rolloverBehavior: form.rolloverBehavior,
+        // isSavingsTarget is handled separately via promptSetAsSavingsTarget
       });
       f7.toast
         .create({
@@ -358,10 +547,10 @@ const saveEnvelope = async () => {
   await submitSaveEnvelope();
 };
 
-const deleteEnvelope = async (id: string) => {
+const deleteEnvelope = async (item: any) => {
   try {
-    const res: any = await envelopes.remove(id);
-    items.value = items.value.filter(item => item.id !== id);
+    const res: any = await envelopes.remove(item.id);
+    items.value = items.value.filter(i => i.id !== item.id);
     if (res?.keptInActivePeriod) {
       f7.dialog.alert(
         "Amplop dinonaktifkan dari daftar master. Karena sudah ada transaksi tercatat pada periode ini, amplop akan tetap muncul dengan status 'Ditutup' di halaman utama hingga periode berakhir.",
@@ -376,7 +565,21 @@ const deleteEnvelope = async (id: string) => {
         .open();
     }
   } catch (err: any) {
-    f7.dialog.alert("Gagal menghapus: " + err.message);
+    // Handle savings target dependency error specifically
+    if (
+      err?.error === "SAVINGS_TARGET_HAS_DEPENDENTS" ||
+      err?.message?.includes("SAVINGS_TARGET_HAS_DEPENDENTS")
+    ) {
+      f7.dialog.alert(
+        `<strong>${item.name}</strong> adalah amplop target tabungan yang sedang digunakan oleh amplop lain.<br><br>` +
+          `Untuk menghapusnya, lakukan salah satu:<br>` +
+          `• Ubah perilaku rollover semua amplop "Transfer ke Tabungan" menjadi pilihan lain, <em>atau</em><br>` +
+          `• Jadikan amplop lain sebagai target tabungan terlebih dahulu (via tombol Ubah).`,
+        "Tidak Dapat Dihapus 🏦"
+      );
+    } else {
+      f7.dialog.alert("Gagal menghapus: " + (err?.message || JSON.stringify(err)));
+    }
   }
 };
 

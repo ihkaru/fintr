@@ -1,5 +1,5 @@
 <template>
-  <f7-page name="home" @page:beforein="loadDashboard" @page:tabshow="loadDashboard">
+  <f7-page name="home" @page:beforein="triggerLoadDashboard" @page:tabshow="triggerLoadDashboard">
     <f7-navbar>
       <f7-nav-title class="font-headline">FamiVault</f7-nav-title>
       <f7-nav-right>
@@ -27,12 +27,122 @@
         :household-name="householdName"
       />
 
+      <!-- Failed Offline Transactions Warning Banner -->
+      <div
+        v-if="failedQueue.length > 0"
+        style="
+          margin: 12px 16px 4px;
+          background: #fdf2f2;
+          border: 1px solid #f8b4b4;
+          border-radius: 12px;
+          padding: 12px 16px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        "
+      >
+        <div style="display: flex; align-items: center; gap: 8px; flex: 1">
+          <span class="material-symbols-outlined" style="color: #f05252; font-size: 24px"
+            >warning</span
+          >
+          <div style="font-size: 13px; color: #9b1c1c; font-weight: 500; line-height: 1.4">
+            Ada <strong>{{ failedQueue.length }}</strong> pengeluaran offline yang gagal diunggah.
+          </div>
+        </div>
+        <button
+          @click="failedSheetOpened = true"
+          style="
+            background: #f05252;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(240, 82, 82, 0.2);
+          "
+        >
+          Tinjau
+        </button>
+      </div>
+
       <!-- Hero Stats Card -->
       <BudgetHeroCard
         :remaining="summary.remaining"
         :allocated="summary.allocated"
         :spent="summary.spent"
       />
+
+      <!-- Budget Optimization Nudge -->
+      <div
+        v-if="isNudgeActive"
+        style="
+          margin: 0 16px 12px;
+          background: #fefcf0;
+          border: 1px solid #f9e6a9;
+          border-radius: 16px;
+          padding: 16px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        "
+      >
+        <div style="display: flex; gap: 12px; align-items: flex-start">
+          <span style="font-size: 24px; line-height: 1">💡</span>
+          <div style="flex: 1">
+            <div style="font-size: 14px; font-weight: 800; color: #7f5c01; margin-bottom: 4px">
+              Optimalisasi Anggaran Terdeteksi!
+            </div>
+            <div style="font-size: 13px; color: #5d480e; line-height: 1.5">
+              Amplop <strong>'Lain-lain'</strong> mendominasi pengeluaran Anda bulan ini (60%+).
+              Ingin memecahnya ke amplop baru agar anggaran lebih terpantau?
+            </div>
+            <div style="font-size: 12px; color: #7f5c01; font-weight: 600; margin-top: 6px">
+              Rekomendasi nama amplop:
+              <span
+                style="background: #fceea7; padding: 2px 6px; border-radius: 6px; font-weight: 700"
+                >"{{ suggestedEnvelopeName }}"</span
+              >
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px">
+          <button
+            @click="dismissNudge"
+            style="
+              background: transparent;
+              color: #707973;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 8px;
+              font-size: 12px;
+              font-weight: 700;
+              cursor: pointer;
+            "
+          >
+            Nanti Saja
+          </button>
+          <button
+            @click="openNudgeEnvelopeSheet"
+            style="
+              background: #0f5238;
+              color: white;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 8px;
+              font-size: 12px;
+              font-weight: 700;
+              cursor: pointer;
+              box-shadow: 0 2px 4px rgba(15, 82, 56, 0.2);
+            "
+          >
+            Pecah Amplop
+          </button>
+        </div>
+      </div>
 
       <!-- Budget Analytics Shortcut -->
       <div
@@ -223,11 +333,32 @@
       :transaction="selectedTransaction"
       @delete="deleteTxn"
     />
+
+    <!-- Failed Transactions Sheet -->
+    <FailedQueueSheet
+      v-model:opened="failedSheetOpened"
+      :failed-queue="failedQueue"
+      :friendly-error="friendlyError"
+      :get-split-total="getSplitTotal"
+      @remove="onRemoveFailed"
+      @retry="onRetryFailed"
+      @clear-all="onClearAllFailed"
+    />
+
+    <!-- Nudge Create Envelope Sheet -->
+    <NudgeEnvelopeSheet
+      v-model:opened="nudgeSheetOpened"
+      :nudge-envelope-form="nudgeEnvelopeForm"
+      :nudge-color-presets="nudgeColorPresets"
+      :creating-nudge-envelope="creatingNudgeEnvelope"
+      @update-form="Object.assign(nudgeEnvelopeForm, $event)"
+      @submit="handleCreateNudgeEnvelope"
+    />
   </f7-page>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { onMounted, onBeforeUnmount, ref } from "vue";
 import {
   f7Page,
   f7Navbar,
@@ -235,20 +366,16 @@ import {
   f7NavRight,
   f7Link,
   f7Preloader,
-  f7,
   f7ready,
+  f7,
 } from "framework7-vue";
-import {
-  periods,
-  transactions as txnApi,
-  reconcile,
-  household,
-  getUser,
-  PeriodDetail,
-  Transaction,
-} from "../js/api";
 import { formatRp } from "../js/routes";
 import { useShareStore } from "../js/shareStore";
+
+// Composables
+import { useDashboard } from "../composables/useDashboard";
+import { useNudge } from "../composables/useNudge";
+import { useFailedQueue } from "../composables/useFailedQueue";
 
 // Modular UI Components
 import PartnerStatusBar from "../components/PartnerStatusBar.vue";
@@ -257,175 +384,72 @@ import EnvelopeCard from "../components/EnvelopeCard.vue";
 import TransactionRow from "../components/TransactionRow.vue";
 import ReconcileWidget from "../components/ReconcileWidget.vue";
 import TransactionDetailSheet from "../components/TransactionDetailSheet.vue";
+import NudgeEnvelopeSheet from "../components/NudgeEnvelopeSheet.vue";
+import FailedQueueSheet from "../components/FailedQueueSheet.vue";
 
-const loading = ref(true);
-const summary = ref({
-  remaining: 0,
-  allocated: 0,
-  spent: 0,
-});
-const allocationsData = ref<PeriodDetail["allocations"]>([]);
-const recentTxns = ref<Transaction[]>([]);
-const reconcileData = ref<any>(null);
-const currentPeriodId = ref<string | null>(null);
+const {
+  loading,
+  summary,
+  allocationsData,
+  recentTxns,
+  reconcileData,
+  currentPeriodId,
+  currentUserProfile,
+  partnerProfile,
+  householdName,
+  loadDashboard,
+  navigateToAddTransaction,
+  openAddTransactionWithEnvelope,
+  deleteTxn,
+  handleTransactionSaved,
+} = useDashboard();
 
-// Partner Status Bar State
-const currentUserProfile = ref<any>(getUser());
-const partnerProfile = ref<any>(null);
-const householdName = ref("");
+const {
+  isNudgeActive,
+  suggestedEnvelopeName,
+  nudgeSheetOpened,
+  creatingNudgeEnvelope,
+  nudgeColorPresets,
+  nudgeEnvelopeForm,
+  dismissNudge,
+  openNudgeEnvelopeSheet,
+  handleCreateNudgeEnvelope,
+  checkNudge,
+} = useNudge(currentPeriodId);
 
-const detailOpened = ref(false);
-const selectedTransaction = ref<Transaction | null>(null);
+const {
+  failedQueue,
+  failedSheetOpened,
+  loadFailedQueue,
+  onRemoveFailed,
+  onRetryFailed,
+  onClearAllFailed,
+  getSplitTotal,
+  friendlyError,
+} = useFailedQueue();
 
-const showTransactionDetail = (txn: Transaction) => {
+const onDashboardLoaded = (currentPeriod: any, allocations: any[], txns: any[]) => {
+  checkNudge(currentPeriod, allocations, txns);
+};
+
+const triggerLoadDashboard = () => loadDashboard(onDashboardLoaded);
+
+const showTransactionDetail = (txn: any) => {
   selectedTransaction.value = txn;
   detailOpened.value = true;
 };
 
-const loadDashboard = async () => {
-  try {
-    const periodList = await periods.list();
-    const currentPeriod = periodList.find(p => !p.isClosed) || periodList[0];
-
-    if (!currentPeriod) {
-      loading.value = false;
-      return;
-    }
-
-    currentPeriodId.value = currentPeriod.id;
-
-    // Fetch details
-    const [detail, txns, recDiff, householdRes] = await Promise.all([
-      periods.getDetail(currentPeriod.id),
-      txnApi.list({ periodId: currentPeriod.id, limit: 5 }),
-      reconcile.diff().catch(() => null),
-      household.get().catch(() => null),
-    ]);
-
-    // Update state
-    summary.value = {
-      remaining: parseFloat(detail.summary.totalRemaining),
-      allocated: parseFloat(detail.summary.totalAllocated),
-      spent: parseFloat(detail.summary.totalSpent),
-    };
-    allocationsData.value = detail.allocations;
-    recentTxns.value = txns;
-    reconcileData.value = recDiff;
-
-    // Process household members and profiles
-    if (householdRes) {
-      const currentUserId = getUser()?.id;
-      const members = householdRes.members || [];
-      const me = members.find((m: any) => m.userId === currentUserId);
-      const partner = members.find((m: any) => m.userId !== currentUserId);
-
-      currentUserProfile.value = me || getUser();
-      partnerProfile.value = partner || null;
-      householdName.value = householdRes.household?.name || "";
-    } else {
-      currentUserProfile.value = getUser();
-      partnerProfile.value = null;
-      householdName.value = "";
-    }
-  } catch (err) {
-    console.error("Gagal memuat data dasbor:", err);
-  } finally {
-    loading.value = false;
-  }
-};
-
-const navigateToAddTransaction = () => {
-  if (f7.views.main && f7.views.main.router) {
-    f7.views.main.router.navigate("/add-transaction/");
-  }
-};
-
-const openAddTransactionWithEnvelope = (allocationId: string) => {
-  const allocation = allocationsData.value.find(a => a.id === allocationId);
-  if (allocation && (allocation as any).isActive === false) {
-    f7.dialog.alert(
-      "Amplop ini sudah dinonaktifkan dari template master. Anda tidak dapat mencatat transaksi baru di dalamnya.",
-      "Amplop Ditutup"
-    );
-    return;
-  }
-  if (f7.views.main && f7.views.main.router) {
-    f7.views.main.router.navigate(`/add-transaction/?allocationId=${allocationId}`);
-  }
-};
-
-const deleteTxn = async (id: string) => {
-  try {
-    f7.dialog.preloader("Menghapus transaksi...");
-    await txnApi.remove(id);
-    f7.dialog.close();
-
-    f7.toast
-      .create({
-        text: "Transaksi berhasil dihapus! 🗑️",
-        closeTimeout: 2000,
-        destroyOnClose: true,
-      })
-      .open();
-
-    await loadDashboard();
-  } catch (err: any) {
-    f7.dialog.close();
-    f7.dialog.alert("Gagal menghapus transaksi: " + err.message, "Oops");
-  }
-};
-
-const handleTransactionSaved = async (e: Event) => {
-  const detail = (e as CustomEvent).detail;
-  if (!detail) {
-    // SSE update from partner, reload dashboard data
-    await loadDashboard();
-    return;
-  }
-
-  // Only run if this page's view is currently the active view
-  if (f7.views.current?.router?.currentRoute?.path !== "/") return;
-
-  const { ids, amount, merchant, isSplit } = detail;
-  const merchantText = merchant ? ` di ${merchant}` : "";
-  const typeText = isSplit ? "Pecahan transaksi" : "Transaksi";
-
-  const toast = f7.toast.create({
-    text: `✅ ${typeText} Rp ${formatRp(amount)}${merchantText} disimpan!`,
-    closeButton: true,
-    closeButtonText: "Batal (Undo)",
-    closeButtonColor: "yellow",
-    closeTimeout: 6000,
-    destroyOnClose: true,
-    on: {
-      closeButtonClick: async () => {
-        try {
-          f7.dialog.preloader("Membatalkan transaksi...");
-          await Promise.all(ids.map((id: string) => txnApi.remove(id)));
-          f7.dialog.close();
-
-          f7.toast
-            .create({
-              text: "🔄 Transaksi berhasil dibatalkan!",
-              closeTimeout: 2000,
-              destroyOnClose: true,
-            })
-            .open();
-
-          await loadDashboard();
-        } catch (err: any) {
-          f7.dialog.close();
-          f7.dialog.alert("Gagal membatalkan transaksi: " + err.message, "Oops");
-        }
-      },
-    },
-  });
-  toast.open();
-};
+// Local UI state for detail sheet
+const detailOpened = ref(false);
+const selectedTransaction = ref<any>(null);
 
 onMounted(async () => {
   window.addEventListener("fintr:transaction-saved", handleTransactionSaved);
-  window.addEventListener("fintr:envelope-changed", loadDashboard);
+  window.addEventListener("fintr:envelope-changed", triggerLoadDashboard);
+  window.addEventListener("fintr:offline-failed-changed", loadFailedQueue);
+
+  loadFailedQueue();
+  triggerLoadDashboard();
 
   f7ready(async () => {
     // Intercept shared receipt image or text from PWA share target and auto-redirect
@@ -462,6 +486,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener("fintr:transaction-saved", handleTransactionSaved);
-  window.removeEventListener("fintr:envelope-changed", loadDashboard);
+  window.removeEventListener("fintr:envelope-changed", triggerLoadDashboard);
+  window.removeEventListener("fintr:offline-failed-changed", loadFailedQueue);
 });
 </script>

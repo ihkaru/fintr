@@ -24,7 +24,7 @@ interface RolloverResult {
  * 2. Based on rollover_behavior:
  *    - reset: remaining goes to 0
  *    - rollover_self: remaining carries to next period's same envelope
- *    - rollover_to_savings: remaining adds to Tabungan envelope in next period
+ *    - rollover_to_savings: remaining adds to the savings target envelope (isSavingsTarget=true)
  * 3. Create next period with updated allocations
  */
 export async function closePeriodAndRollover(
@@ -111,8 +111,8 @@ export async function closePeriodAndRollover(
         and(eq(envelopeTemplates.householdId, householdId), eq(envelopeTemplates.isActive, true))
       );
 
-    // Find Tabungan template for rollover_to_savings
-    let savingsTemplate = activeTemplates.find(t => t.name === "Tabungan");
+    // Find savings target envelope by flag (not hardcoded name)
+    let savingsTemplate = activeTemplates.find(t => t.isSavingsTarget);
 
     // Calculate rollovers for each active template
     const templatesToInsert: Array<{
@@ -189,25 +189,28 @@ export async function closePeriodAndRollover(
       }
     }
 
-    // If we have rollover to savings but Tabungan template was deleted/deactivated, recover it
+    // If we have rollover to savings but savings target was deleted/deactivated, recover it
     if (!savingsTemplate && savingsRolloverTotal > 0) {
+      // Try to find any inactive savings target by flag
       const [inactiveSavings] = await tx
         .select()
         .from(envelopeTemplates)
         .where(
           and(
             eq(envelopeTemplates.householdId, householdId),
-            eq(envelopeTemplates.name, "Tabungan")
+            eq(envelopeTemplates.isSavingsTarget, true)
           )
         );
 
       if (inactiveSavings) {
+        // Re-activate the existing savings target
         await tx
           .update(envelopeTemplates)
           .set({ isActive: true })
           .where(eq(envelopeTemplates.id, inactiveSavings.id));
         savingsTemplate = { ...inactiveSavings, isActive: true };
       } else {
+        // No savings target exists at all — create one
         const [newSavings] = await tx
           .insert(envelopeTemplates)
           .values({
@@ -215,6 +218,7 @@ export async function closePeriodAndRollover(
             name: "Tabungan",
             defaultAmount: "0",
             rolloverBehavior: "rollover_self",
+            isSavingsTarget: true,
             sortOrder: activeTemplates.length,
             color: "#22c55e",
           })
@@ -231,9 +235,9 @@ export async function closePeriodAndRollover(
       });
     }
 
-    // Insert allocations for the next period
+    // Insert allocations for the next period (skip savings target — handled separately below)
     for (const item of templatesToInsert) {
-      if (item.envelopeName !== "Tabungan") {
+      if (!savingsTemplate || item.templateId !== savingsTemplate.id) {
         await tx.insert(budgetAllocations).values({
           periodId: nextPeriod.id,
           templateId: item.templateId,
@@ -243,11 +247,11 @@ export async function closePeriodAndRollover(
       }
     }
 
-    // Handle Tabungan — includes its own rollover + redirected savings
+    // Handle savings target — combines its own self-rollover + redirected savings from other envelopes
     if (savingsTemplate) {
-      const tabunganItem = templatesToInsert.find(t => t.templateId === savingsTemplate.id);
-      const tabunganRolloverSelf = tabunganItem ? tabunganItem.rolloverToNext : 0;
-      const totalSavingsRollover = tabunganRolloverSelf + savingsRolloverTotal;
+      const savingsItem = templatesToInsert.find(t => t.templateId === savingsTemplate!.id);
+      const savingsRolloverSelf = savingsItem ? savingsItem.rolloverToNext : 0;
+      const totalSavingsRollover = savingsRolloverSelf + savingsRolloverTotal;
 
       await tx.insert(budgetAllocations).values({
         periodId: nextPeriod.id,
@@ -358,13 +362,14 @@ export async function recalculateRolloverForHousehold(
         rolloverMap.set(alloc.templateId, rolloverToNext);
       }
 
+      // Find savings target by flag (not by hardcoded name)
       const [savingsTemplate] = await tx
         .select()
         .from(envelopeTemplates)
         .where(
           and(
             eq(envelopeTemplates.householdId, householdId),
-            eq(envelopeTemplates.name, "Tabungan")
+            eq(envelopeTemplates.isSavingsTarget, true)
           )
         );
 
@@ -377,8 +382,8 @@ export async function recalculateRolloverForHousehold(
       for (const nextAlloc of nextAllocations) {
         let newRollover: number;
         if (savingsTemplate && nextAlloc.templateId === savingsTemplate.id) {
-          const tabunganRolloverSelf = rolloverMap.get(savingsTemplate.id) || 0;
-          newRollover = tabunganRolloverSelf + savingsRolloverTotal;
+          const savingsRolloverSelf = rolloverMap.get(savingsTemplate.id) || 0;
+          newRollover = savingsRolloverSelf + savingsRolloverTotal;
         } else {
           newRollover = rolloverMap.get(nextAlloc.templateId) || 0;
         }

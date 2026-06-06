@@ -125,6 +125,7 @@ export function useAddTransaction(routeQueryAllocId?: string) {
   // Setup Capacitor + PWA share intent handlers
   onMounted(async () => {
     initDateTime();
+    await loadEnvelopes((msg, title) => f7.dialog.alert(msg, title));
 
     // Check for shared data from Native share store
     const { sharedData, clearSharedData } = useShareStore();
@@ -255,6 +256,16 @@ export function useAddTransaction(routeQueryAllocId?: string) {
         if (SendIntent) {
           const intent = await SendIntent.checkSendIntentReceived();
           if (intent && intent.files && intent.files.length > 0) {
+            if (intent.files.length > 5) {
+              f7.dialog.alert(
+                "Batas maksimal pengunggahan adalah 5 file sekaligus. Pengunggahan dibatalkan.",
+                "Batas File Terlampaui"
+              );
+              try {
+                await SendIntent.clearSendIntent();
+              } catch {}
+              return;
+            }
             if (!navigator.onLine) {
               f7.dialog.alert(
                 "Pemrosesan foto struk memerlukan koneksi internet. Foto Anda tersimpan aman di galeri. Silakan catat nominalnya secara manual saat ini.",

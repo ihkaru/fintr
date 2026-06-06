@@ -53,7 +53,7 @@
       <PeriodManagementCard
         :active-period="activePeriod"
         :closing-period="closingPeriod"
-        @close-period="closeActivePeriod"
+        @close-period="handleCloseActivePeriod"
       />
 
       <!-- Logout Card -->
@@ -104,7 +104,7 @@
         :closing-period="closingPeriod"
         :active-period="activePeriod"
         @closed="showRolloverSheet = false"
-        @confirm="confirmClosePeriod"
+        @confirm="handleConfirmClosePeriod"
       />
     </div>
   </f7-page>
@@ -120,28 +120,30 @@ import HouseholdCard from "../components/settings/HouseholdCard.vue";
 import PeriodManagementCard from "../components/settings/PeriodManagementCard.vue";
 import RolloverPreviewSheet from "../components/settings/RolloverPreviewSheet.vue";
 
+// Composable
+import { useRolloverPreview } from "../composables/useRolloverPreview";
+
 declare const __APP_VERSION__: string;
 const appVersion = __APP_VERSION__;
 
 const loading = ref(true);
 const joining = ref(false);
-const closingPeriod = ref(false);
 
 const userProfile = ref<any>(null);
 const inviteCode = ref("");
 const activePeriod = ref<any>(null);
 const members = ref<any[]>([]);
 
-// Rollover Sheet States
-const showRolloverSheet = ref(false);
-const loadingPreview = ref(false);
-const previewData = ref<any>(null);
-const previewSummary = ref({
-  totalRemaining: 0,
-  toSavings: 0,
-  toSelf: 0,
-  toReset: 0,
-});
+// Rollover Flow Composable
+const {
+  showRolloverSheet,
+  loadingPreview,
+  previewData,
+  previewSummary,
+  closingPeriod,
+  closeActivePeriod,
+  confirmClosePeriod,
+} = useRolloverPreview();
 
 const loadSettings = async () => {
   try {
@@ -214,64 +216,19 @@ const joinHousehold = async (joinCodeValue: string) => {
   }
 };
 
-const closeActivePeriod = async () => {
+const handleCloseActivePeriod = () => {
   if (!activePeriod.value) {
     f7.dialog.alert("Tidak ada periode aktif yang bisa ditutup.", "Oops");
     return;
   }
-
-  showRolloverSheet.value = true;
-  loadingPreview.value = true;
-  try {
-    const res = await periods.getDetail(activePeriod.value.id);
-    previewData.value = res;
-
-    let totalRemaining = 0;
-    let toSavings = 0;
-    let toSelf = 0;
-    let toReset = 0;
-
-    res.allocations.forEach((alloc: any) => {
-      const remaining = parseFloat(alloc.remaining) || 0;
-      totalRemaining += remaining;
-      if (alloc.rolloverBehavior === "rollover_to_savings") {
-        toSavings += remaining;
-      } else if (alloc.rolloverBehavior === "rollover_self") {
-        toSelf += remaining;
-      } else {
-        toReset += remaining;
-      }
-    });
-
-    previewSummary.value = {
-      totalRemaining,
-      toSavings,
-      toSelf,
-      toReset,
-    };
-  } catch (err: any) {
-    f7.dialog.alert("Gagal memuat pratinjau rollover: " + err.message);
-    showRolloverSheet.value = false;
-  } finally {
-    loadingPreview.value = false;
-  }
+  closeActivePeriod(activePeriod.value.id);
 };
 
-const confirmClosePeriod = async (options: { fastForward: boolean }) => {
-  closingPeriod.value = true;
-  try {
-    await periods.close(activePeriod.value.id, { fastForward: options.fastForward });
-    showRolloverSheet.value = false;
-    f7.dialog.alert(
-      "Periode berhasil ditutup dan rollover selesai! Periode baru telah dibuka secara otomatis.",
-      "Sukses"
-    );
+const handleConfirmClosePeriod = (options: { fastForward: boolean }) => {
+  if (!activePeriod.value) return;
+  confirmClosePeriod(activePeriod.value.id, options, () => {
     loadSettings();
-  } catch (err: any) {
-    f7.dialog.alert("Gagal melakukan rollover: " + err.message);
-  } finally {
-    closingPeriod.value = false;
-  }
+  });
 };
 
 const handleLogout = () => {

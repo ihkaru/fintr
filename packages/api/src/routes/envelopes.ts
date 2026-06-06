@@ -92,6 +92,29 @@ export const envelopeRoutes = new Elysia({ prefix: "/envelopes" })
       if (body.rolloverBehavior !== undefined) updates.rolloverBehavior = body.rolloverBehavior;
       if (body.color !== undefined) updates.color = body.color;
       if (body.sortOrder !== undefined) updates.sortOrder = body.sortOrder;
+      if (body.isSavingsTarget !== undefined) {
+        if (body.isSavingsTarget) {
+          // Switching to this envelope: unmark existing savings target first (enforce singleton)
+          await db
+            .update(envelopeTemplates)
+            .set({ isSavingsTarget: false })
+            .where(
+              and(
+                eq(envelopeTemplates.householdId, householdId),
+                eq(envelopeTemplates.isSavingsTarget, true)
+              )
+            );
+          updates.isSavingsTarget = true;
+        } else {
+          // Block explicit unmark: must designate another envelope as target instead
+          set.status = 400;
+          return {
+            error: "CANNOT_UNMARK_SAVINGS_TARGET",
+            message:
+              "Tidak dapat menonaktifkan target tabungan secara langsung. Buka amplop lain dan jadikan sebagai target tabungan baru.",
+          };
+        }
+      }
 
       const [updated] = await db
         .update(envelopeTemplates)
@@ -145,6 +168,7 @@ export const envelopeRoutes = new Elysia({ prefix: "/envelopes" })
         ),
         color: t.Optional(t.String()),
         sortOrder: t.Optional(t.Number()),
+        isSavingsTarget: t.Optional(t.Boolean()),
       }),
     }
   )
@@ -152,6 +176,45 @@ export const envelopeRoutes = new Elysia({ prefix: "/envelopes" })
     if (!householdId) {
       set.status = 400;
       return { error: "Household required" };
+    }
+
+    // Get the template to check if it's a savings target
+    const [template] = await db
+      .select()
+      .from(envelopeTemplates)
+      .where(
+        and(eq(envelopeTemplates.id, params.id), eq(envelopeTemplates.householdId, householdId))
+      );
+
+    if (!template) {
+      set.status = 404;
+      return { error: "Amplop tidak ditemukan" };
+    }
+
+    // Guard: block deletion if this is the savings target AND other envelopes depend on it
+    if (template.isSavingsTarget) {
+      const dependents = await db
+        .select({ id: envelopeTemplates.id })
+        .from(envelopeTemplates)
+        .where(
+          and(
+            eq(envelopeTemplates.householdId, householdId),
+            eq(envelopeTemplates.isActive, true),
+            eq(envelopeTemplates.rolloverBehavior, "rollover_to_savings")
+          )
+        );
+
+      // Filter out the savings target itself
+      const externalDependents = dependents.filter(d => d.id !== params.id);
+
+      if (externalDependents.length > 0) {
+        set.status = 400;
+        return {
+          error: "SAVINGS_TARGET_HAS_DEPENDENTS",
+          message:
+            "Amplop ini adalah target tabungan. Ada amplop lain yang menggunakan 'Transfer ke Tabungan'. Ubah perilaku rollover amplop tersebut terlebih dahulu, atau jadikan amplop lain sebagai target tabungan sebelum menghapus ini.",
+        };
+      }
     }
 
     // Soft delete template
