@@ -891,3 +891,86 @@ onBeforeUnmount(() => {
   }
 });
 </script>
+
+<style scoped>
+/*
+ * These styles are injected by Vue compiler as part of the JS bundle,
+ * so they are NOT affected by service worker CSS caching.
+ * They also carry a [data-v-xxxx] scoped attribute which gives them
+ * higher specificity than Framework7's global input[type] resets.
+ */
+
+/* ── Wallet Amount Box ─────────────────────────────────────── */
+.wallet-amount-box {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #bfc9c1;
+  border-radius: 8px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.wallet-rp-prefix {
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #707973;
+  white-space: nowrap;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* input inside .wallet-amount-box — scoped specificity beats F7 global resets */
+.wallet-amount-inner {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 9px 8px 9px 0;
+  color: #0f5238;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  box-sizing: border-box;
+  -moz-appearance: textfield;
+  width: 100%;
+}
+
+.wallet-amount-inner::-webkit-outer-spin-button,
+.wallet-amount-inner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.wallet-amount-inner::placeholder {
+  color: #b0b8b3;
+  font-weight: 400;
+}
+
+.wallet-amount-box:focus-within {
+  border-color: #0f5238;
+  box-shadow: 0 0 0 2px rgba(15, 82, 56, 0.1);
+}
+
+/* ── Wallet Label Input ─────────────────────────────────────── */
+.wallet-label-input {
+  display: block;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #bfc9c1;
+  border-radius: 8px;
+  padding: 9px 10px;
+  color: #161a32;
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.wallet-label-input:focus {
+  border-color: #0f5238;
+}
+</style>

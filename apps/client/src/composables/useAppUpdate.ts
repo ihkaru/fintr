@@ -15,6 +15,16 @@ let waitingWorker: ServiceWorker | null = null;
 export function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
 
+  // Skip SW in dev mode — Vite serves unhashed filenames so cache-first
+  // strategy causes stale CSS/JS that masks hot-reload changes.
+  if (import.meta.env.DEV) {
+    // Unregister any previously installed SW so dev mode is always fresh
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      registrations.forEach(r => r.unregister());
+    });
+    return;
+  }
+
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register("/sw.js");
