@@ -1,8 +1,14 @@
 import { Elysia, t } from "elysia";
 import { authMiddleware } from "../middleware/auth";
 import { db } from "../db/index";
-import { budgetPeriods, budgetAllocations, envelopeTemplates, transactions } from "../db/schema";
-import { eq, and, desc, sql, inArray } from "drizzle-orm";
+import {
+  budgetPeriods,
+  budgetAllocations,
+  envelopeTemplates,
+  transactions,
+  rolloverLogs,
+} from "../db/schema";
+import { eq, and, desc, asc, sql, inArray } from "drizzle-orm";
 import { closePeriodAndRollover } from "../services/rollover";
 import { seedDefaultEnvelopes, seedInitialPeriod } from "../db/seed";
 
@@ -392,4 +398,18 @@ export const periodRoutes = new Elysia({ prefix: "/periods" })
       set.status = 400;
       return { error: (error as Error).message };
     }
+  })
+  .get("/:id/rollover-logs", async ({ params, householdId, set }) => {
+    if (!householdId) {
+      set.status = 400;
+      return { error: "Household required" };
+    }
+
+    const logs = await db
+      .select()
+      .from(rolloverLogs)
+      .where(and(eq(rolloverLogs.toPeriodId, params.id), eq(rolloverLogs.householdId, householdId)))
+      .orderBy(asc(rolloverLogs.envelopeName));
+
+    return logs;
   });

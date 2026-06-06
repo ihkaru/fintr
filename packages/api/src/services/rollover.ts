@@ -1,5 +1,11 @@
 import { db } from "../db/index";
-import { budgetPeriods, budgetAllocations, envelopeTemplates, transactions } from "../db/schema";
+import {
+  budgetPeriods,
+  budgetAllocations,
+  envelopeTemplates,
+  transactions,
+  rolloverLogs,
+} from "../db/schema";
 import { eq, and, sql } from "drizzle-orm";
 
 interface RolloverResult {
@@ -140,6 +146,27 @@ export async function closePeriodAndRollover(
         behavior: template.rolloverBehavior,
         remaining: remaining.toFixed(2),
         rolledOver: rolloverToNext.toFixed(2),
+      });
+
+      // Write logs to database
+      let rolledOverAmount = 0;
+      if (remaining > 0) {
+        if (
+          template.rolloverBehavior === "rollover_self" ||
+          template.rolloverBehavior === "rollover_to_savings"
+        ) {
+          rolledOverAmount = remaining;
+        }
+      }
+
+      await db.insert(rolloverLogs).values({
+        householdId,
+        fromPeriodId: periodId,
+        toPeriodId: nextPeriod.id,
+        envelopeName: template.name,
+        behavior: template.rolloverBehavior as "reset" | "rollover_self" | "rollover_to_savings",
+        remainingAmount: remaining.toFixed(2),
+        rolledOverAmount: rolledOverAmount.toFixed(2),
       });
     }
   }

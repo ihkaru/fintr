@@ -243,6 +243,22 @@ export const periods = {
   async close(id: string) {
     return request(`/periods/${id}/close`, { method: "POST" });
   },
+
+  async getRolloverLogs(id: string) {
+    return request<
+      Array<{
+        id: string;
+        householdId: string;
+        fromPeriodId: string;
+        toPeriodId: string;
+        envelopeName: string;
+        behavior: string;
+        remainingAmount: string;
+        rolledOverAmount: string;
+        createdAt: string;
+      }>
+    >(`/periods/${id}/rollover-logs`);
+  },
 };
 
 // ── Allocations ─────────────────────────────────────────────────

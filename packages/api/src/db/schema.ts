@@ -227,3 +227,38 @@ export const accountSnapshotsRelations = relations(accountSnapshots, ({ one }) =
     references: [users.id],
   }),
 }));
+
+// ── Rollover Logs ──────────────────────────────────────────────────────────────
+
+export const rolloverLogs = pgTable("rollover_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  fromPeriodId: uuid("from_period_id")
+    .notNull()
+    .references(() => budgetPeriods.id, { onDelete: "cascade" }),
+  toPeriodId: uuid("to_period_id")
+    .notNull()
+    .references(() => budgetPeriods.id, { onDelete: "cascade" }),
+  envelopeName: text("envelope_name").notNull(),
+  behavior: rolloverBehaviorEnum("behavior").notNull(),
+  remainingAmount: numeric("remaining_amount", { precision: 12, scale: 2 }).notNull(),
+  rolledOverAmount: numeric("rolled_over_amount", { precision: 12, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const rolloverLogsRelations = relations(rolloverLogs, ({ one }) => ({
+  household: one(households, {
+    fields: [rolloverLogs.householdId],
+    references: [households.id],
+  }),
+  fromPeriod: one(budgetPeriods, {
+    fields: [rolloverLogs.fromPeriodId],
+    references: [budgetPeriods.id],
+  }),
+  toPeriod: one(budgetPeriods, {
+    fields: [rolloverLogs.toPeriodId],
+    references: [budgetPeriods.id],
+  }),
+}));
