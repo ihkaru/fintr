@@ -293,6 +293,35 @@ export const periodRoutes = new Elysia({ prefix: "/periods" })
       return { error: "Periode tidak ditemukan" };
     }
 
+    // Self-healing: if the period is currently active (not closed), ensure all active templates have allocations
+    if (!period.isClosed) {
+      const activeTemplates = await db
+        .select()
+        .from(envelopeTemplates)
+        .where(
+          and(eq(envelopeTemplates.householdId, householdId), eq(envelopeTemplates.isActive, true))
+        );
+
+      const existingAllocations = await db
+        .select()
+        .from(budgetAllocations)
+        .where(eq(budgetAllocations.periodId, period.id));
+
+      const existingTemplateIds = new Set(existingAllocations.map(a => a.templateId));
+      const missingTemplates = activeTemplates.filter(t => !existingTemplateIds.has(t.id));
+
+      if (missingTemplates.length > 0) {
+        await db.insert(budgetAllocations).values(
+          missingTemplates.map(t => ({
+            periodId: period.id,
+            templateId: t.id,
+            allocatedAmount: t.defaultAmount,
+            rolloverAmount: "0",
+          }))
+        );
+      }
+    }
+
     // Get allocations with spending totals
     const allocations = await db
       .select({

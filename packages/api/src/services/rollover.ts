@@ -1,6 +1,6 @@
 import { db } from "../db/index";
 import { budgetPeriods, budgetAllocations, envelopeTemplates, transactions } from "../db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 interface RolloverResult {
   nextPeriodId: string;
@@ -79,62 +79,92 @@ export async function closePeriodAndRollover(
   let savingsRolloverTotal = 0;
   const rollovers: RolloverResult["rollovers"] = [];
 
+  // Get all active templates for this household
+  const activeTemplates = await db
+    .select()
+    .from(envelopeTemplates)
+    .where(
+      and(eq(envelopeTemplates.householdId, householdId), eq(envelopeTemplates.isActive, true))
+    );
+
   // Find Tabungan template for rollover_to_savings
-  const savingsTemplate = allocationsWithSpending.find(a => a.envelopeName === "Tabungan");
+  const savingsTemplate = activeTemplates.find(t => t.name === "Tabungan");
 
-  for (const alloc of allocationsWithSpending) {
-    const allocated = parseFloat(alloc.allocatedAmount);
-    const rollover = parseFloat(alloc.rolloverAmount);
-    const spent = parseFloat(alloc.totalSpent);
-    const remaining = allocated + rollover - spent;
+  // Calculate rollovers for each active template
+  const templatesToInsert: Array<{
+    templateId: string;
+    envelopeName: string;
+    defaultAmount: string;
+    rolloverToNext: number;
+    rolloverBehavior: string;
+  }> = [];
 
+  for (const template of activeTemplates) {
+    const alloc = allocationsWithSpending.find(a => a.templateId === template.id);
     let rolloverToNext = 0;
+    let remaining = 0;
 
-    if (remaining > 0) {
-      switch (alloc.rolloverBehavior) {
-        case "reset":
-          rolloverToNext = 0;
-          break;
-        case "rollover_self":
-          rolloverToNext = remaining;
-          break;
-        case "rollover_to_savings":
-          savingsRolloverTotal += remaining;
-          rolloverToNext = 0;
-          break;
+    if (alloc) {
+      const allocated = parseFloat(alloc.allocatedAmount);
+      const rollover = parseFloat(alloc.rolloverAmount);
+      const spent = parseFloat(alloc.totalSpent);
+      remaining = allocated + rollover - spent;
+
+      if (remaining > 0) {
+        switch (alloc.rolloverBehavior) {
+          case "reset":
+            rolloverToNext = 0;
+            break;
+          case "rollover_self":
+            rolloverToNext = remaining;
+            break;
+          case "rollover_to_savings":
+            savingsRolloverTotal += remaining;
+            rolloverToNext = 0;
+            break;
+        }
       }
     }
 
-    // Skip Tabungan for now — will add savings rollover at the end
-    if (alloc.envelopeName !== "Tabungan") {
-      await db.insert(budgetAllocations).values({
-        periodId: nextPeriod.id,
-        templateId: alloc.templateId,
-        allocatedAmount: alloc.defaultAmount, // Use template default
-        rolloverAmount: rolloverToNext.toFixed(2),
+    templatesToInsert.push({
+      templateId: template.id,
+      envelopeName: template.name,
+      defaultAmount: template.defaultAmount,
+      rolloverToNext,
+      rolloverBehavior: template.rolloverBehavior,
+    });
+
+    if (alloc) {
+      rollovers.push({
+        envelopeName: template.name,
+        behavior: template.rolloverBehavior,
+        remaining: remaining.toFixed(2),
+        rolledOver: rolloverToNext.toFixed(2),
       });
     }
-
-    rollovers.push({
-      envelopeName: alloc.envelopeName,
-      behavior: alloc.rolloverBehavior,
-      remaining: remaining.toFixed(2),
-      rolledOver: rolloverToNext.toFixed(2),
-    });
   }
 
-  // 6. Handle Tabungan — includes its own rollover + redirected savings
-  if (savingsTemplate) {
-    const allocated = parseFloat(savingsTemplate.allocatedAmount);
-    const rollover = parseFloat(savingsTemplate.rolloverAmount);
-    const spent = parseFloat(savingsTemplate.totalSpent);
-    const remaining = allocated + rollover - spent;
+  // Insert allocations for the next period
+  for (const item of templatesToInsert) {
+    if (item.envelopeName !== "Tabungan") {
+      await db.insert(budgetAllocations).values({
+        periodId: nextPeriod.id,
+        templateId: item.templateId,
+        allocatedAmount: item.defaultAmount,
+        rolloverAmount: item.rolloverToNext.toFixed(2),
+      });
+    }
+  }
 
-    const totalSavingsRollover = remaining + savingsRolloverTotal;
+  // Handle Tabungan — includes its own rollover + redirected savings
+  if (savingsTemplate) {
+    const tabunganItem = templatesToInsert.find(t => t.templateId === savingsTemplate.id);
+    const tabunganRolloverSelf = tabunganItem ? tabunganItem.rolloverToNext : 0;
+    const totalSavingsRollover = tabunganRolloverSelf + savingsRolloverTotal;
 
     await db.insert(budgetAllocations).values({
       periodId: nextPeriod.id,
-      templateId: savingsTemplate.templateId,
+      templateId: savingsTemplate.id,
       allocatedAmount: savingsTemplate.defaultAmount,
       rolloverAmount: totalSavingsRollover.toFixed(2),
     });
