@@ -320,10 +320,10 @@
 
 /* ── Form Styles ─────────────────────────────────────────────── */
 .fintr-input {
-  background: var(--fintr-bg-card) !important;
-  border: 1px solid var(--fintr-border) !important;
+  background: var(--fintr-bg-card);
+  border: 1px solid var(--fintr-border);
   border-radius: 12px;
-  padding: 14px 16px !important;
+  padding: 14px 16px;
   color: var(--fintr-text);
   font-size: 15px;
   font-family: inherit;
@@ -358,51 +358,50 @@
 
 /* ── Wallet Calculator Inputs ────────────────────────────────── */
 /*
- * Framework7 globally resets all input[type] elements:
- *   border: none; background: none; padding: 0; display: block;
- * These overrides use !important to reclaim proper styling.
+ * By placing Framework7 in a CSS @layer, global resets are bypassed
+ * elegantly. No !important tags are needed to override them.
  */
 .wallet-label-input {
-  display: block !important;
-  width: 100% !important;
-  background: #ffffff !important;
-  border: 1px solid #bfc9c1 !important;
-  border-radius: 8px !important;
-  padding: 9px 10px !important;
-  color: #161a32 !important;
-  font-size: 13px !important;
-  font-family: inherit !important;
-  box-sizing: border-box !important;
+  display: block;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #bfc9c1;
+  border-radius: 8px;
+  padding: 9px 10px;
+  color: #161a32;
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
   outline: none;
 }
 
 .wallet-label-input:focus {
-  border-color: #0f5238 !important;
+  border-color: #0f5238;
 }
 
 .wallet-amount-input {
-  display: block !important;
-  width: 100% !important;
-  background: #ffffff !important;
-  border: 1px solid #bfc9c1 !important;
-  border-radius: 8px !important;
-  padding: 9px 10px !important;
-  padding-left: 30px !important;
-  color: #0f5238 !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
-  font-family: inherit !important;
-  box-sizing: border-box !important;
+  display: block;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #bfc9c1;
+  border-radius: 8px;
+  padding: 9px 10px;
+  padding-left: 30px;
+  color: #0f5238;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  box-sizing: border-box;
   outline: none;
 }
 
 .wallet-amount-input:focus {
-  border-color: #0f5238 !important;
+  border-color: #0f5238;
 }
 
 .wallet-amount-input::placeholder {
-  color: #b0b8b3 !important;
-  font-weight: 400 !important;
+  color: #b0b8b3;
+  font-weight: 400;
 }
 
 /*
@@ -432,19 +431,19 @@
 }
 
 .wallet-amount-inner {
-  flex: 1 !important;
-  min-width: 0 !important;
-  border: none !important;
-  background: transparent !important;
-  outline: none !important;
-  padding: 9px 10px 9px 0 !important;
-  color: #0f5238 !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
-  font-family: inherit !important;
-  box-sizing: border-box !important;
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 9px 10px 9px 0;
+  color: #0f5238;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  box-sizing: border-box;
   /* Disable number spinners */
-  -moz-appearance: textfield !important;
+  -moz-appearance: textfield;
 }
 
 .wallet-amount-inner::-webkit-outer-spin-button,
@@ -454,8 +453,8 @@
 }
 
 .wallet-amount-inner::placeholder {
-  color: #b0b8b3 !important;
-  font-weight: 400 !important;
+  color: #b0b8b3;
+  font-weight: 400;
 }
 
 .wallet-amount-box:focus-within {
