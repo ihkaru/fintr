@@ -9,6 +9,34 @@ import { allocationRoutes } from "./routes/allocations";
 import { transactionRoutes } from "./routes/transactions";
 import { reconcileRoutes } from "./routes/reconcile";
 import { syncRoutes } from "./routes/sync";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import { createMigrationClient } from "./db";
+import { join } from "path";
+
+// Run database migrations on startup with retries
+console.log("⚙️ Running database migrations...");
+let retries = 5;
+while (retries > 0) {
+  try {
+    const migrationClient = createMigrationClient();
+    const migrationDb = drizzle(migrationClient);
+    await migrate(migrationDb, { migrationsFolder: join(__dirname, "../drizzle") });
+    await migrationClient.end();
+    console.log("✅ Database migrations completed successfully.");
+    break;
+  } catch (error) {
+    retries--;
+    console.error(`❌ Database migration failed (retries left: ${retries}):`, error);
+    if (retries === 0) {
+      if (process.env.NODE_ENV === "production") {
+        process.exit(1);
+      }
+    } else {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+  }
+}
 
 const app = new Elysia()
   .use(
