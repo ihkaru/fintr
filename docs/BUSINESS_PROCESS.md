@@ -106,7 +106,127 @@ Skenario ketika pengguna tidak membuka aplikasi selama beberapa bulan, kemudian 
 
 ---
 
-## 🛠️ 3. Rekomendasi Pengembangan Masa Depan
+## 🏛️ 3. Resolusi Celah Logika & Spesifikasi Teknis (BPA Resolution)
+
+Untuk menjamin tidak adanya asumsi implisit yang berbeda antar pengembang, berikut adalah spesifikasi teknis dan aturan logika bisnis yang telah didefinisikan secara eksplisit:
+
+### A. State Machine Entitas
+
+#### 1. Siklus Hidup `budgetPeriods`
+
+```mermaid
+stateDiagram-v2
+    [*] --> Active : Inisialisasi Dinamis / FF
+    Active --> Closed : Tutup Periode & Rollover (Aksi User)
+    Closed --> [*]
+```
+
+- **Reopening**: Periode yang sudah berstatus `isClosed: true` **tidak dapat dibuka kembali** oleh pengguna maupun admin. Aturan ini mutlak untuk mencegah rusaknya rantai perhitungan saldo rollover pada periode-periode berikutnya.
+- **Lock Policy**: Seluruh transaksi yang terikat pada periode yang sudah ditutup bersifat _read-only_ (tidak bisa ditambah, diedit, atau dihapus).
+
+#### 2. Siklus Hidup `envelopeTemplates`
+
+```mermaid
+stateDiagram-v2
+    [*] --> Active : Dibuat (isActive = true)
+    Active --> SoftDeleted : Dihapus (isActive = false)
+    SoftDeleted --> Active : Direaktivasi (isActive = true)
+```
+
+- **Soft-Delete**: Penghapusan amplop mengubah status `isActive` menjadi `false` (tidak menghapus baris dari DB agar riwayat pengeluaran masa lalu tidak rusak).
+- **Reaktivasi**: Pengguna dapat mengaktifkan kembali amplop yang telah di-soft-delete dengan nama yang sama.
+- **Pemicu Mid-Period**: Jika template amplop diaktifkan kembali di tengah periode berjalan, sistem melalui mekanisme **Self-Healing** pada endpoint detail periode (`GET /periods/:id`) secara otomatis mendeteksi hilangnya relasi alokasi untuk periode aktif ini dan langsung membuatkan entri alokasi baru dengan nominal bawaan (`allocatedAmount = defaultAmount`) dan rollover `0`.
+
+---
+
+### B. Matriks Hak Akses Pengguna (Actor-Permission Matrix)
+
+FamiVault dirancang dengan model **Kemitraan Keuangan Setara** (_Equal Financial Partnership_) untuk menghindari ketimpangan kontrol finansial antar pasangan. Namun, terdapat batasan administratif tertentu:
+
+| Aksi / Fitur                          | Owner (Pembuat Rumah Tangga) | Member (Pasangan Bergabung) | Keterangan Logika Bisnis                                                     |
+| :------------------------------------ | :--------------------------: | :-------------------------: | :--------------------------------------------------------------------------- |
+| Mencatat/Mengedit/Menghapus Transaksi |              ✅              |             ✅              | Keduanya memiliki hak setara untuk mencatat pengeluaran harian.              |
+| Membuat/Mengedit/Menghapus Amplop     |              ✅              |             ✅              | Keduanya dapat mengelola template anggaran rumah tangga bersama.             |
+| Menutup Periode (Rollover)            |              ✅              |             ✅              | Siapa pun yang berdiskusi di akhir bulan dapat memicu transisi periode baru. |
+| Melihat Laporan & Log Rollover        |              ✅              |             ✅              | Keduanya memiliki akses penuh ke histori transparansi keuangan.              |
+| Melihat Kode Undangan Rumah Tangga    |              ✅              |             ✅              | Kode undangan dapat dibagikan oleh siapa saja untuk menghubungkan akun.      |
+| Mengeluarkan Pasangan (_Kick Member_) |              ✅              |             ❌              | Hanya pembuat rumah tangga asli yang dapat memutuskan hubungan kemitraan.    |
+| Membubarkan Rumah Tangga              |              ✅              |             ❌              | Hanya Owner yang dapat menghapus/membubarkan entitas rumah tangga di sistem. |
+
+---
+
+### C. Tabel Keputusan (Decision Table) Penyelarasan Periode
+
+Saat pengguna login atau memicu rollover, sistem mengevaluasi status periode terakhir menggunakan logika berikut:
+
+| Kondisi Periode Terakhir                          | Jumlah Transaksi | Selisih Waktu dengan Hari Ini | Aksi Sistem                                                                                                                                                   |
+| :------------------------------------------------ | :--------------: | :---------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Belum ada periode anggaran sama sekali            |        0         |               -               | **Onboarding Seeding**: Buat periode anggaran aktif untuk bulan berjalan saat ini beserta amplop default.                                                     |
+| Ada 1 periode aktif di masa lalu (seeding bawaan) |        0         |           > 1 Bulan           | **Fast-Forward In-Place**: Perbarui bulan & tahun periode aktif tersebut ke bulan berjalan saat ini secara langsung di DB.                                    |
+| Periode aktif terakhir berada di masa lalu        |       > 0        |           = 1 Bulan           | **Normal Rollover**: Tampilkan pratinjau rollover, tutup periode lama, dan buka periode baru untuk bulan berjalan.                                            |
+| Periode aktif terakhir berada di masa lalu        |       > 0        |           > 1 Bulan           | **Cascade Rollover**: Tawarkan pembuatan periode kosong beruntun (untuk mencatat riwayat tertunda) atau langsung melompat ke periode bulan berjalan saat ini. |
+
+---
+
+### D. Data Handoff Contract (Skema Kontrak API & SSE)
+
+#### 1. Payload Server-Sent Events (SSE)
+
+Setiap kali ada perubahan data (transaksi baru, edit anggaran, hapus amplop), server menyiarkan payload JSON berikut via stream SSE ke perangkat pasangan:
+
+```json
+{
+  "event": "budget_update",
+  "data": {
+    "type": "TRANSACTION_CREATED | ENVELOPE_UPDATED | PERIOD_CLOSED",
+    "timestamp": "2026-06-06T08:24:00Z",
+    "payload": {
+      "envelopeId": "uuid-string",
+      "allocatedAmount": 500000,
+      "spent": 120000
+    }
+  }
+}
+```
+
+#### 2. Kontrak Error `400 Bad Request` pada `/join-household`
+
+Untuk mencegah transaksi lama ter-orphan ketika pengguna berpindah household, backend mengembalikan kontrak error terstruktur:
+
+```json
+{
+  "success": false,
+  "code": "HOUSEHOLD_JOIN_BLOCKED_EXISTING_DATA",
+  "message": "Tidak dapat bergabung ke rumah tangga baru karena Anda sudah memiliki catatan transaksi pada rumah tangga saat ini.",
+  "details": {
+    "existingTransactionsCount": 14
+  }
+}
+```
+
+---
+
+### E. Klarifikasi Logika Over-Budgeting
+
+Sesuai implementasi pada versi **v1.0.18**:
+
+- **Perubahan Database**: Ketika pengguna menurunkan batas nominal default amplop di tengah bulan (misal dari Rp 500.000 menjadi Rp 200.000), sistem **secara langsung mengubah nilai `allocatedAmount`** di database pada tabel `budget_allocations` untuk periode aktif saat itu juga.
+- **Perhitungan di UI**: Nilai saldo sisa dihitung secara dinamis melalui formula:
+  $$\text{Sisa Saldo} = \text{allocatedAmount} + \text{rolloverAmount} - \text{spent}$$
+- Jika nilai sisa saldo bernilai negatif (misal Rp 200.000 + Rp 0 - Rp 300.000 = -Rp 100.000), UI secara reaktif akan mengubah warna saldo menjadi merah marun (`var(--fintr-danger)`) sebagai alarm visual tanpa memblokir transaksi yang sudah terjadi.
+
+---
+
+### F. Rekonsiliasi Keuangan (Reconciliation Logic)
+
+- **Formula Selisih Rekonsiliasi**:
+  $$\text{Selisih Varians} = \text{Uang Riil} - \sum (\text{allocatedAmount} + \text{rolloverAmount} - \text{spent})$$
+- **Kepemilikan Saldo**: `accountSnapshots` disimpan per **Household** (`householdId`) untuk menggambarkan total likuiditas bersama. Catatan ini merekam kontribusi saldo riil dari masing-masing rekening pasangan (Bank A + Bank B + Dompet Tunai) yang diinput saat sesi rekonsiliasi bersama di akhir pekan.
+- **Penyimpanan Varians**: Selisih varians tidak disimpan dalam kolom terpisah secara redundan, melainkan dihitung secara dinamis di level API saat membandingkan saldo riil terakhir pada `accountSnapshots` dengan akumulasi sisa saldo aktif amplop.
+
+---
+
+## 🛠️ 4. Rekomendasi Pengembangan Masa Depan
 
 Berdasarkan analisis Happy & Unhappy Path di atas, berikut adalah beberapa perbaikan operasional yang direkomendasikan untuk pengembangan jangka panjang:
 
