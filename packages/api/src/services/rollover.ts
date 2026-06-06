@@ -88,7 +88,7 @@ export async function closePeriodAndRollover(
     );
 
   // Find Tabungan template for rollover_to_savings
-  const savingsTemplate = activeTemplates.find(t => t.name === "Tabungan");
+  let savingsTemplate = activeTemplates.find(t => t.name === "Tabungan");
 
   // Calculate rollovers for each active template
   const templatesToInsert: Array<{
@@ -142,6 +142,45 @@ export async function closePeriodAndRollover(
         rolledOver: rolloverToNext.toFixed(2),
       });
     }
+  }
+
+  // If we have rollover to savings but Tabungan template was deleted/deactivated, recover it
+  if (!savingsTemplate && savingsRolloverTotal > 0) {
+    const [inactiveSavings] = await db
+      .select()
+      .from(envelopeTemplates)
+      .where(
+        and(eq(envelopeTemplates.householdId, householdId), eq(envelopeTemplates.name, "Tabungan"))
+      );
+
+    if (inactiveSavings) {
+      await db
+        .update(envelopeTemplates)
+        .set({ isActive: true })
+        .where(eq(envelopeTemplates.id, inactiveSavings.id));
+      savingsTemplate = { ...inactiveSavings, isActive: true };
+    } else {
+      const [newSavings] = await db
+        .insert(envelopeTemplates)
+        .values({
+          householdId,
+          name: "Tabungan",
+          defaultAmount: "0",
+          rolloverBehavior: "rollover_self",
+          sortOrder: activeTemplates.length,
+          color: "#22c55e",
+        })
+        .returning();
+      savingsTemplate = newSavings;
+    }
+
+    templatesToInsert.push({
+      templateId: savingsTemplate.id,
+      envelopeName: savingsTemplate.name,
+      defaultAmount: savingsTemplate.defaultAmount,
+      rolloverToNext: 0,
+      rolloverBehavior: savingsTemplate.rolloverBehavior,
+    });
   }
 
   // Insert allocations for the next period
