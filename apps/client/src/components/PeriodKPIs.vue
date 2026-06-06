@@ -20,7 +20,7 @@
             font-weight: 800;
             color: #0f5238;
             margin: 4px 0;
-            font-family: &quot;Manrope&quot;, sans-serif;
+            font-family: Manrope, sans-serif;
           "
         >
           {{ formatRp(averageSaving) }}
@@ -45,7 +45,7 @@
             font-weight: 800;
             color: #485f84;
             margin: 4px 0;
-            font-family: &quot;Manrope&quot;, sans-serif;
+            font-family: Manrope, sans-serif;
           "
         >
           {{ savingRatePct }}%

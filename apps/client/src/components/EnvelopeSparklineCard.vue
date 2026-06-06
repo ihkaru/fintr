@@ -99,12 +99,7 @@
       >
         <span style="font-size: 10px; color: #707973">Bulan Terakhir</span>
         <span
-          style="
-            font-size: 14px;
-            font-weight: 800;
-            color: #ba1a1a;
-            font-family: &quot;Inter&quot;, sans-serif;
-          "
+          style="font-size: 14px; font-weight: 800; color: #ba1a1a; font-family: Inter, sans-serif"
         >
           {{ formatRp(lastSpent) }}
         </span>

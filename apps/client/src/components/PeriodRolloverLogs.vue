@@ -136,7 +136,7 @@
                 font-size: 14px;
                 font-weight: 800;
                 color: #404943;
-                font-family: &quot;Inter&quot;, sans-serif;
+                font-family: Inter, sans-serif;
               "
             >
               {{ formatRp(parseFloat(log.remainingAmount)) }}
@@ -159,7 +159,7 @@
                 font-size: 14px;
                 font-weight: 800;
                 color: #0f5238;
-                font-family: &quot;Inter&quot;, sans-serif;
+                font-family: Inter, sans-serif;
               "
             >
               {{ formatRp(parseFloat(log.rolledOverAmount)) }}
