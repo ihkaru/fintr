@@ -266,3 +266,34 @@ Berdasarkan analisis Happy & Unhappy Path di atas, berikut adalah beberapa perba
 3. **Riwayat Rollover Terpusat & Log Audit UI (Terimplementasi v1.0.21)**: Menyimpan log khusus rollover yang mencatat berapa sisa dana yang di-reset, di-rollover, atau ditransfer ke tabungan di setiap akhir bulan sebagai bahan laporan audit tahunan pengguna, serta menyajikannya dalam tab Log Rollover di analisis anggaran.
 4. **Pratinjau Rollover & Smart Insights UI (Terimplementasi v1.0.22)**: Menghadirkan bottom sheet pratinjau rollover interaktif saat pengguna menekan tombol Tutup Periode. Fitur ini menyajikan visualisasi rincian nasib sisa anggaran tiap amplop, total dana yang akan ditabung/dipertahankan, serta alarm peringatan dinamis jika ada sisa anggaran yang akan terbuang sia-sia akibat perilaku reset ke nol.
 5. **Mekanisme Sinkronisasi Offline**: Menambahkan antrean transaksi di local storage (IndexedDB) di sisi client PWA agar pengguna tetap bisa mencatat pengeluaran saat tidak ada sinyal internet, dan otomatis melakukan sinkronisasi (_sync back_) saat koneksi terdeteksi kembali.
+
+---
+
+## 🎨 5. Desain UX untuk Pengguna Zero-Knowledge & Onboarding Journey
+
+Untuk memastikan aplikasi dapat digunakan dengan mudah oleh pengguna baru yang belum memiliki mental model keuangan keluarga (_zero-knowledge users_), berikut adalah pedoman UX dan desain interaksi yang diintegrasikan ke dalam FamiVault:
+
+### A. Alur Onboarding & Aha Moment
+
+1. **User Journey yang Ideal**:
+   - **Langkah 1**: Registrasi instan (tanpa dipaksa menghubungkan pasangan di awal).
+   - **Langkah 2**: Masuk ke dasbor utama yang sudah terisi dengan template amplop default (mencegah _cold start_ / kekosongan data).
+   - **Langkah 3**: Mencatat transaksi pengeluaran pertama (baik manual maupun via Vision AI).
+   - **Langkah 4 (Aha Moment)**: Pengguna mengundang pasangan $\rightarrow$ pasangan bergabung $\rightarrow$ transaksi yang dicatat langsung muncul di layar pasangan secara real-time via SSE.
+2. **Prinsip "Pasangan sebagai Fitur", Bukan Kendala**:
+   - Aplikasi dirancang agar tetap 100% berguna bagi pengguna yang menggunakannya secara solo. Fitur penghubung pasangan diletakkan sebagai _enhancement_ (CTA sekunder yang halus di pengaturan/dasbor), bukan sebagai syarat wajib sebelum masuk ke aplikasi (_blocking gate_).
+
+### B. Penyajian Fitur Bertahap (Progressive Disclosure)
+
+Fitur-fitur disajikan secara bertahap sesuai tingkat kedewasaan penggunaan aplikasi untuk mengurangi beban kognitif:
+
+- **Hari 1-7**: Fokus pada pencatatan harian sederhana dan pemantauan sisa saldo amplop. Halaman rekonsiliasi atau tombol tutup periode tidak disorot secara menonjol.
+- **Akhir Bulan**: Tombol "Tutup Periode" mulai diaktifkan secara kontekstual di dasbor untuk mengundang pengguna ke tahap _rollover_ dan laporan keuangan bulanan.
+
+### C. Antarmuka Mandiri & Penjelasan Kontekstual (Self-Narrating UI)
+
+Setiap indikasi data yang tidak familiar harus menjelaskan dirinya sendiri secara langsung (inline) di layar aplikasi:
+
+- **Indikator Over-Budgeting**: Saat saldo amplop bernilai negatif, label saldo berubah menjadi warna merah cerah (`var(--fintr-danger)`) disertai teks penjelasan ringkas: _"Anggaran bulan ini lebih kecil dari belanjaan berjalan"_.
+- **Visualisasi Amplop Dinonaktifkan ("Ditutup")**: Amplop yang berstatus nonaktif di master namun memiliki transaksi berjalan dirender dengan opacity `0.85`, border putus-putus abu-abu, dan badge kuning/orange _"Amplop Ditutup. Pengeluaran bulan ini tetap tercatat, namun amplop tidak akan muncul di bulan depan."_
+- **Empty States yang Edukatif**: Halaman kosong (seperti transaksi baru, riwayat rekonsiliasi, dll.) tidak hanya bertuliskan _"Belum ada data"_, melainkan menyajikan ilustrasi ringan, manfaat fitur tersebut, serta tombol aksi cepat untuk mendorong interaksi pertama.
