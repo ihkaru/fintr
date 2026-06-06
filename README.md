@@ -143,6 +143,27 @@ sequenceDiagram
 
 ---
 
+## ⚙️ Mekanisme Konsistensi Data & Siklus Hidup Anggaran
+
+FamiVault dilengkapi dengan serangkaian fungsi otomatis di backend dan frontend untuk menjamin data anggaran Anda selalu konsisten, akurat, dan reaktif terhadap aksi pengguna secara instan:
+
+1. **Self-Healing Alokasi Amplop Aktif**:
+   - Jika ada amplop aktif yang belum memiliki alokasi anggaran (`budgetAllocations`) di periode berjalan (misal: akibat migrasi data, kesalahan inisialisasi, atau amplop baru diaktifkan), backend secara otomatis mendeteksinya saat memuat halaman Home (`GET /periods/:id`).
+   - Sistem akan menyuntikkan alokasi anggaran awal dengan nominal bawaan (`defaultAmount`) dan saldo rollover `0` ke database saat itu juga, membuat menu Home langsung terisi secara instan tanpa hambatan.
+2. **Pembersihan Alokasi Otomatis saat Penghapusan (Soft Delete)**:
+   - Menghapus amplop (soft delete) di menu kelola akan menonaktifkan template global.
+   - Apabila di periode berjalan amplop tersebut **belum memiliki transaksi sama sekali**, sistem secara dinamis akan menghapus alokasi anggaran berjalan terkait agar tidak memadati visualisasi Home.
+   - Jika amplop tersebut sudah pernah memiliki transaksi, data alokasi dan riwayat transaksi masa lalu tetap dipertahankan demi menjaga keutuhan pembukuan keuangan.
+3. **Fast-Forward Onboarding Otomatis**:
+   - Pengguna baru sering kali mendapati database default terisi periode lama (contoh: Juni 2025).
+   - Sistem secara otomatis mendeteksi jika hanya ada satu periode lama dengan jumlah transaksi bernilai `0`, lalu mem-fast-forward periode tersebut ke bulan dan tahun berjalan saat ini secara transparan tanpa intervensi manual.
+4. **Logika Rollover Komprehensif**:
+   - Saat periode anggaran ditutup (`/periods/:id/close`), sistem akan memproses rollover untuk **seluruh template amplop yang aktif** di rumah tangga tersebut, bukan hanya yang memiliki transaksi di periode lalu. Ini memastikan konsistensi struktur amplop di bulan baru.
+5. **Sinkronisasi Reaktif Lintas Layar**:
+   - Setiap penambahan, perubahan, atau penghapusan amplop memicu siaran event global `fintr:envelope-changed`. Halaman Home, Riwayat Transaksi, dan Formulir Tambah Transaksi akan memperbarui datanya secara instan tanpa perlu memuat ulang aplikasi.
+
+---
+
 ## 🤝 Panduan Sinkronisasi Akun Pasangan
 
 FamiVault dirancang untuk menjaga transparansi keuangan pasangan secara _real-time_. Berikut langkah untuk menghubungkan akun:
