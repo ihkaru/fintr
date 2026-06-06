@@ -123,6 +123,7 @@ stateDiagram-v2
 
 - **Reopening**: Periode yang sudah berstatus `isClosed: true` **tidak dapat dibuka kembali** oleh pengguna maupun admin. Aturan ini mutlak untuk mencegah rusaknya rantai perhitungan saldo rollover pada periode-periode berikutnya.
 - **Lock Policy**: Seluruh transaksi yang terikat pada periode yang sudah ditutup bersifat _read-only_ (tidak bisa ditambah, diedit, atau dihapus).
+  - _Catatan Keamanan/Desain_: Lock ini ditegakkan di layer aplikasi/middleware service API untuk menyederhanakan skema DB dan menghindari overhead database triggers. Relasi `onDelete: "cascade"` pada database diatur untuk pembersihan menyeluruh jika rumah tangga/household dibubarkan, namun selama siklus normal, API mencegah segala bentuk mutasi pada periode tertutup.
 
 #### 2. Siklus Hidup `envelopeTemplates`
 
@@ -166,6 +167,9 @@ Saat pengguna login atau memicu rollover, sistem mengevaluasi status periode ter
 | Periode aktif terakhir berada di masa lalu        |       > 0        |           = 1 Bulan           | **Normal Rollover**: Tampilkan pratinjau rollover, tutup periode lama, dan buka periode baru untuk bulan berjalan.                                            |
 | Periode aktif terakhir berada di masa lalu        |       > 0        |           > 1 Bulan           | **Cascade Rollover**: Tawarkan pembuatan periode kosong beruntun (untuk mencatat riwayat tertunda) atau langsung melompat ke periode bulan berjalan saat ini. |
 
+- **Detail Fast-Forward In-Place**: Jika pengguna tidak aktif dalam waktu lama namun di database hanya terbentuk tepat 1 periode anggaran (misal periode seeding awal saat registrasi) dan belum memiliki transaksi sama sekali (`transactions = 0`), sistem akan terus menggeser bulan & tahun periode tersebut agar selalu selaras dengan waktu login terkini pengguna. Hal ini mencegah terciptanya periode-periode kosong tak terpakai sejak awal pendaftaran.
+- **Batas Cascade Rollover (Threshold Limit)**: Untuk mencegah overload database dan potensi timeout jika pengguna tidak aktif sangat lama (misal > 6 bulan), sistem menetapkan batas toleransi **maksimal 6 bulan cascade**. Jika selisih waktu terlewat melebihi 6 bulan, sistem secara otomatis memaksa rollover langsung lompat (_fast-forward_) ke bulan berjalan dengan memindahkan akumulasi saldo akhir periode aktif terakhir secara utuh.
+
 ---
 
 ### D. Data Handoff Contract (Skema Kontrak API & SSE)
@@ -188,6 +192,8 @@ Setiap kali ada perubahan data (transaksi baru, edit anggaran, hapus amplop), se
   }
 }
 ```
+
+- **Pemetaan ID (`envelopeId`)**: Parameter `envelopeId` yang dikirimkan di dalam payload SSE merujuk secara langsung pada kolom primary key `envelopes.id` (bukan ID baris alokasi periodik). Hal ini menjamin frontend dapat mencocokkan amplop dan meng-invalidate cache visual dashboard dengan konsisten tanpa adanya mismatch data.
 
 #### 2. Kontrak Error `400 Bad Request` pada `/join-household`
 
