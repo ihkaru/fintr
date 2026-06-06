@@ -2,13 +2,14 @@
   <div
     class="envelope-card animate-in"
     :style="{
-      background: '#ffffff',
-      border: '1px solid #bfc9c1',
+      background: allocation.isActive === false ? '#f8f9fa' : '#ffffff',
+      border: allocation.isActive === false ? '1px dashed #ced4da' : '1px solid #bfc9c1',
       borderRadius: '16px',
       padding: '16px',
       marginBottom: '12px',
       boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
       cursor: 'pointer',
+      opacity: allocation.isActive === false ? 0.85 : 1,
     }"
     @click="$emit('click')"
   >
@@ -42,6 +43,21 @@
           }"
         ></span>
         {{ allocation.envelopeName }}
+        <span
+          v-if="allocation.isActive === false"
+          style="
+            font-size: 10px;
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            border: 1px solid #dee2e6;
+            margin-left: 4px;
+          "
+        >
+          Ditutup
+        </span>
       </div>
       <div
         class="amount font-headline"
@@ -96,6 +112,7 @@ interface Allocation {
   rolloverAmount: string;
   totalSpent: string;
   remaining: string;
+  isActive?: boolean;
 }
 
 const props = defineProps<{

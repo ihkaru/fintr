@@ -191,6 +191,7 @@ export interface PeriodDetail {
     rolloverBehavior: string;
     totalSpent: string;
     remaining: string;
+    isActive?: boolean;
   }>;
   summary: {
     totalAllocated: string;

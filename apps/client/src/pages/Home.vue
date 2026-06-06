@@ -300,6 +300,14 @@ const navigateToAddTransaction = () => {
 };
 
 const openAddTransactionWithEnvelope = (allocationId: string) => {
+  const allocation = allocationsData.value.find(a => a.id === allocationId);
+  if (allocation && (allocation as any).isActive === false) {
+    f7.dialog.alert(
+      "Amplop ini sudah dinonaktifkan dari template master. Anda tidak dapat mencatat transaksi baru di dalamnya.",
+      "Amplop Ditutup"
+    );
+    return;
+  }
   if (f7.views.main && f7.views.main.router) {
     f7.views.main.router.navigate(`/add-transaction/?allocationId=${allocationId}`);
   }

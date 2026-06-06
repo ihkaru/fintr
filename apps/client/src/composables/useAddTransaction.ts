@@ -102,10 +102,16 @@ export function useAddTransaction(routeQueryAllocId?: string) {
 
       currentPeriodId.value = current.id;
       const detail = await periods.getDetail(current.id);
-      allocations.value = detail.allocations;
+      // Filter out deactivated/soft-deleted allocations
+      allocations.value = detail.allocations.filter(a => a.isActive !== false);
 
       if (routeQueryAllocId) {
-        form.allocationId = routeQueryAllocId;
+        const found = allocations.value.find(a => a.id === routeQueryAllocId);
+        if (found) {
+          form.allocationId = routeQueryAllocId;
+        } else if (allocations.value.length > 0) {
+          form.allocationId = allocations.value[0].id;
+        }
       } else if (allocations.value.length > 0) {
         form.allocationId = allocations.value[0].id;
       }
