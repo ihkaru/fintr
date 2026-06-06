@@ -2,6 +2,34 @@
   <f7-page name="settings">
     <f7-navbar title="Pengaturan"></f7-navbar>
 
+    <!-- Fullscreen preloader when rollover is in progress -->
+    <div
+      v-if="closingPeriod"
+      style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+        color: white;
+        text-align: center;
+      "
+    >
+      <f7-preloader size="42" color="white"></f7-preloader>
+      <div style="margin-top: 16px; font-weight: 600; font-size: 15px">
+        Proses Tutup Periode & Rollover...
+      </div>
+      <div style="margin-top: 8px; font-size: 12px; opacity: 0.8; padding: 0 32px">
+        Mohon tunggu, sistem sedang memproses sisa anggaran dan memindahkan alokasi.
+      </div>
+    </div>
+
     <div v-if="loading" style="text-align: center; padding: 48px">
       <f7-preloader size="42"></f7-preloader>
       <div style="margin-top: 16px; color: var(--fintr-text-muted)">

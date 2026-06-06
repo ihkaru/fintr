@@ -1,10 +1,12 @@
-import { toRef, onMounted } from "vue";
+import { toRef, onMounted, ref } from "vue";
 import { useSplit } from "./useSplit";
 import { useOcr } from "./useOcr";
 import { periods, transactions } from "../js/api";
 import { useShareStore } from "../js/shareStore";
 import { useTransactionForm } from "./useTransactionForm";
 import { useTransactionSubmit } from "./useTransactionSubmit";
+import { queueTextOcrTransaction } from "../js/utils/offlineQueue";
+import { f7 } from "framework7-vue";
 
 export function useAddTransaction(routeQueryAllocId?: string) {
   const {
@@ -31,6 +33,9 @@ export function useAddTransaction(routeQueryAllocId?: string) {
 
   const {
     ocrStatus,
+    ocrConfidence,
+    ocrHighlightedFields,
+    ocrItems,
     currentOcrSessionId,
     fileToBase64,
     processOcrResult,
@@ -39,13 +44,17 @@ export function useAddTransaction(routeQueryAllocId?: string) {
     clearOcrPreview,
   } = useOcr();
 
+  const filterSufficientOnly = ref(false);
+
   const { submitting, saveTransaction } = useTransactionSubmit(
     form,
     currentPeriodId,
     isSplit,
     splitRemaining,
     splitItems,
-    splitTotal
+    splitTotal,
+    allocations,
+    filterSufficientOnly
   );
 
   const resetForm = (fileInputId?: string) => {
@@ -64,6 +73,7 @@ export function useAddTransaction(routeQueryAllocId?: string) {
     splitItems.value = [];
     ocrStatus.value = "";
     aiRecommendationText.value = "";
+    filterSufficientOnly.value = false;
     clearOcrPreview();
 
     if (fileInputId) {
@@ -77,6 +87,7 @@ export function useAddTransaction(routeQueryAllocId?: string) {
   const clearReceipt = (fileInputId: string = "ocr-file-input") => {
     form.rawImageKey = "";
     ocrStatus.value = "";
+    filterSufficientOnly.value = false;
     clearOcrPreview();
     const fileInput = document.getElementById(fileInputId) as HTMLInputElement;
     if (fileInput) {
@@ -122,6 +133,15 @@ export function useAddTransaction(routeQueryAllocId?: string) {
       clearSharedData();
 
       if (data.type === "image" || data.type === "pdf") {
+        if (!navigator.onLine) {
+          ocrStatus.value = "";
+          f7.dialog.alert(
+            "Pemrosesan foto struk memerlukan koneksi internet. Foto Anda tersimpan aman di galeri. Silakan catat nominalnya secara manual saat ini.",
+            "Offline"
+          );
+          return;
+        }
+
         const sessionId = ++currentOcrSessionId.value;
         ocrStatus.value = "🔄 Mengambil struk dari share target...";
         form.source = "ocr";
@@ -173,6 +193,19 @@ export function useAddTransaction(routeQueryAllocId?: string) {
           console.error("Gagal OCR share target:", err);
         }
       } else if (data.type === "text" && data.text) {
+        if (!navigator.onLine) {
+          queueTextOcrTransaction(data.text);
+          ocrStatus.value = "✅ Teks struk offline disimpan dalam antrean sinkronisasi.";
+          f7.toast
+            .create({
+              text: "Koneksi offline. Teks struk disimpan ke antrean sinkronisasi.",
+              closeTimeout: 3000,
+              position: "bottom",
+            })
+            .open();
+          return;
+        }
+
         const sessionId = ++currentOcrSessionId.value;
         ocrStatus.value = "🔄 Menganalisis teks yang dibagikan...";
         form.source = "ocr";
@@ -222,6 +255,14 @@ export function useAddTransaction(routeQueryAllocId?: string) {
         if (SendIntent) {
           const intent = await SendIntent.checkSendIntentReceived();
           if (intent && intent.files && intent.files.length > 0) {
+            if (!navigator.onLine) {
+              f7.dialog.alert(
+                "Pemrosesan foto struk memerlukan koneksi internet. Foto Anda tersimpan aman di galeri. Silakan catat nominalnya secara manual saat ini.",
+                "Offline"
+              );
+              return;
+            }
+
             const sessionId = ++currentOcrSessionId.value;
             const fileObj = intent.files[0];
             ocrStatus.value = "🔄 Mengambil gambar dari share target...";
@@ -286,6 +327,15 @@ export function useAddTransaction(routeQueryAllocId?: string) {
         const cache = await caches.open("shared-image-cache");
         const sharedResponse = await cache.match("/shared-image");
         if (sharedResponse) {
+          if (!navigator.onLine) {
+            f7.dialog.alert(
+              "Pemrosesan foto struk memerlukan koneksi internet. Foto Anda tersimpan aman di galeri. Silakan catat nominalnya secara manual saat ini.",
+              "Offline"
+            );
+            await cache.delete("/shared-image");
+            return;
+          }
+
           const sessionId = ++currentOcrSessionId.value;
           ocrStatus.value = "🔄 Mengambil gambar struk yang dibagikan...";
           form.source = "ocr";
@@ -347,13 +397,27 @@ export function useAddTransaction(routeQueryAllocId?: string) {
 
         const sharedTextResponse = await cache.match("/shared-text");
         if (sharedTextResponse) {
-          const sessionId = ++currentOcrSessionId.value;
-          ocrStatus.value = "🔄 Menganalisis teks yang dibagikan...";
-          form.source = "ocr";
-
           const textData = await sharedTextResponse.json();
           const textToParse =
             `${textData.title || ""}\n${textData.text || ""}\n${textData.url || ""}`.trim();
+
+          if (!navigator.onLine) {
+            queueTextOcrTransaction(textToParse);
+            ocrStatus.value = "✅ Teks struk offline disimpan dalam antrean sinkronisasi.";
+            f7.toast
+              .create({
+                text: "Koneksi offline. Teks struk disimpan ke antrean sinkronisasi.",
+                closeTimeout: 3000,
+                position: "bottom",
+              })
+              .open();
+            await cache.delete("/shared-text");
+            return;
+          }
+
+          const sessionId = ++currentOcrSessionId.value;
+          ocrStatus.value = "🔄 Menganalisis teks yang dibagikan...";
+          form.source = "ocr";
 
           if (allocations.value.length === 0) {
             const list = await periods.list();
@@ -412,6 +476,10 @@ export function useAddTransaction(routeQueryAllocId?: string) {
     splitTotal,
     splitRemaining,
     ocrStatus,
+    ocrConfidence,
+    ocrHighlightedFields,
+    ocrItems,
+    filterSufficientOnly,
     setSource,
     selectEnvelope,
     initDateTime,

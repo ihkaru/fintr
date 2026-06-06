@@ -1,5 +1,6 @@
 <template>
   <div
+    :class="{ 'pulse-highlight': highlight }"
     style="
       background: #ffffff;
       border: 1px solid #bfc9c1;
@@ -8,6 +9,7 @@
       text-align: center;
       margin-bottom: 20px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+      transition: all 0.2s;
     "
   >
     <div
@@ -31,6 +33,8 @@
         class="amount-input font-headline"
         :value="modelValue"
         @input="onInput"
+        @focus="emit('clear-highlight')"
+        @click="emit('clear-highlight')"
         placeholder="0"
         inputmode="numeric"
         style="
@@ -53,13 +57,16 @@
 <script setup lang="ts">
 defineProps<{
   modelValue: number | "";
+  highlight?: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: "update:modelValue", value: number | ""): void;
+  (e: "clear-highlight"): void;
 }>();
 
 const onInput = (e: Event) => {
+  emit("clear-highlight");
   const target = e.target as HTMLInputElement;
   const val = target.value === "" ? "" : Number(target.value);
   emit("update:modelValue", val);

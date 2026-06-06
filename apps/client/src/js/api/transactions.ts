@@ -49,6 +49,8 @@ export const transactions = {
       source?: string;
       rawImageKey?: string;
     }>;
+    forceWriteClosedPeriod?: boolean;
+    allowDuplicate?: boolean;
   }) {
     return request("/transactions/split", {
       method: "POST",

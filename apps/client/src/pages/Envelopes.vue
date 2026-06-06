@@ -211,7 +211,6 @@ import {
   f7Navbar,
   f7NavRight,
   f7Link,
-  f7Icon,
   f7Preloader,
   f7List,
   f7ListItem,

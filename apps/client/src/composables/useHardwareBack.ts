@@ -3,10 +3,6 @@ import { f7, f7ready } from "framework7-vue";
 import { useBackButton } from "./useBackButton";
 import { useSync } from "./useSync";
 import { isLoggedInReactive, auth, setToken, setUser } from "../js/api";
-import { Capacitor } from "@capacitor/core";
-import { CapacitorShareTarget } from "@capgo/capacitor-share-target";
-import { Filesystem } from "@capacitor/filesystem";
-import { useShareStore } from "../js/shareStore";
 
 let lastTimeBackButtonWasPressed = 0;
 

@@ -73,6 +73,8 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
         const err = new Error(json.message || json.error || errorMessage);
         if (json.code) (err as any).code = json.code;
         if (json.details) (err as any).details = json.details;
+        (err as any).status = response.status;
+        (err as any).responseJson = json;
         throw err;
       } else {
         errorMessage = await response.text();

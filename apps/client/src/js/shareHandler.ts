@@ -90,7 +90,7 @@ export function initShareHandler() {
             if (preloaderActive && f7.dialog) {
               try {
                 f7.dialog.close();
-              } catch (e) {}
+              } catch {}
             }
 
             navigateToApp();
@@ -98,7 +98,7 @@ export function initShareHandler() {
             if (preloaderActive && f7.dialog) {
               try {
                 f7.dialog.close();
-              } catch (e) {}
+              } catch {}
             }
             if (f7.dialog) {
               f7.dialog.alert("Gagal membaca file yang dibagikan: " + err.message, "Gagal");

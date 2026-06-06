@@ -51,7 +51,7 @@
         <div class="meta" style="font-size: 11px; color: #707973">
           {{ formattedDate }}
           <span
-            v-if="transaction.source === 'ocr'"
+            v-if="transaction.source === 'ocr' || transaction.source === 'share'"
             style="
               background: rgba(15, 82, 56, 0.08);
               color: #0f5238;
@@ -60,9 +60,14 @@
               font-size: 9px;
               font-weight: bold;
               margin-left: 4px;
+              display: inline-flex;
+              align-items: center;
+              gap: 2px;
             "
-            >OCR</span
           >
+            <span class="material-symbols-outlined" style="font-size: 10px">receipt_long</span>
+            Via Struk
+          </span>
         </div>
       </div>
     </div>

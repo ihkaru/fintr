@@ -27,7 +27,10 @@
       <input
         type="text"
         :value="merchant"
-        @input="emit('update:merchant', ($event.target as HTMLInputElement).value)"
+        :class="{ 'pulse-highlight': highlightMerchant }"
+        @input="onMerchantInput"
+        @focus="emit('clear-highlight', 'merchant')"
+        @click="emit('clear-highlight', 'merchant')"
         placeholder="Indomaret, SPBU Mempawah, BRI ATM, dll"
         style="
           background: #f3f1e9;
@@ -57,7 +60,10 @@
       <input
         type="datetime-local"
         :value="date"
-        @input="emit('update:date', ($event.target as HTMLInputElement).value)"
+        :class="{ 'pulse-highlight': highlightDate }"
+        @input="onDateInput"
+        @focus="emit('clear-highlight', 'date')"
+        @click="emit('clear-highlight', 'date')"
         style="
           background: #f3f1e9;
           border: 1px solid #bfc9c1;
@@ -111,11 +117,24 @@ defineProps<{
   merchant: string;
   date: string;
   note: string;
+  highlightMerchant?: boolean;
+  highlightDate?: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: "update:merchant", val: string): void;
   (e: "update:date", val: string): void;
   (e: "update:note", val: string): void;
+  (e: "clear-highlight", field: "merchant" | "date"): void;
 }>();
+
+const onMerchantInput = (e: Event) => {
+  emit("clear-highlight", "merchant");
+  emit("update:merchant", (e.target as HTMLInputElement).value);
+};
+
+const onDateInput = (e: Event) => {
+  emit("clear-highlight", "date");
+  emit("update:date", (e.target as HTMLInputElement).value);
+};
 </script>

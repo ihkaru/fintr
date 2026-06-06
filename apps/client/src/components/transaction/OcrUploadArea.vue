@@ -94,9 +94,37 @@
             align-items: center;
           "
         >
-          <span style="font-size: 11px; color: #707973; font-weight: 500">
-            Struk Belanja Terunggah
-          </span>
+          <div style="display: flex; align-items: center; gap: 8px">
+            <span style="font-size: 11px; color: #707973; font-weight: 500">
+              Struk Belanja Terunggah
+            </span>
+            <!-- Confidence Badge -->
+            <span
+              v-if="confidence"
+              :style="{
+                fontSize: '10px',
+                fontWeight: '700',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                textTransform: 'uppercase',
+                backgroundColor:
+                  confidence === 'high'
+                    ? 'rgba(76, 175, 80, 0.15)'
+                    : confidence === 'medium'
+                      ? 'rgba(255, 152, 0, 0.15)'
+                      : 'rgba(244, 67, 54, 0.15)',
+                color:
+                  confidence === 'high'
+                    ? '#2e7d32'
+                    : confidence === 'medium'
+                      ? '#ef6c00'
+                      : '#c62828',
+                border: `1px solid ${confidence === 'high' ? '#4caf50' : confidence === 'medium' ? '#ff9800' : '#f44336'}`,
+              }"
+            >
+              {{ confidence === "high" ? "High" : confidence === "medium" ? "Medium" : "Low" }}
+            </span>
+          </div>
           <button
             type="button"
             @click.prevent.stop="onClearFile"
@@ -178,6 +206,7 @@
 defineProps<{
   ocrStatus: string;
   localImagePreviewUrl: string;
+  confidence?: "high" | "medium" | "low" | "";
 }>();
 
 const emit = defineEmits<{

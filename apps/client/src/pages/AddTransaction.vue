@@ -19,7 +19,11 @@
       style="padding: 24px 16px; background: #faf3e0; min-height: 100vh; box-sizing: border-box"
     >
       <!-- Amount Input Card -->
-      <AmountInputCard v-model="form.amount" />
+      <AmountInputCard
+        v-model="form.amount"
+        :highlight="ocrHighlightedFields.amount"
+        @clear-highlight="clearFieldHighlight()"
+      />
 
       <!-- Source Toggle -->
       <SourceToggle :model-value="form.source" @update:model-value="setSource" />
@@ -29,9 +33,47 @@
         v-show="form.source === 'ocr'"
         :ocr-status="ocrStatus"
         :local-image-preview-url="localImagePreviewUrl"
+        :confidence="ocrConfidence"
         @file-change="handleOcrFile"
         @clear-file="clearReceipt"
       />
+
+      <!-- Quick Split Auto-Link Banner -->
+      <div
+        v-if="ocrItems && ocrItems.length > 0"
+        @click="handleAutoSplit"
+        class="animate-in"
+        style="
+          margin: -12px 0 20px 0;
+          padding: 12px 16px;
+          background: linear-gradient(135deg, rgba(15, 82, 56, 0.1), rgba(15, 82, 56, 0.05));
+          border: 1px dashed rgba(15, 82, 56, 0.3);
+          border-radius: 12px;
+          color: #0f5238;
+          font-size: 13px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          transition:
+            transform 0.2s,
+            background-color 0.2s;
+        "
+        onmouseover="this.style.transform = 'translateY(-1px)'"
+        onmouseout="this.style.transform = 'none'"
+      >
+        <span class="material-symbols-outlined" style="font-size: 20px; color: #0f5238">
+          splitscreen
+        </span>
+        <div style="flex: 1">
+          Terdeteksi <strong>{{ ocrItems.length }} item</strong> dalam struk ini. Klik di sini untuk
+          membagi kategori secara otomatis.
+        </div>
+        <span class="material-symbols-outlined" style="font-size: 16px; color: #0f5238">
+          chevron_right
+        </span>
+      </div>
 
       <!-- Form Details Card -->
       <div
@@ -81,7 +123,10 @@
             <EnvelopeSelector
               :allocations="allocations"
               v-model="form.allocationId"
+              :amount="form.amount"
               :ai-recommendation-text="aiRecommendationText"
+              :filter-sufficient="filterSufficientOnly"
+              @clear-filter="filterSufficientOnly = false"
             />
           </div>
 
@@ -125,6 +170,9 @@
         v-model:merchant="form.merchant"
         v-model:date="form.date"
         v-model:note="form.note"
+        :highlight-merchant="ocrHighlightedFields.merchant"
+        :highlight-date="ocrHighlightedFields.date"
+        @clear-highlight="clearFieldHighlight"
       />
 
       <!-- Actions Button -->
@@ -162,7 +210,13 @@
             cursor: pointer;
           "
         >
-          {{ submitting ? "Menyimpan..." : "Simpan Transaksi" }}
+          {{
+            submitting
+              ? "Menyimpan..."
+              : form.source === "ocr" && (ocrConfidence === "low" || form.amount === "")
+                ? "Tinjau & Simpan Transaksi"
+                : "Simpan Transaksi"
+          }}
         </button>
       </div>
     </div>
@@ -170,7 +224,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from "vue";
+import { onMounted, onBeforeUnmount, watch, nextTick } from "vue";
 import { f7Page, f7Navbar, f7Preloader, f7, f7NavLeft, f7Link, f7NavTitle } from "framework7-vue";
 import { useAddTransaction } from "../composables/useAddTransaction";
 import { useBackButton } from "../composables/useBackButton";
@@ -197,6 +251,10 @@ const {
   splitItems,
   splitRemaining,
   ocrStatus,
+  ocrConfidence,
+  ocrHighlightedFields,
+  ocrItems,
+  filterSufficientOnly,
   setSource,
   loadEnvelopes,
   saveTransaction,
@@ -219,6 +277,31 @@ const goBack = () => {
 
 const handleOcrFile = (e: Event) => {
   onOcrFileChange(e, showAlert);
+};
+
+const handleAutoSplit = () => {
+  if (ocrItems.value && ocrItems.value.length > 0) {
+    isSplit.value = true;
+    splitItems.value = ocrItems.value.map(item => {
+      const matched = allocations.value.find(
+        a =>
+          a.id === item.recommendedEnvelopeId ||
+          a.envelopeName.toLowerCase() === item.name?.toLowerCase()
+      );
+      return {
+        allocationId: matched ? matched.id : allocations.value[0]?.id || "",
+        amount: item.amount || 0,
+      };
+    });
+  }
+};
+
+const clearFieldHighlight = (field?: "amount" | "merchant" | "date") => {
+  if (!field) {
+    ocrHighlightedFields.value.amount = false;
+  } else {
+    ocrHighlightedFields.value[field] = false;
+  }
 };
 
 const handleUpdateSplitItem = ({
@@ -271,6 +354,26 @@ let unregisterBack: (() => void) | null = null;
 const handleEnvelopeChanged = async () => {
   await loadEnvelopes(showAlert);
 };
+
+// Auto focus amount if ocr confidence is low or amount is null/empty
+watch(
+  () => ocrConfidence.value,
+  newConf => {
+    if (newConf) {
+      if (newConf === "low" || form.amount === "") {
+        nextTick(() => {
+          const input = document.querySelector(".amount-input") as HTMLInputElement;
+          if (input) {
+            input.focus();
+            if (typeof form.amount === "number") {
+              input.select();
+            }
+          }
+        });
+      }
+    }
+  }
+);
 
 onMounted(async () => {
   await loadEnvelopes(showAlert);

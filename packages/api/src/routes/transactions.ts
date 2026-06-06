@@ -2,9 +2,10 @@ import { Elysia, t } from "elysia";
 import { authMiddleware } from "../middleware/auth";
 import { db } from "../db/index";
 import { transactions, budgetAllocations, budgetPeriods, envelopeTemplates } from "../db/schema";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { eq, and, desc, inArray, sql } from "drizzle-orm";
 import { extractTransactionFromImage, extractTransactionFromText } from "../services/ocr";
 import { broadcastToHousehold } from "../services/sync";
+import { recalculateRolloverForHousehold } from "../services/rollover";
 import fs from "node:fs";
 
 interface OcrJob {
@@ -72,9 +73,14 @@ export const transactionRoutes = new Elysia({ prefix: "/transactions" })
   .post(
     "/",
     async ({ body, userId, householdId, set }) => {
-      // Check if period is closed
+      // Check if period exists and get details
       const [period] = await db
-        .select({ isClosed: budgetPeriods.isClosed })
+        .select({
+          isClosed: budgetPeriods.isClosed,
+          householdId: budgetPeriods.householdId,
+          year: budgetPeriods.year,
+          month: budgetPeriods.month,
+        })
         .from(budgetPeriods)
         .where(eq(budgetPeriods.id, body.periodId));
 
@@ -82,9 +88,83 @@ export const transactionRoutes = new Elysia({ prefix: "/transactions" })
         set.status = 404;
         return { error: "Periode tidak ditemukan" };
       }
+
+      let wasClosed = false;
       if (period.isClosed) {
-        set.status = 400;
-        return { error: "PERIOD_CLOSED" };
+        if (!body.forceWriteClosedPeriod) {
+          set.status = 400;
+          return { error: "PERIOD_CLOSED" };
+        }
+
+        // Check if the closed period is exactly 1 month prior to the active period
+        const [activePeriod] = await db
+          .select()
+          .from(budgetPeriods)
+          .where(
+            and(
+              eq(budgetPeriods.householdId, period.householdId),
+              eq(budgetPeriods.isClosed, false)
+            )
+          );
+
+        if (!activePeriod) {
+          set.status = 400;
+          return { error: "PERIOD_CLOSED" };
+        }
+
+        const monthDiff =
+          (activePeriod.year - period.year) * 12 + (activePeriod.month - period.month);
+        if (monthDiff !== 1) {
+          set.status = 400;
+          return { error: "PERIOD_CLOSED_TOO_FAR" };
+        }
+
+        wasClosed = true;
+      }
+
+      // Duplicate detection
+      if (!body.allowDuplicate) {
+        const seventyTwoHoursAgo = new Date(Date.now() - 72 * 60 * 60 * 1000);
+        const potentialDuplicates = await db
+          .select({
+            id: transactions.id,
+            amount: transactions.amount,
+            merchant: transactions.merchant,
+            transactionAt: transactions.transactionAt,
+            createdBy: transactions.createdBy,
+          })
+          .from(transactions)
+          .innerJoin(budgetPeriods, eq(transactions.periodId, budgetPeriods.id))
+          .where(
+            and(
+              eq(budgetPeriods.householdId, period.householdId),
+              eq(transactions.amount, body.amount.toString()),
+              sql`${transactions.transactionAt} >= ${seventyTwoHoursAgo}`
+            )
+          );
+
+        const newTxDate = new Date(body.transactionAt).getTime();
+        const duplicate = potentialDuplicates.find(t => {
+          const matchMerchant =
+            (!t.merchant && !body.merchant) ||
+            (t.merchant &&
+              body.merchant &&
+              t.merchant.toLowerCase().trim() === body.merchant.toLowerCase().trim());
+
+          const timeDiff = Math.abs(new Date(t.transactionAt).getTime() - newTxDate);
+          const matchTime = timeDiff <= 24 * 60 * 60 * 1000; // 24 hours — wide enough to catch temporal gap date-shifting
+
+          return matchMerchant && matchTime;
+        });
+
+        if (duplicate) {
+          set.status = 409;
+          return {
+            error: "DUPLICATE_TRANSACTION_DETECTED",
+            message: "Transaksi serupa telah dicatat sebelumnya.",
+            duplicate,
+          };
+        }
       }
 
       const [txn] = await db
@@ -102,6 +182,10 @@ export const transactionRoutes = new Elysia({ prefix: "/transactions" })
         })
         .returning();
 
+      if (wasClosed) {
+        await recalculateRolloverForHousehold(period.householdId, body.periodId);
+      }
+
       if (householdId) {
         broadcastToHousehold(householdId, userId, "transaction_changed");
       }
@@ -118,6 +202,8 @@ export const transactionRoutes = new Elysia({ prefix: "/transactions" })
         transactionAt: t.String(), // ISO date string
         source: t.Optional(t.Union([t.Literal("manual"), t.Literal("ocr"), t.Literal("share")])),
         rawImageKey: t.Optional(t.String()),
+        forceWriteClosedPeriod: t.Optional(t.Boolean()),
+        allowDuplicate: t.Optional(t.Boolean()),
       }),
     }
   )
@@ -125,16 +211,101 @@ export const transactionRoutes = new Elysia({ prefix: "/transactions" })
     "/split",
     async ({ body, userId, householdId, set }) => {
       const periodIds = Array.from(new Set(body.transactions.map(t => t.periodId)));
+      const closedPeriodIds: string[] = [];
       if (periodIds.length > 0) {
         const periods = await db
-          .select({ id: budgetPeriods.id, isClosed: budgetPeriods.isClosed })
+          .select({
+            id: budgetPeriods.id,
+            isClosed: budgetPeriods.isClosed,
+            householdId: budgetPeriods.householdId,
+            year: budgetPeriods.year,
+            month: budgetPeriods.month,
+          })
           .from(budgetPeriods)
           .where(inArray(budgetPeriods.id, periodIds));
 
         for (const p of periods) {
           if (p.isClosed) {
-            set.status = 400;
-            return { error: "PERIOD_CLOSED" };
+            if (!body.forceWriteClosedPeriod) {
+              set.status = 400;
+              return { error: "PERIOD_CLOSED" };
+            }
+
+            // Check if exactly 1 month prior to active period
+            const [activePeriod] = await db
+              .select()
+              .from(budgetPeriods)
+              .where(
+                and(eq(budgetPeriods.householdId, p.householdId), eq(budgetPeriods.isClosed, false))
+              );
+
+            if (!activePeriod) {
+              set.status = 400;
+              return { error: "PERIOD_CLOSED" };
+            }
+
+            const monthDiff = (activePeriod.year - p.year) * 12 + (activePeriod.month - p.month);
+            if (monthDiff !== 1) {
+              set.status = 400;
+              return { error: "PERIOD_CLOSED_TOO_FAR" };
+            }
+
+            closedPeriodIds.push(p.id);
+          }
+        }
+      }
+
+      // Duplicate detection
+      if (!body.allowDuplicate && body.transactions.length > 0) {
+        const firstPeriodId = body.transactions[0].periodId;
+        const [pDetail] = await db
+          .select({ householdId: budgetPeriods.householdId })
+          .from(budgetPeriods)
+          .where(eq(budgetPeriods.id, firstPeriodId));
+
+        if (pDetail) {
+          const seventyTwoHoursAgo = new Date(Date.now() - 72 * 60 * 60 * 1000);
+          const potentialDuplicates = await db
+            .select({
+              id: transactions.id,
+              amount: transactions.amount,
+              merchant: transactions.merchant,
+              transactionAt: transactions.transactionAt,
+              createdBy: transactions.createdBy,
+            })
+            .from(transactions)
+            .innerJoin(budgetPeriods, eq(transactions.periodId, budgetPeriods.id))
+            .where(
+              and(
+                eq(budgetPeriods.householdId, pDetail.householdId),
+                sql`${transactions.transactionAt} >= ${seventyTwoHoursAgo}`
+              )
+            );
+
+          for (const item of body.transactions) {
+            const newTxDate = new Date(item.transactionAt).getTime();
+            const duplicate = potentialDuplicates.find(t => {
+              const matchAmount = t.amount === item.amount.toString();
+              const matchMerchant =
+                (!t.merchant && !item.merchant) ||
+                (t.merchant &&
+                  item.merchant &&
+                  t.merchant.toLowerCase().trim() === item.merchant.toLowerCase().trim());
+
+              const timeDiff = Math.abs(new Date(t.transactionAt).getTime() - newTxDate);
+              const matchTime = timeDiff <= 24 * 60 * 60 * 1000; // 24 hours — wide enough to catch temporal gap date-shifting
+
+              return matchAmount && matchMerchant && matchTime;
+            });
+
+            if (duplicate) {
+              set.status = 409;
+              return {
+                error: "DUPLICATE_TRANSACTION_DETECTED",
+                message: "Transaksi serupa telah dicatat sebelumnya.",
+                duplicate,
+              };
+            }
           }
         }
       }
@@ -161,6 +332,19 @@ export const transactionRoutes = new Elysia({ prefix: "/transactions" })
         return txns;
       });
 
+      if (closedPeriodIds.length > 0) {
+        const uniqueClosed = Array.from(new Set(closedPeriodIds));
+        for (const cPeriodId of uniqueClosed) {
+          const [p] = await db
+            .select({ householdId: budgetPeriods.householdId })
+            .from(budgetPeriods)
+            .where(eq(budgetPeriods.id, cPeriodId));
+          if (p) {
+            await recalculateRolloverForHousehold(p.householdId, cPeriodId);
+          }
+        }
+      }
+
       if (householdId) {
         broadcastToHousehold(householdId, userId, "transaction_changed");
       }
@@ -183,6 +367,8 @@ export const transactionRoutes = new Elysia({ prefix: "/transactions" })
             rawImageKey: t.Optional(t.String()),
           })
         ),
+        forceWriteClosedPeriod: t.Optional(t.Boolean()),
+        allowDuplicate: t.Optional(t.Boolean()),
       }),
     }
   )

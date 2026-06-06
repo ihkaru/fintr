@@ -44,6 +44,7 @@ import { isLoggedInReactive as isLoggedIn } from "../js/api";
 import { watch } from "vue";
 import { useSync } from "../composables/useSync";
 import { useHardwareBack } from "../composables/useHardwareBack";
+import { registerOnlineListener } from "../js/utils/offlineQueue";
 import UpdateBanner from "./UpdateBanner.vue";
 
 const f7params = {
@@ -53,8 +54,9 @@ const f7params = {
   routes,
 };
 
-// Initialize native hardware back button and app state listeners
+// Initialize native hardware back button, app state listeners, and offline sync manager
 useHardwareBack();
+registerOnlineListener();
 
 const { startSync, stopSync } = useSync();
 

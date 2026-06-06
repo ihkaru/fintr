@@ -44,17 +44,23 @@
           </div>
           <!-- Badge Source -->
           <div
-            style="
-              font-size: 11px;
-              padding: 4px 10px;
-              border-radius: 100px;
-              font-weight: 700;
-              background: var(--fintr-bg-card-hover);
-              color: var(--fintr-primary);
-              display: flex;
-              align-items: center;
-              gap: 4px;
-            "
+            :style="{
+              fontSize: '11px',
+              padding: '4px 10px',
+              borderRadius: '100px',
+              fontWeight: '700',
+              background:
+                transaction.source === 'ocr' || transaction.source === 'share'
+                  ? 'rgba(15, 82, 56, 0.08)'
+                  : 'var(--fintr-bg-card-hover)',
+              color:
+                transaction.source === 'ocr' || transaction.source === 'share'
+                  ? '#0f5238'
+                  : 'var(--fintr-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }"
           >
             {{ getSourceIcon(transaction.source) }} {{ getSourceLabel(transaction.source) }}
           </div>
@@ -346,8 +352,8 @@ const getSourceIcon = (source?: string) => {
 };
 
 const getSourceLabel = (source?: string) => {
-  if (source === "ocr") return "Scan Struk";
-  if (source === "share") return "Shared PWA";
+  if (source === "ocr") return "Via Struk";
+  if (source === "share") return "Via Struk";
   return "Input Manual";
 };
 </script>

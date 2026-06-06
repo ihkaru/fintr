@@ -240,8 +240,8 @@
               <span class="material-symbols-outlined" style="font-size: 16px">gavel</span>
               <span>
                 Karena kelompangan melebihi batas 6 bulan, sistem akan otomatis melakukan
-                <strong>Fast-Forward (Lompat Langsung)</strong> ke bulan saat ini untuk menjaga
-                efisiensi dan performa.
+                <strong>Lompati Bulan Kosong (Lompat Langsung)</strong> ke bulan saat ini untuk
+                menjaga efisiensi dan performa.
               </span>
             </div>
           </div>
@@ -288,9 +288,12 @@
                   style="margin-top: 3px; accent-color: var(--f7-theme-color-tint)"
                 />
                 <div>
-                  <div style="font-size: 12px; font-weight: 700">Urut (Cascade)</div>
+                  <div style="font-size: 12px; font-weight: 700">
+                    Tutup Runtut (Bulan demi Bulan)
+                  </div>
                   <div style="font-size: 10px; color: var(--fintr-text-muted); margin-top: 2px">
-                    Menuju bulan berikutnya: <strong>{{ getNextPeriodLabel() }}</strong>
+                    Secara bertahap menyelesaikan rollover satu per satu ke bulan berikutnya:
+                    <strong>{{ getNextPeriodLabel() }}</strong>
                   </div>
                 </div>
               </label>
@@ -325,10 +328,11 @@
                 />
                 <div>
                   <div style="font-size: 12px; font-weight: 700">
-                    Lompat Langsung (Fast-Forward)
+                    Lompati Bulan Kosong (Lompat ke Bulan Ini)
                   </div>
                   <div style="font-size: 10px; color: var(--fintr-text-muted); margin-top: 2px">
-                    Langsung ke bulan sekarang: <strong>{{ getCurrentPeriodLabel() }}</strong>
+                    Mengabaikan bulan-bulan tanpa aktivitas dan langsung membuka periode baru di
+                    bulan ini: <strong>{{ getCurrentPeriodLabel() }}</strong>
                   </div>
                 </div>
               </label>
