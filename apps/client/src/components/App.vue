@@ -41,10 +41,11 @@
 import { f7App, f7Views, f7View, f7Toolbar, f7Link } from "framework7-vue";
 import { routes } from "../js/routes";
 import { isLoggedInReactive as isLoggedIn } from "../js/api";
-import { watch } from "vue";
+import { watch, onMounted } from "vue";
 import { useSync } from "../composables/useSync";
 import { useHardwareBack } from "../composables/useHardwareBack";
 import { registerOnlineListener } from "../js/utils/offlineQueue";
+import { SplashScreen } from "@capacitor/splash-screen";
 import UpdateBanner from "./UpdateBanner.vue";
 
 const f7params = {
@@ -57,6 +58,10 @@ const f7params = {
 // Initialize native hardware back button, app state listeners, and offline sync manager
 useHardwareBack();
 registerOnlineListener();
+
+onMounted(() => {
+  SplashScreen.hide().catch(() => {});
+});
 
 const { startSync, stopSync } = useSync();
 
