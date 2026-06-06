@@ -125,8 +125,194 @@
               box-sizing: border-box;
               font-size: 14px;
             "
-            @input="calculateDiff"
+            @input="handleActualBalanceInput"
           />
+        </div>
+
+        <!-- Tautan kalkulator pecahan dompet -->
+        <div style="margin-top: 10px; margin-bottom: 16px">
+          <button
+            type="button"
+            @click="toggleCalculator"
+            style="
+              background: none;
+              border: none;
+              color: #0f5238;
+              font-size: 13px;
+              font-weight: 700;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              padding: 0;
+            "
+          >
+            <span class="material-symbols-outlined" style="font-size: 18px">
+              {{ showCalculator ? "keyboard_arrow_up" : "calculate" }}
+            </span>
+            {{ showCalculator ? "Sembunyikan Rincian Dompet" : "🧮 Hitung dari Beberapa Dompet" }}
+          </button>
+        </div>
+
+        <!-- Collapsible Calculator Section -->
+        <div
+          v-if="showCalculator"
+          class="animate-in"
+          style="
+            background: #fdfdfb;
+            border: 1px solid #bfc9c1;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+          "
+        >
+          <div
+            style="
+              font-size: 12px;
+              font-weight: 700;
+              color: #0f5238;
+              margin-bottom: 12px;
+              display: flex;
+              align-items: center;
+              gap: 4px;
+            "
+          >
+            <span class="material-symbols-outlined" style="font-size: 16px"
+              >account_balance_wallet</span
+            >
+            Pecah Saldo (Mempawah + Kubu Raya)
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px">
+            <div
+              v-for="(wallet, idx) in wallets"
+              :key="idx"
+              style="display: flex; gap: 8px; align-items: center"
+            >
+              <input
+                type="text"
+                v-model="wallet.label"
+                placeholder="Nama Dompet (e.g. BRI Suami)"
+                style="
+                  flex: 1.2;
+                  background: #ffffff;
+                  border: 1px solid #bfc9c1;
+                  color: #161a32;
+                  padding: 8px 10px;
+                  border-radius: 8px;
+                  font-size: 12px;
+                  box-sizing: border-box;
+                "
+                @input="syncCalculator"
+              />
+              <div style="position: relative; flex: 1; display: flex; align-items: center">
+                <span
+                  style="
+                    position: absolute;
+                    left: 8px;
+                    font-size: 11px;
+                    font-weight: 700;
+                    color: var(--fintr-text-muted);
+                  "
+                  >Rp</span
+                >
+                <input
+                  type="number"
+                  v-model="wallet.amount"
+                  placeholder="Jumlah"
+                  style="
+                    width: 100%;
+                    background: #ffffff;
+                    border: 1px solid #bfc9c1;
+                    color: #161a32;
+                    padding: 8px 10px;
+                    padding-left: 26px;
+                    border-radius: 8px;
+                    font-size: 12px;
+                    box-sizing: border-box;
+                  "
+                  @input="syncCalculator"
+                />
+              </div>
+              <button
+                type="button"
+                @click="removeWallet(idx)"
+                style="
+                  background: none;
+                  border: none;
+                  color: var(--fintr-danger);
+                  cursor: pointer;
+                  padding: 4px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <span class="material-symbols-outlined" style="font-size: 18px">delete</span>
+              </button>
+            </div>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-top: 12px;
+            "
+          >
+            <button
+              type="button"
+              @click="addWallet"
+              style="
+                background: #e8ede9;
+                border: none;
+                color: #0f5238;
+                padding: 6px 12px;
+                border-radius: 8px;
+                font-size: 11px;
+                font-weight: 700;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+              "
+            >
+              <span class="material-symbols-outlined" style="font-size: 14px">add</span>
+              Tambah Baris
+            </button>
+
+            <div style="font-size: 12px; font-weight: 700; color: #161a32">
+              Total: {{ formatRp(calculatorTotal) }}
+            </div>
+          </div>
+
+          <!-- Auto-copy note option -->
+          <div
+            style="
+              margin-top: 14px;
+              padding-top: 10px;
+              border-top: 1px dashed #bfc9c1;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            "
+          >
+            <input
+              type="checkbox"
+              id="autoNoteCheckbox"
+              v-model="autoNoteEnabled"
+              @change="updateAutoNote"
+              style="accent-color: #0f5238; cursor: pointer"
+            />
+            <label
+              for="autoNoteCheckbox"
+              style="font-size: 11px; color: #707973; font-weight: 600; cursor: pointer"
+            >
+              Simpan rincian ini ke Catatan Snapshot
+            </label>
+          </div>
         </div>
 
         <!-- Calculated Live Diff -->
@@ -332,6 +518,76 @@ const form = reactive({
   note: "",
 });
 
+const showCalculator = ref(false);
+const wallets = ref<Array<{ label: string; amount: number | "" }>>([
+  { label: "BRI Suami (Mempawah)", amount: "" },
+  { label: "Dompet Istri (Kubu Raya)", amount: "" },
+  { label: "E-Wallet Bersama", amount: "" },
+]);
+const autoNoteEnabled = ref(true);
+const calculatorTotal = ref(0);
+
+const toggleCalculator = () => {
+  showCalculator.value = !showCalculator.value;
+};
+
+const addWallet = () => {
+  wallets.value.push({ label: "", amount: "" });
+};
+
+const removeWallet = (index: number) => {
+  wallets.value.splice(index, 1);
+  syncCalculator();
+};
+
+const syncCalculator = () => {
+  let total = 0;
+  wallets.value.forEach(w => {
+    if (w.amount !== "" && !isNaN(w.amount)) {
+      total += Number(w.amount);
+    }
+  });
+  calculatorTotal.value = total;
+  form.actualBalance = total > 0 ? total : "";
+  calculateDiff();
+  updateAutoNote();
+};
+
+const formatRpShort = (val: number) => {
+  if (val >= 1000000) {
+    const jt = val / 1000000;
+    return `${jt % 1 === 0 ? jt : jt.toFixed(1)}jt`;
+  }
+  if (val >= 1000) {
+    const rb = val / 1000;
+    return `${rb % 1 === 0 ? rb : rb.toFixed(1)}rb`;
+  }
+  return val.toString();
+};
+
+const updateAutoNote = () => {
+  if (!autoNoteEnabled.value) return;
+  const activeWallets = wallets.value.filter(w => w.amount !== "" && Number(w.amount) > 0);
+  if (activeWallets.length === 0) {
+    form.note = "";
+    return;
+  }
+  const details = activeWallets
+    .map(w => `${w.label || "Lainnya"}: ${formatRpShort(Number(w.amount))}`)
+    .join(", ");
+  form.note = `Rincian: ${details}`;
+};
+
+const handleActualBalanceInput = () => {
+  calculateDiff();
+  if (showCalculator.value) {
+    wallets.value.forEach(w => {
+      w.amount = "";
+    });
+    calculatorTotal.value = 0;
+  }
+};
+
 let initialBalance: number | "" = "";
 const initialNote = "";
 
@@ -384,6 +640,11 @@ const submitSnapshot = async () => {
       })
       .open();
     form.note = "";
+    wallets.value.forEach(w => {
+      w.amount = "";
+    });
+    calculatorTotal.value = 0;
+    showCalculator.value = false;
     loadReconcileData();
   } catch (err: any) {
     f7.dialog.alert("Gagal menyimpan: " + err.message);
