@@ -1,25 +1,23 @@
-import { ref, reactive, toRef, onMounted, watch } from "vue";
+import { toRef, onMounted } from "vue";
 import { useSplit } from "./useSplit";
 import { useOcr } from "./useOcr";
-import { periods, transactions, PeriodDetail } from "../js/api";
-import { useShareStore, SharedData } from "../js/shareStore";
+import { periods, transactions } from "../js/api";
+import { useShareStore } from "../js/shareStore";
+import { useTransactionForm } from "./useTransactionForm";
+import { useTransactionSubmit } from "./useTransactionSubmit";
 
 export function useAddTransaction(routeQueryAllocId?: string) {
-  const loadingEnvelopes = ref(true);
-  const submitting = ref(false);
-  const allocations = ref<PeriodDetail["allocations"]>([]);
-  const currentPeriodId = ref<string>("");
-  const aiRecommendationText = ref("");
-
-  const form = reactive({
-    amount: "" as number | "",
-    merchant: "",
-    note: "",
-    date: "",
-    source: "manual" as "manual" | "ocr",
-    allocationId: "" as string,
-    rawImageKey: "",
-  });
+  const {
+    loadingEnvelopes,
+    allocations,
+    currentPeriodId,
+    aiRecommendationText,
+    form,
+    setSource,
+    selectEnvelope,
+    initDateTime,
+    loadEnvelopes,
+  } = useTransactionForm(routeQueryAllocId);
 
   const {
     isSplit,
@@ -41,19 +39,14 @@ export function useAddTransaction(routeQueryAllocId?: string) {
     clearOcrPreview,
   } = useOcr();
 
-  const setSource = (src: "manual" | "ocr") => {
-    form.source = src;
-  };
-
-  const selectEnvelope = (id: string) => {
-    form.allocationId = id;
-  };
-
-  const initDateTime = () => {
-    const local = new Date();
-    local.setMinutes(local.getMinutes() - local.getTimezoneOffset());
-    form.date = local.toISOString().slice(0, 16);
-  };
+  const { submitting, saveTransaction } = useTransactionSubmit(
+    form,
+    currentPeriodId,
+    isSplit,
+    splitRemaining,
+    splitItems,
+    splitTotal
+  );
 
   const resetForm = (fileInputId?: string) => {
     currentOcrSessionId.value++;
@@ -88,143 +81,6 @@ export function useAddTransaction(routeQueryAllocId?: string) {
     const fileInput = document.getElementById(fileInputId) as HTMLInputElement;
     if (fileInput) {
       fileInput.value = "";
-    }
-  };
-
-  const loadEnvelopes = async (alertCallback: (msg: string, title: string) => void) => {
-    try {
-      const list = await periods.list();
-      const current = list.find(p => !p.isClosed);
-      if (!current) {
-        alertCallback("Belum ada periode anggaran aktif. Buka periode dulu.", "Oops");
-        return;
-      }
-
-      currentPeriodId.value = current.id;
-      const detail = await periods.getDetail(current.id);
-      // Filter out deactivated/soft-deleted allocations
-      allocations.value = detail.allocations.filter(a => a.isActive !== false);
-
-      if (routeQueryAllocId) {
-        const found = allocations.value.find(a => a.id === routeQueryAllocId);
-        if (found) {
-          form.allocationId = routeQueryAllocId;
-        } else if (allocations.value.length > 0) {
-          form.allocationId = allocations.value[0].id;
-        }
-      } else if (allocations.value.length > 0) {
-        form.allocationId = allocations.value[0].id;
-      }
-    } catch (err: any) {
-      console.error("Gagal memuat amplop:", err);
-    } finally {
-      loadingEnvelopes.value = false;
-    }
-  };
-
-  const saveTransaction = async (
-    alertCallback: (msg: string, title: string) => void,
-    routerBackCallback: () => void
-  ) => {
-    if (!form.amount || form.amount <= 0) {
-      alertCallback("Jumlah pengeluaran harus lebih besar dari 0", "Oops");
-      return;
-    }
-
-    if (isSplit.value) {
-      if (splitRemaining.value !== 0) {
-        alertCallback(
-          `Jumlah nominal pecahan tidak sama dengan total nominal transaksi (selisih: Rp ${splitRemaining.value}). Silakan sesuaikan pembagian Anda.`,
-          "Nominal Tidak Pas"
-        );
-        return;
-      }
-
-      for (let i = 0; i < splitItems.value.length; i++) {
-        const item = splitItems.value[i];
-        if (!item.allocationId) {
-          alertCallback(`Pilih amplop untuk Bagian #${i + 1}`, "Oops");
-          return;
-        }
-        if (!item.amount || item.amount <= 0) {
-          alertCallback(`Nominal Bagian #${i + 1} harus lebih besar dari 0`, "Oops");
-          return;
-        }
-      }
-
-      submitting.value = true;
-      try {
-        const txns = splitItems.value.map(item => ({
-          periodId: currentPeriodId.value,
-          allocationId: item.allocationId,
-          amount: Number(item.amount),
-          merchant: form.merchant || undefined,
-          note: form.note
-            ? `${form.note} (${splitItems.value.indexOf(item) + 1}/${splitItems.value.length})`
-            : `Split (${splitItems.value.indexOf(item) + 1}/${splitItems.value.length})`,
-          transactionAt: new Date(form.date).toISOString(),
-          source: form.source,
-          rawImageKey: form.rawImageKey || undefined,
-        }));
-
-        const res = (await transactions.createSplit({ transactions: txns })) as any;
-        const createdIds = res.map((t: any) => t.id);
-
-        window.dispatchEvent(
-          new CustomEvent("fintr:transaction-saved", {
-            detail: {
-              ids: createdIds,
-              amount: splitTotal.value,
-              merchant: form.merchant || undefined,
-              isSplit: true,
-            },
-          })
-        );
-
-        routerBackCallback();
-      } catch (err: any) {
-        alertCallback("Gagal menyimpan split transaksi: " + err.message, "Error");
-      } finally {
-        submitting.value = false;
-      }
-      return;
-    }
-
-    // Normal mode saving
-    if (!form.allocationId) {
-      alertCallback("Pilih amplop alokasi pengeluaran", "Oops");
-      return;
-    }
-
-    submitting.value = true;
-    try {
-      const res = (await transactions.create({
-        periodId: currentPeriodId.value,
-        allocationId: form.allocationId,
-        amount: Number(form.amount),
-        merchant: form.merchant || undefined,
-        note: form.note || undefined,
-        transactionAt: new Date(form.date).toISOString(),
-        source: form.source,
-        rawImageKey: form.rawImageKey || undefined,
-      })) as any;
-
-      window.dispatchEvent(
-        new CustomEvent("fintr:transaction-saved", {
-          detail: {
-            ids: [res.id],
-            amount: Number(form.amount),
-            merchant: form.merchant || undefined,
-            isSplit: false,
-          },
-        })
-      );
-
-      routerBackCallback();
-    } catch (err: any) {
-      alertCallback("Gagal menyimpan: " + err.message, "Error");
-    } finally {
-      submitting.value = false;
     }
   };
 

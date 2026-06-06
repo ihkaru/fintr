@@ -1,0 +1,77 @@
+/* ── Login Page ──────────────────────────────────────────────── */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.login-container .logo {
+  font-size: 48px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #6366f1, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  letter-spacing: -0.04em;
+}
+
+.login-container .tagline {
+  font-size: 15px;
+  color: var(--fintr-text-muted);
+  margin-bottom: 48px;
+  line-height: 1.5;
+}
+
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: white;
+  color: #1f2937;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 32px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 320px;
+}
+
+.google-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.google-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ── Toolbar/Tabbar ──────────────────────────────────────────── */
+.toolbar-bottom {
+  --f7-toolbar-bg-color: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--fintr-border);
+}
+
+/* ── Status colors for diff ──────────────────────────────────── */
+.status-ok {
+  color: var(--fintr-success);
+}
+.status-warning {
+  color: var(--fintr-warning);
+}
+.status-danger {
+  color: var(--fintr-danger);
+}

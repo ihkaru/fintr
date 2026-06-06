@@ -1,0 +1,39 @@
+/* ── Design Tokens ──────────────────────────────────────────── */
+:root {
+  --f7-font-family: "Inter", "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+  --f7-theme-color: #0f5238;
+  --f7-theme-color-rgb: 15, 82, 56;
+  --f7-theme-color-shade: #0c432d;
+  --f7-theme-color-tint: #1b7352;
+
+  /* Custom tokens */
+  --fintr-bg: #faf3e0;
+  --fintr-bg-card: #ffffff;
+  --fintr-bg-card-hover: #f3f1e9;
+  --fintr-text: #161a32;
+  --fintr-text-muted: #404943;
+  --fintr-text-dim: #707973;
+  --fintr-border: #bfc9c1;
+  --fintr-success: #22c55e;
+  --fintr-warning: #f59e0b;
+  --fintr-danger: #ba1a1a;
+  --fintr-gradient-start: #2d6a4f;
+  --fintr-gradient-end: #485f84;
+  --fintr-primary: #0f5238;
+  --fintr-secondary: #485f84;
+  --fintr-secondary-container: #bbd3fd;
+
+  /* F7 Theme overrides */
+  --f7-bars-bg-color: #ffffff;
+  --f7-page-bg-color: #faf3e0;
+  --f7-list-bg-color: #ffffff;
+  --f7-block-title-text-color: #404943;
+}
+
+/* ── Custom font families from Stitch ───────────────────────── */
+.font-headline {
+  font-family: "Manrope", sans-serif;
+}
+.font-body {
+  font-family: "Inter", sans-serif;
+}

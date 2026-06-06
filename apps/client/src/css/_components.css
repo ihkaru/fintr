@@ -1,0 +1,398 @@
+/* ── Glassmorphism Cards ─────────────────────────────────────── */
+.card-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--fintr-border);
+  border-radius: 16px;
+  padding: 20px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.card-glass:active {
+  transform: scale(0.98);
+}
+
+/* ── Envelope Card ───────────────────────────────────────────── */
+.envelope-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.envelope-card {
+  background: var(--fintr-bg-card);
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid var(--fintr-border);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.envelope-card:active {
+  transform: scale(0.97);
+  background: var(--fintr-bg-card-hover);
+}
+
+.envelope-card .name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fintr-text);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.envelope-card .name .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.envelope-card .amount {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--fintr-text);
+  margin-bottom: 4px;
+  letter-spacing: -0.02em;
+}
+
+.envelope-card .sub-text {
+  font-size: 11px;
+  color: var(--fintr-text-muted);
+}
+
+.envelope-card .progress-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.envelope-card .progress-bar .fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+/* ── Hero Stats ──────────────────────────────────────────────── */
+.hero-stats {
+  background: linear-gradient(135deg, var(--fintr-gradient-start), var(--fintr-gradient-end));
+  border-radius: 20px;
+  padding: 24px 20px;
+  margin: 16px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-stats::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -30%;
+  width: 200px;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+}
+
+.hero-stats .label {
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0.85;
+  margin-bottom: 4px;
+}
+
+.hero-stats .value {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+}
+
+.hero-stats .sub-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hero-stats .sub-item {
+  flex: 1;
+}
+
+.hero-stats .sub-item .sub-label {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-bottom: 2px;
+}
+
+.hero-stats .sub-item .sub-value {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* ── FAB ─────────────────────────────────────────────────────── */
+.fab-custom {
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  right: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--fintr-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 8px 32px rgba(15, 82, 56, 0.3);
+  cursor: pointer;
+  z-index: 100;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  border: none;
+}
+
+.fab-custom:active {
+  transform: scale(0.92);
+  box-shadow: 0 4px 16px rgba(15, 82, 56, 0.2);
+}
+
+/* ── Transaction Item ────────────────────────────────────────── */
+.txn-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  gap: 12px;
+  border-bottom: 1px solid var(--fintr-border);
+  transition: background 0.15s ease;
+}
+
+.txn-item:active {
+  background: var(--fintr-bg-card-hover);
+}
+
+.txn-item .icon-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.txn-item .info {
+  flex: 1;
+  min-width: 0;
+}
+
+.txn-item .info .merchant {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fintr-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.txn-item .info .meta {
+  font-size: 12px;
+  color: var(--fintr-text-muted);
+  margin-top: 2px;
+}
+
+.txn-item .amount-col {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.txn-item .amount-col .amount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fintr-danger);
+}
+
+.txn-item .amount-col .envelope-tag {
+  font-size: 10px;
+  color: var(--fintr-text-dim);
+  margin-top: 2px;
+}
+
+/* ── Section Headers ─────────────────────────────────────────── */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 16px 12px;
+}
+
+.section-header .title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fintr-text);
+}
+
+.section-header .action {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--f7-theme-color);
+  cursor: pointer;
+}
+
+/* ── Reconcile Widget ────────────────────────────────────────── */
+.reconcile-widget {
+  background: var(--fintr-bg-card);
+  border: 1px solid var(--fintr-border);
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin: 0 16px 16px;
+}
+
+.reconcile-widget .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.reconcile-widget .row .label {
+  font-size: 13px;
+  color: var(--fintr-text-muted);
+}
+
+.reconcile-widget .row .value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fintr-text);
+}
+
+.reconcile-widget .row .value.positive {
+  color: var(--fintr-success);
+}
+
+.reconcile-widget .row .value.negative {
+  color: var(--fintr-danger);
+}
+
+.reconcile-widget .divider {
+  height: 1px;
+  background: var(--fintr-border);
+  margin: 8px 0;
+}
+
+/* ── Form Styles ─────────────────────────────────────────────── */
+.fintr-input {
+  background: var(--fintr-bg-card);
+  border: 1px solid var(--fintr-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--fintr-text);
+  font-size: 15px;
+  font-family: inherit;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.fintr-input:focus {
+  border-color: var(--f7-theme-color);
+}
+
+.fintr-input::placeholder {
+  color: var(--fintr-text-dim);
+}
+
+.amount-input {
+  font-size: 32px;
+  font-weight: 800;
+  text-align: center;
+  background: transparent;
+  border: none;
+  color: var(--fintr-text);
+  width: 100%;
+  outline: none;
+  letter-spacing: -0.02em;
+}
+
+.amount-input::placeholder {
+  color: var(--fintr-text-dim);
+}
+
+/* ── Chip Selector ───────────────────────────────────────────── */
+.chip-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.chip-selector .chip {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--fintr-border);
+  background: var(--fintr-bg-card);
+  color: var(--fintr-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chip-selector .chip.active {
+  border-color: var(--f7-theme-color);
+  background: rgba(15, 82, 56, 0.12);
+  color: var(--f7-theme-color);
+}
+
+/* ── Button Styles ───────────────────────────────────────────── */
+.btn-primary {
+  background: var(--f7-theme-color);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(15, 82, 56, 0.2);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Empty State ─────────────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--fintr-text-muted);
+}
+
+.empty-state .icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state .message {
+  font-size: 14px;
+  line-height: 1.5;
+}

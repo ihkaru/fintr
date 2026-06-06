@@ -116,178 +116,11 @@
         <!-- SVG Trend Chart Card -->
         <PeriodTrendChart :periods-data="periodsData" />
 
-        <!-- KPI Metrics Row -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px">
-          <div
-            style="
-              background: white;
-              border: 1px solid #bfc9c1;
-              border-radius: 16px;
-              padding: 16px;
-              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01);
-            "
-          >
-            <div
-              style="font-size: 11px; color: #707973; font-weight: 600; text-transform: uppercase"
-            >
-              Rata-rata Menabung
-            </div>
-            <div
-              style="
-                font-size: 18px;
-                font-weight: 800;
-                color: #0f5238;
-                margin: 4px 0;
-                font-family: &quot;Manrope&quot;, sans-serif;
-              "
-            >
-              {{ formatRp(averageSaving) }}
-            </div>
-            <div style="font-size: 11px; color: #707973">Per bulan dari sisa anggaran</div>
-          </div>
-          <div
-            style="
-              background: white;
-              border: 1px solid #bfc9c1;
-              border-radius: 16px;
-              padding: 16px;
-              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01);
-            "
-          >
-            <div
-              style="font-size: 11px; color: #707973; font-weight: 600; text-transform: uppercase"
-            >
-              Saving Rate
-            </div>
-            <div
-              style="
-                font-size: 18px;
-                font-weight: 800;
-                color: #485f84;
-                margin: 4px 0;
-                font-family: &quot;Manrope&quot;, sans-serif;
-              "
-            >
-              {{ savingRatePct }}%
-            </div>
-            <div
-              style="
-                font-size: 11px;
-                color: #22c55e;
-                font-weight: 700;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-              "
-            >
-              <span style="font-size: 12px">📈</span> Sehat & Stabil
-            </div>
-          </div>
-        </div>
-
-        <!-- Household context info for newlyweds -->
-        <div
-          style="
-            background: rgba(15, 82, 56, 0.05);
-            border: 1px dashed #0f5238;
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-          "
-        >
-          <span style="font-size: 20px; line-height: 1">💡</span>
-          <div style="font-size: 12.5px; color: #0f5238; line-height: 1.5">
-            <strong>Tips Keuangan Keluarga Baru:</strong> Dengan penghasilan bulanan 7.8 juta,
-            target Tabungan wajib 2 juta langsung diamankan di awal bulan. Riwayat anggaran di atas
-            membantu memantau konsistensi amplop belanja Anda berdua.
-          </div>
-        </div>
+        <!-- KPI Metrics Row & Newlyweds Tips -->
+        <PeriodKPIs :average-saving="averageSaving" :saving-rate-pct="savingRatePct" />
 
         <!-- Detailed Period Table -->
-        <div
-          style="
-            background: white;
-            border: 1px solid #bfc9c1;
-            border-radius: 16px;
-            overflow: hidden;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01);
-          "
-        >
-          <div
-            style="
-              padding: 16px;
-              border-bottom: 1px solid #bfc9c1;
-              font-weight: 800;
-              color: #161a32;
-              font-size: 14px;
-            "
-          >
-            Tabel Rincian Periode
-          </div>
-          <div style="overflow-x: auto">
-            <table
-              style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left"
-            >
-              <thead>
-                <tr
-                  style="
-                    background: #f3f1e9;
-                    border-bottom: 1px solid #bfc9c1;
-                    color: #404943;
-                    font-weight: 700;
-                  "
-                >
-                  <th style="padding: 12px 16px">Periode</th>
-                  <th style="padding: 12px 16px; text-align: right">Anggaran</th>
-                  <th style="padding: 12px 16px; text-align: right">Terpakai</th>
-                  <th style="padding: 12px 16px; text-align: right">Sisa (Tabungan)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="p in periodsData"
-                  :key="p.id"
-                  style="border-bottom: 1px solid #e3e8e4; color: #161a32"
-                >
-                  <td style="padding: 12px 16px; font-weight: 600">{{ p.name }}</td>
-                  <td
-                    style="
-                      padding: 12px 16px;
-                      text-align: right;
-                      font-family: &quot;Inter&quot;, sans-serif;
-                    "
-                  >
-                    {{ formatRp(parseFloat(p.totalAllocated)) }}
-                  </td>
-                  <td
-                    style="
-                      padding: 12px 16px;
-                      text-align: right;
-                      font-family: &quot;Inter&quot;, sans-serif;
-                    "
-                  >
-                    {{ formatRp(parseFloat(p.totalSpent)) }}
-                  </td>
-                  <td
-                    style="
-                      padding: 12px 16px;
-                      text-align: right;
-                      font-weight: 700;
-                      color: #0f5238;
-                      font-family: &quot;Inter&quot;, sans-serif;
-                    "
-                  >
-                    {{ formatRp(parseFloat(p.totalRemaining)) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <PeriodDetailsTable :periods-data="periodsData" />
       </div>
 
       <!-- Tab 2: Perbandingan Amplop (Category View) -->
@@ -312,174 +145,7 @@
 
       <!-- Tab 3: Log Rollover -->
       <div v-else-if="activeTab === 'rollover'" class="animate-in">
-        <div style="margin-bottom: 16px">
-          <label
-            style="
-              font-size: 12px;
-              color: #707973;
-              font-weight: 600;
-              display: block;
-              margin-bottom: 6px;
-            "
-            >PILIH PERIODE AUDIT</label
-          >
-          <div
-            style="
-              position: relative;
-              display: flex;
-              align-items: center;
-              background: white;
-              border: 1px solid #bfc9c1;
-              border-radius: 12px;
-              padding: 4px 12px;
-            "
-          >
-            <span
-              class="material-symbols-outlined"
-              style="font-size: 20px; color: #707973; margin-right: 8px"
-              >calendar_month</span
-            >
-            <select
-              v-model="selectedPeriodId"
-              @change="fetchRolloverLogs"
-              style="
-                width: 100%;
-                border: none;
-                background: transparent;
-                font-size: 14px;
-                font-weight: 600;
-                color: #161a32;
-                padding: 8px 0;
-                outline: none;
-                cursor: pointer;
-                -webkit-appearance: none;
-              "
-            >
-              <option v-for="p in periodsData" :key="p.id" :value="p.id">{{ p.name }}</option>
-            </select>
-            <span
-              class="material-symbols-outlined"
-              style="font-size: 20px; color: #707973; pointer-events: none; margin-left: auto"
-              >arrow_drop_down</span
-            >
-          </div>
-        </div>
-
-        <div v-if="loadingLogs" style="text-align: center; padding: 32px">
-          <f7-preloader size="28" color="green"></f7-preloader>
-          <div style="margin-top: 12px; color: var(--fintr-text-muted); font-size: 13px">
-            Memuat log rollover...
-          </div>
-        </div>
-
-        <div
-          v-else-if="rolloverLogsData.length === 0"
-          style="
-            text-align: center;
-            padding: 32px;
-            background: white;
-            border: 1px solid #bfc9c1;
-            border-radius: 16px;
-          "
-        >
-          <div style="font-size: 40px; margin-bottom: 12px">📥</div>
-          <div style="font-weight: 700; color: #161a32; font-size: 14px; margin-bottom: 6px">
-            Tidak Ada Log Rollover
-          </div>
-          <div style="font-size: 12px; color: #707973">
-            Tidak ditemukan catatan log pemindahan saldo otomatis saat memulai periode ini.
-          </div>
-        </div>
-
-        <div v-else style="display: flex; flex-direction: column; gap: 12px">
-          <div
-            v-for="log in rolloverLogsData"
-            :key="log.id"
-            style="
-              background: white;
-              border: 1px solid #bfc9c1;
-              border-radius: 16px;
-              padding: 16px;
-              display: flex;
-              flex-direction: column;
-              gap: 12px;
-              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01);
-            "
-          >
-            <div style="display: flex; justify-content: space-between; align-items: center">
-              <div style="display: flex; align-items: center; gap: 8px">
-                <span class="material-symbols-outlined" style="font-size: 20px; color: #0f5238"
-                  >mail</span
-                >
-                <span style="font-weight: 700; font-size: 14px; color: #161a32">{{
-                  log.envelopeName
-                }}</span>
-              </div>
-              <span :style="getBehaviorBadgeStyle(log.behavior)">
-                {{ getBehaviorLabel(log.behavior) }}
-              </span>
-            </div>
-
-            <div
-              style="
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 16px;
-                background: #f8faf9;
-                border-radius: 12px;
-                padding: 12px;
-                border: 1px solid #e3e8e4;
-              "
-            >
-              <div>
-                <div
-                  style="
-                    font-size: 10px;
-                    color: #707973;
-                    font-weight: 600;
-                    text-transform: uppercase;
-                    margin-bottom: 4px;
-                  "
-                >
-                  Sisa Saldo Lalu
-                </div>
-                <div
-                  style="
-                    font-size: 14px;
-                    font-weight: 800;
-                    color: #404943;
-                    font-family: &quot;Inter&quot;, sans-serif;
-                  "
-                >
-                  {{ formatRp(parseFloat(log.remainingAmount)) }}
-                </div>
-              </div>
-              <div>
-                <div
-                  style="
-                    font-size: 10px;
-                    color: #707973;
-                    font-weight: 600;
-                    text-transform: uppercase;
-                    margin-bottom: 4px;
-                  "
-                >
-                  Dipindahkan
-                </div>
-                <div
-                  style="
-                    font-size: 14px;
-                    font-weight: 800;
-                    color: #0f5238;
-                    font-family: &quot;Inter&quot;, sans-serif;
-                  "
-                >
-                  {{ formatRp(parseFloat(log.rolledOverAmount)) }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PeriodRolloverLogs :periods-list="periodsData" :initial-period-id="selectedPeriodId" />
       </div>
     </div>
   </f7-page>
@@ -489,7 +155,13 @@
 import { ref, computed } from "vue";
 import { f7Page, f7Navbar, f7NavTitle, f7Preloader, f7NavLeft, f7Link } from "framework7-vue";
 import { periods } from "../js/api";
-import { formatRp } from "../js/routes";
+
+// Modular UI Components
+import PeriodTrendChart from "../components/PeriodTrendChart.vue";
+import EnvelopeSparklineCard from "../components/EnvelopeSparklineCard.vue";
+import PeriodKPIs from "../components/PeriodKPIs.vue";
+import PeriodDetailsTable from "../components/PeriodDetailsTable.vue";
+import PeriodRolloverLogs from "../components/PeriodRolloverLogs.vue";
 
 const props = defineProps<{
   f7router: any;
@@ -498,10 +170,6 @@ const props = defineProps<{
 const goBack = () => {
   props.f7router.back();
 };
-
-// Modular UI Components
-import PeriodTrendChart from "../components/PeriodTrendChart.vue";
-import EnvelopeSparklineCard from "../components/EnvelopeSparklineCard.vue";
 
 const loading = ref(true);
 const activeTab = ref<"trend" | "category" | "rollover">("trend");
@@ -528,71 +196,7 @@ interface CategoryCompare {
 
 const periodsData = ref<PeriodTotal[]>([]);
 const categoriesData = ref<CategoryCompare[]>([]);
-
 const selectedPeriodId = ref<string>("");
-const rolloverLogsData = ref<any[]>([]);
-const loadingLogs = ref(false);
-
-const fetchRolloverLogs = async () => {
-  if (!selectedPeriodId.value) return;
-  loadingLogs.value = true;
-  try {
-    const logs = await periods.getRolloverLogs(selectedPeriodId.value);
-    rolloverLogsData.value = logs;
-  } catch (err) {
-    console.error("Gagal mengambil log rollover:", err);
-  } finally {
-    loadingLogs.value = false;
-  }
-};
-
-const getBehaviorLabel = (behavior: string) => {
-  switch (behavior) {
-    case "reset":
-      return "Reset ke Nol";
-    case "rollover_self":
-      return "Sisa Saldo Tetap";
-    case "rollover_to_savings":
-      return "Transfer ke Tabungan";
-    default:
-      return behavior;
-  }
-};
-
-const getBehaviorBadgeStyle = (behavior: string) => {
-  const base = {
-    fontSize: "11px",
-    fontWeight: "700",
-    padding: "4px 8px",
-    borderRadius: "6px",
-  };
-  switch (behavior) {
-    case "reset":
-      return {
-        ...base,
-        background: "#fee2e2",
-        color: "#991b1b",
-      };
-    case "rollover_self":
-      return {
-        ...base,
-        background: "#e0f2fe",
-        color: "#075985",
-      };
-    case "rollover_to_savings":
-      return {
-        ...base,
-        background: "#dcfce7",
-        color: "#166534",
-      };
-    default:
-      return {
-        ...base,
-        background: "#f3f4f6",
-        color: "#374151",
-      };
-  }
-};
 
 const loadPeriodSummary = async () => {
   try {
@@ -601,7 +205,6 @@ const loadPeriodSummary = async () => {
     categoriesData.value = res.categories;
     if (res.periods && res.periods.length > 0) {
       selectedPeriodId.value = res.periods[0].id;
-      fetchRolloverLogs();
     }
   } catch (err) {
     console.error("Gagal mengambil data perbandingan periode:", err);
