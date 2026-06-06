@@ -1,7 +1,13 @@
 import { Elysia, t } from "elysia";
 import { authMiddleware } from "../middleware/auth";
 import { db } from "../db/index";
-import { accountSnapshots, budgetPeriods, transactions, budgetAllocations } from "../db/schema";
+import {
+  accountSnapshots,
+  budgetPeriods,
+  transactions,
+  budgetAllocations,
+  users,
+} from "../db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 
 export const reconcileRoutes = new Elysia({ prefix: "/reconcile" })
@@ -108,8 +114,18 @@ export const reconcileRoutes = new Elysia({ prefix: "/reconcile" })
     }
 
     const snapshots = await db
-      .select()
+      .select({
+        id: accountSnapshots.id,
+        snapshotAt: accountSnapshots.snapshotAt,
+        actualBalance: accountSnapshots.actualBalance,
+        note: accountSnapshots.note,
+        createdAt: accountSnapshots.createdAt,
+        createdBy: accountSnapshots.createdBy,
+        creatorName: users.name,
+        creatorAvatar: users.avatarUrl,
+      })
       .from(accountSnapshots)
+      .leftJoin(users, eq(accountSnapshots.createdBy, users.id))
       .where(eq(accountSnapshots.householdId, householdId))
       .orderBy(desc(accountSnapshots.snapshotAt))
       .limit(20);

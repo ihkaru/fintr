@@ -108,7 +108,7 @@
               font-weight: 600;
             "
           >
-            Saldo Riil / Fisik Saat Ini (Tabungan BRI + Dompet Cash + QRIS)
+            Saldo Riil / Fisik Saat Ini (Total Semua Rekening & Dompet)
           </div>
           <input
             type="number"
@@ -181,7 +181,7 @@
             <span class="material-symbols-outlined" style="font-size: 16px"
               >account_balance_wallet</span
             >
-            Pecah Saldo (Mempawah + Kubu Raya)
+            Pecah Saldo per Rekening / Dompet
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px">
@@ -193,7 +193,7 @@
               <input
                 type="text"
                 v-model="wallet.label"
-                placeholder="Nama Dompet (e.g. BRI Suami)"
+                placeholder="Nama Dompet (e.g. Tabungan)"
                 style="
                   flex: 1.2;
                   background: #ffffff;
@@ -464,37 +464,211 @@
         </div>
       </div>
 
-      <f7-list
-        v-else
-        media-list
-        class="no-margin animate-in"
-        style="border-radius: 16px; border: 1px solid #bfc9c1; overflow: hidden; background: white"
-      >
-        <f7-list-item
+      <div v-else style="display: flex; flex-direction: column; gap: 12px" class="animate-in">
+        <div
           v-for="h in historyList"
           :key="h.id"
-          :title="formatRp(h.actualBalance)"
-          :subtitle="h.note || 'Snapshot Saldo'"
-          :text="formatDate(h.snapshotAt)"
-        ></f7-list-item>
-      </f7-list>
+          @click="toggleExpandSnapshot(h.id)"
+          style="
+            background: #ffffff;
+            border: 1px solid #bfc9c1;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            transition: all 0.2s ease;
+            cursor: pointer;
+          "
+          :style="{
+            borderColor: expandedSnapshots[h.id] ? '#0f5238' : '#bfc9c1',
+            background: expandedSnapshots[h.id] ? '#f8faf9' : '#ffffff',
+          }"
+        >
+          <!-- Row Utama -->
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 12px;
+              width: 100%;
+            "
+          >
+            <!-- Left: User Avatar Initials and Info -->
+            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0">
+              <div
+                style="
+                  width: 40px;
+                  height: 40px;
+                  border-radius: 50%;
+                  background: #e8ede9;
+                  color: #0f5238;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-weight: 700;
+                  font-size: 14px;
+                  flex-shrink: 0;
+                  border: 1.5px solid #0f5238;
+                  text-transform: uppercase;
+                  overflow: hidden;
+                "
+              >
+                <img
+                  v-if="h.creatorAvatar"
+                  :src="h.creatorAvatar"
+                  style="width: 100%; height: 100%; object-fit: cover"
+                />
+                <span v-else>{{ h.creatorName ? h.creatorName.substring(0, 2) : "US" }}</span>
+              </div>
+
+              <div style="flex: 1; min-width: 0">
+                <div
+                  style="
+                    font-size: 15px;
+                    font-weight: 700;
+                    color: #161a32;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                  "
+                >
+                  {{ formatRp(h.actualBalance) }}
+                </div>
+                <div
+                  style="
+                    font-size: 12px;
+                    color: #707973;
+                    margin-top: 2px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                  "
+                  v-if="!expandedSnapshots[h.id]"
+                >
+                  {{ h.note || "Snapshot Saldo" }}
+                </div>
+                <div
+                  style="font-size: 12px; color: #707973; margin-top: 2px; font-weight: 600"
+                  v-else-if="!parseNoteDetails(h.note)"
+                >
+                  {{ h.note || "Snapshot Saldo" }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Date and Creator Badge -->
+            <div
+              style="
+                text-align: right;
+                flex-shrink: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 4px;
+              "
+            >
+              <span
+                style="
+                  font-size: 11px;
+                  color: #707973;
+                  font-weight: 500;
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                "
+              >
+                {{ formatDate(h.snapshotAt) }}
+                <span
+                  class="material-symbols-outlined"
+                  style="font-size: 14px; transition: transform 0.2s"
+                  :style="{
+                    transform: expandedSnapshots[h.id] ? 'rotate(180deg)' : 'rotate(0deg)',
+                  }"
+                >
+                  expand_more
+                </span>
+              </span>
+              <div
+                style="
+                  font-size: 10px;
+                  font-weight: 700;
+                  background: #f0f4f1;
+                  color: #0f5238;
+                  padding: 2px 8px;
+                  border-radius: 20px;
+                  border: 1px solid #c9d6cb;
+                  max-width: 100px;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                "
+              >
+                👤 {{ h.creatorName || "Pengguna" }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Bagian Detail Koin / Rincian Dompet (muncul saat di-expand) -->
+          <div
+            v-if="expandedSnapshots[h.id] && parseNoteDetails(h.note)"
+            class="animate-in"
+            style="
+              margin-top: 4px;
+              padding: 10px 12px;
+              background: #f3f6f4;
+              border-radius: 10px;
+              border: 1px solid #c9d6cb;
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+            "
+            @click.stop
+          >
+            <div
+              style="
+                font-size: 10px;
+                font-weight: 700;
+                color: #707973;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              "
+            >
+              Rincian Dompet Fisik
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px">
+              <div
+                v-for="(item, i) in parseNoteDetails(h.note)"
+                :key="i"
+                style="
+                  background: #ffffff;
+                  border: 1px solid #bfc9c1;
+                  padding: 4px 10px;
+                  border-radius: 8px;
+                  font-size: 11px;
+                  font-weight: 600;
+                  color: #161a32;
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                "
+              >
+                <span style="color: #707973">{{ item.label }}:</span>
+                <span style="color: #0f5238; font-weight: 700">{{ item.value }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </f7-page>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onBeforeUnmount } from "vue";
-import {
-  f7Page,
-  f7Navbar,
-  f7Preloader,
-  f7List,
-  f7ListItem,
-  f7,
-  f7NavLeft,
-  f7Link,
-  f7NavTitle,
-} from "framework7-vue";
+import { f7Page, f7Navbar, f7Preloader, f7, f7NavLeft, f7Link, f7NavTitle } from "framework7-vue";
 import { reconcile } from "../js/api";
 import { formatRp } from "../js/routes";
 import { useBackButton } from "../composables/useBackButton";
@@ -520,9 +694,9 @@ const form = reactive({
 
 const showCalculator = ref(false);
 const wallets = ref<Array<{ label: string; amount: number | "" }>>([
-  { label: "BRI Suami (Mempawah)", amount: "" },
-  { label: "Dompet Istri (Kubu Raya)", amount: "" },
-  { label: "E-Wallet Bersama", amount: "" },
+  { label: "Tabungan Utama", amount: "" },
+  { label: "Dompet Tunai", amount: "" },
+  { label: "E-Wallet/QRIS", amount: "" },
 ]);
 const autoNoteEnabled = ref(true);
 const calculatorTotal = ref(0);
@@ -590,6 +764,28 @@ const handleActualBalanceInput = () => {
 
 let initialBalance: number | "" = "";
 const initialNote = "";
+
+const expandedSnapshots = ref<Record<string, boolean>>({});
+
+const toggleExpandSnapshot = (id: string) => {
+  expandedSnapshots.value[id] = !expandedSnapshots.value[id];
+};
+
+const parseNoteDetails = (note: string | null) => {
+  if (!note) return null;
+  if (!note.startsWith("Rincian:")) return null;
+
+  const cleanStr = note.substring("Rincian:".length).trim();
+  const parts = cleanStr.split(",");
+  return parts.map(p => {
+    const lastColonIdx = p.lastIndexOf(":");
+    if (lastColonIdx === -1) return { label: p.trim(), value: "" };
+    return {
+      label: p.substring(0, lastColonIdx).trim(),
+      value: p.substring(lastColonIdx + 1).trim(),
+    };
+  });
+};
 
 const loadReconcileData = async () => {
   try {
