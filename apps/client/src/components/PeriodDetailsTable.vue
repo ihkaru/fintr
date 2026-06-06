@@ -44,22 +44,10 @@
             style="border-bottom: 1px solid #e3e8e4; color: #161a32"
           >
             <td style="padding: 12px 16px; font-weight: 600">{{ p.name }}</td>
-            <td
-              style="
-                padding: 12px 16px;
-                text-align: right;
-                font-family: &quot;Inter&quot;, sans-serif;
-              "
-            >
+            <td style="padding: 12px 16px; text-align: right; font-family: Inter, sans-serif">
               {{ formatRp(parseFloat(p.totalAllocated)) }}
             </td>
-            <td
-              style="
-                padding: 12px 16px;
-                text-align: right;
-                font-family: &quot;Inter&quot;, sans-serif;
-              "
-            >
+            <td style="padding: 12px 16px; text-align: right; font-family: Inter, sans-serif">
               {{ formatRp(parseFloat(p.totalSpent)) }}
             </td>
             <td
@@ -68,7 +56,7 @@
                 text-align: right;
                 font-weight: 700;
                 color: #0f5238;
-                font-family: &quot;Inter&quot;, sans-serif;
+                font-family: Inter, sans-serif;
               "
             >
               {{ formatRp(parseFloat(p.totalRemaining)) }}
