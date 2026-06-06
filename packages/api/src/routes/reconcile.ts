@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { authMiddleware } from "../middleware/auth";
 import { db } from "../db/index";
-import { accountSnapshots, budgetPeriods, transactions } from "../db/schema";
+import { accountSnapshots, budgetPeriods, transactions, budgetAllocations } from "../db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 
 export const reconcileRoutes = new Elysia({ prefix: "/reconcile" })
@@ -54,6 +54,16 @@ export const reconcileRoutes = new Elysia({ prefix: "/reconcile" })
       return { error: "Tidak ada periode aktif" };
     }
 
+    // Get total allocated in current period (allocated amount + rollover amount)
+    const [allocatedResult] = await db
+      .select({
+        totalAllocated: sql<string>`COALESCE(SUM(${budgetAllocations.allocatedAmount} + ${budgetAllocations.rolloverAmount}), 0)`,
+      })
+      .from(budgetAllocations)
+      .where(eq(budgetAllocations.periodId, currentPeriod.id));
+
+    const totalAllocated = parseFloat(allocatedResult.totalAllocated);
+
     // Get total spent in current period
     const [spentResult] = await db
       .select({
@@ -63,7 +73,6 @@ export const reconcileRoutes = new Elysia({ prefix: "/reconcile" })
       .where(eq(transactions.periodId, currentPeriod.id));
 
     const totalSpent = parseFloat(spentResult.totalSpent);
-    const openingBalance = parseFloat(currentPeriod.openingBalance || "0");
 
     // Get the latest snapshot
     const [latestSnapshot] = await db
@@ -73,7 +82,7 @@ export const reconcileRoutes = new Elysia({ prefix: "/reconcile" })
       .orderBy(desc(accountSnapshots.snapshotAt))
       .limit(1);
 
-    const expectedBalance = openingBalance - totalSpent;
+    const expectedBalance = totalAllocated - totalSpent;
     const actualBalance = latestSnapshot ? parseFloat(latestSnapshot.actualBalance) : null;
     const difference = actualBalance !== null ? actualBalance - expectedBalance : null;
 
@@ -82,7 +91,7 @@ export const reconcileRoutes = new Elysia({ prefix: "/reconcile" })
         year: currentPeriod.year,
         month: currentPeriod.month,
       },
-      openingBalance: openingBalance.toFixed(2),
+      openingBalance: totalAllocated.toFixed(2),
       totalSpent: totalSpent.toFixed(2),
       expectedBalance: expectedBalance.toFixed(2),
       actualBalance: actualBalance?.toFixed(2) || null,
