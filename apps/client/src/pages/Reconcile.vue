@@ -201,52 +201,33 @@
               <!-- Baris 1: Label nama dompet -->
               <input
                 type="text"
+                class="wallet-label-input"
                 v-model="wallet.label"
                 placeholder="Nama Dompet (e.g. BRI, Dompet Tunai)"
-                style="
-                  width: 100%;
-                  background: #ffffff;
-                  border: 1px solid #bfc9c1;
-                  color: #161a32;
-                  padding: 8px 10px;
-                  border-radius: 8px;
-                  font-size: 13px;
-                  box-sizing: border-box;
-                  outline: none;
-                "
                 @input="syncCalculator"
               />
               <!-- Baris 2: Input jumlah + tombol hapus -->
               <div style="display: flex; gap: 8px; align-items: center">
-                <div style="position: relative; flex: 1; display: flex; align-items: center">
+                <div style="position: relative; flex: 1">
                   <span
                     style="
                       position: absolute;
                       left: 10px;
+                      top: 50%;
+                      transform: translateY(-50%);
                       font-size: 12px;
                       font-weight: 700;
                       color: var(--fintr-text-muted);
                       pointer-events: none;
+                      z-index: 1;
                     "
                     >Rp</span
                   >
                   <input
                     type="number"
+                    class="wallet-amount-input"
                     v-model="wallet.amount"
                     placeholder="0"
-                    style="
-                      width: 100%;
-                      background: #ffffff;
-                      border: 1px solid #bfc9c1;
-                      color: #0f5238;
-                      padding: 8px 10px;
-                      padding-left: 28px;
-                      border-radius: 8px;
-                      font-size: 14px;
-                      font-weight: 700;
-                      box-sizing: border-box;
-                      outline: none;
-                    "
                     @input="syncCalculator"
                   />
                 </div>
