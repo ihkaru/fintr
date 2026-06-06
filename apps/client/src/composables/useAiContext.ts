@@ -142,7 +142,7 @@ Periode: ${periodLabel} | Dihasilkan: ${generatedAt}${partnerLine}
   - Total Anggaran Bulanan  : Rp ${formatRp(summary.allocated)}
   - Total Terpakai          : Rp ${formatRp(summary.spent)}
   - Sisa Dana Tersedia      : Rp ${formatRp(summary.remaining)}
-  - Saving Rate periode ini : ${savingRate}%
+  - Sisa Anggaran (%) periode ini : ${savingRate}%
 
 ---
 

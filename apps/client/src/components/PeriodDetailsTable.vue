@@ -34,7 +34,7 @@
             <th style="padding: 12px 16px">Periode</th>
             <th style="padding: 12px 16px; text-align: right">Anggaran</th>
             <th style="padding: 12px 16px; text-align: right">Terpakai</th>
-            <th style="padding: 12px 16px; text-align: right">Sisa (Tabungan)</th>
+            <th style="padding: 12px 16px; text-align: right">Sisa Dana</th>
           </tr>
         </thead>
         <tbody>

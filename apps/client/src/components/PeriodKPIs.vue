@@ -12,7 +12,7 @@
         "
       >
         <div style="font-size: 11px; color: #707973; font-weight: 600; text-transform: uppercase">
-          Rata-rata Menabung
+          Sisa Anggaran Rata-rata
         </div>
         <div
           style="
@@ -25,7 +25,7 @@
         >
           {{ formatRp(averageSaving) }}
         </div>
-        <div style="font-size: 11px; color: #707973">Per bulan dari sisa anggaran</div>
+        <div style="font-size: 11px; color: #707973">Sisa anggaran kumulatif per periode</div>
       </div>
       <div
         style="
@@ -37,7 +37,7 @@
         "
       >
         <div style="font-size: 11px; color: #707973; font-weight: 600; text-transform: uppercase">
-          Saving Rate
+          Sisa Anggaran (%)
         </div>
         <div
           style="
@@ -53,14 +53,14 @@
         <div
           style="
             font-size: 11px;
-            color: #22c55e;
+            color: #485f84;
             font-weight: 700;
             display: flex;
             align-items: center;
             gap: 4px;
           "
         >
-          <span style="font-size: 12px">📈</span> Sehat & Stabil
+          <span style="font-size: 12px">🛡️</span> Persentase Dana Tersisa
         </div>
       </div>
     </div>
