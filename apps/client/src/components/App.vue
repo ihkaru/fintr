@@ -80,10 +80,10 @@ watch(
 
 <style>
 .bottom-nav-toolbar {
-  --f7-toolbar-bg-color: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--fintr-border);
+  --f7-toolbar-bg-color: #ffffff;
+  background-color: #ffffff !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.03);
   height: calc(56px + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
