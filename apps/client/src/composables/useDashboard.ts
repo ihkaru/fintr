@@ -3,8 +3,10 @@ import { f7 } from "framework7-vue";
 import { periods, transactions as txnApi, reconcile, household, getUser } from "../js/api";
 import type { Transaction, PeriodDetail } from "../js/api";
 import { formatRp } from "../js/routes";
+import { usePeriodStore } from "../js/periodStore";
 
 export function useDashboard() {
+  const { setPeriodData } = usePeriodStore();
   const loading = ref(true);
   const summary = ref({
     remaining: 0,
@@ -50,6 +52,7 @@ export function useDashboard() {
         spent: parseFloat(detail.summary.totalSpent),
       };
       allocationsData.value = detail.allocations;
+      setPeriodData(currentPeriod.id, detail.allocations, currentPeriod);
       recentTxns.value = txns.slice(0, 5);
       reconcileData.value = recDiff;
 

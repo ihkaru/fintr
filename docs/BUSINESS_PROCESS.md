@@ -2,7 +2,11 @@
 
 ## 📌 Riwayat Versi & Perubahan (Changelog)
 
-- **v1.0.50 (Rilis Saat Ini)**:
+- **v1.0.51 (Rilis Saat Ini)**:
+  - **Optimasi Caching SWR (Stale-While-Revalidate) Anggaran/Amplop Aktif**:
+    - **Penyimpanan State Terpusat (periodStore)**: Mengembangkan shared store sederhana berbasis Vue reactive refs (`periodStore.ts`) untuk membagikan data anggaran aktif dan daftar alokasi amplop yang dimuat dari Dashboard (`useDashboard.ts`) langsung ke formulir transaksi (`useTransactionForm.ts`).
+    - **Eliminasi Lag Transisi**: Dengan membaca data periodStore secara langsung, formulir transaksi dapat langsung memetakan amplop pada ketukan render pertama (instant load), disusul proses verifikasi pembaruan data di latar belakang (background revalidation). Hal ini sepenuhnya menghilangkan lag transisi dan kedipan preloader saat pengguna menavigasi ke halaman input transaksi.
+- **v1.0.50**:
   - **RCA & Perbaikan Flashing Transisi Input Transaksi**:
     - **Pencegahan Nested page-content**: Menambahkan `:page-content="false"` ke `<f7-page>` di `AddTransaction.vue` untuk mencegah Framework7 secara otomatis membungkus elemen default slot dengan container `.page-content` tambahan. Perbaikan ini mengeliminasi masalah _nested_ `.page-content` (satu di dalam yang lain) yang menyebabkan repainting ganda dan kedipan (flashing) warna latar belakang putih/transparan saat halaman transisi dibuka melalui klik FAB di Dashboard.
 - **v1.0.49**:
