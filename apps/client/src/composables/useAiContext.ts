@@ -41,9 +41,10 @@ export function useAiContext() {
     // Build envelope rows
     const envelopeRows = allocationsData
       .map(a => {
-        const spent = parseFloat(a.spent ?? "0");
-        const allocated = parseFloat(a.allocated ?? "0");
-        const remaining = allocated - spent;
+        const spent = parseFloat(a.totalSpent ?? "0");
+        const allocated =
+          parseFloat(a.allocatedAmount ?? "0") + parseFloat(a.rolloverAmount ?? "0");
+        const remaining = parseFloat(a.remaining ?? "0");
         const rolloverLabel =
           a.rolloverBehavior === "rollover_self"
             ? "Menumpuk"
@@ -86,7 +87,7 @@ export function useAiContext() {
 
     // Most active envelope by spend
     const mostActive = [...allocationsData].sort(
-      (a, b) => parseFloat(b.spent ?? "0") - parseFloat(a.spent ?? "0")
+      (a, b) => parseFloat(b.totalSpent ?? "0") - parseFloat(a.totalSpent ?? "0")
     )[0];
 
     const usageSection = `## POLA PENGGUNAAN APLIKASI
@@ -96,7 +97,7 @@ export function useAiContext() {
       ✍️ Input manual : ${manualCount} transaksi
       📷 Scan struk   : ${ocrCount} transaksi
       📱 Share/target : ${shareCount} transaksi
-  - Amplop paling aktif            : ${mostActive ? `${mostActive.envelopeName} (${formatRp(parseFloat(mostActive.spent ?? "0"))} dari ${formatRp(parseFloat(mostActive.allocated ?? "0"))})` : "Belum ada"}
+  - Amplop paling aktif            : ${mostActive ? `${mostActive.envelopeName} (${formatRp(parseFloat(mostActive.totalSpent ?? "0"))} dari ${formatRp(parseFloat(mostActive.allocatedAmount ?? "0") + parseFloat(mostActive.rolloverAmount ?? "0"))})` : "Belum ada"}
   - Catatan akurasi data: ${manualCount === totalTxns ? "Semua data diinput manual — kemungkinan ada pengeluaran yang belum tercatat." : ocrCount > 0 || shareCount > 0 ? "Ada pencatatan via struk/share — data kemungkinan lebih akurat dan real-time." : "Tidak ada transaksi tercatat."}`;
 
     // Reconciliation section
