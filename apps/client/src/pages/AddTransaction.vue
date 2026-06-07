@@ -362,6 +362,7 @@ const handleAutoSplit = () => {
       return {
         allocationId: matched ? matched.id : allocations.value[0]?.id || "",
         amount: item.total || item.price || 0,
+        note: item.name || "",
       };
     });
   }

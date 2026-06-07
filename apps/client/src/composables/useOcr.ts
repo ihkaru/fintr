@@ -44,7 +44,7 @@ export function useOcr() {
       rawImageKey?: string;
     },
     isSplit: Ref<boolean> | boolean,
-    splitItems: Ref<Array<{ allocationId: string; amount: number | "" }>>,
+    splitItems: Ref<Array<{ allocationId: string; amount: number | ""; note?: string }>>,
     allocations: Array<{ id: string; envelopeName: string }>,
     aiRecommendationText: Ref<string>
   ) => {
@@ -115,7 +115,7 @@ export function useOcr() {
       rawImageKey?: string;
     },
     isSplit: Ref<boolean> | boolean,
-    splitItems: Ref<Array<{ allocationId: string; amount: number | "" }>>,
+    splitItems: Ref<Array<{ allocationId: string; amount: number | ""; note?: string }>>,
     aiRecommendationText: Ref<string>,
     alertCallback: (msg: string, title: string) => void
   ) => {

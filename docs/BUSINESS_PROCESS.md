@@ -2,7 +2,10 @@
 
 ## 📌 Riwayat Versi & Perubahan (Changelog)
 
-- **v1.0.45 (Rilis Saat Ini)**:
+- **v1.0.46 (Rilis Saat Ini)**:
+  - **Perbaikan UI/UX Pengisian Otomatis Split Catatan**:
+    - **Pemetaan Teks Catatan Item dari OCR**: Memastikan tombol Auto-Split secara aktif memetakan dan menginisialisasi `note` dengan nama barang belanjaan asli yang diekstrak oleh OCR AI Gemini Vision (`item.name`). Hal ini mencegah input nama barang tetap tersembunyi (karena nilai `undefined`) dan memungkinkan pengguna melihat/mengedit catatan item tersebut langsung di kartu editor ketika mengganti alokasi amplop.
+- **v1.0.45**:
   - **Penyempurnaan Split Kategori dengan Rekomendasi Amplop & Catatan per Item dari Struk OCR**:
     - **Ekstraksi Rekomendasi Amplop per Item**: Model OCR AI Gemini Vision kini menganalisis nama barang belanjaan individu pada struk dan merekomendasikan ID amplop terdekat yang paling sesuai (misal: "Minyak Goreng" ke amplop "Makan & Kebersihan", "Bensin" ke "Transportasi & Bensin").
     - **Pencatatan Nama Barang per Item (Split Note)**: Membawa nama barang (e.g. "POP MIE AYAM 75G") sebagai catatan item split (`note` per item). Ini memungkinkan pengguna menyimpan transaksi dengan label spesifik per item belanja alih-alih label generic `Split (1/9)`.
