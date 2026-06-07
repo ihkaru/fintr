@@ -63,45 +63,287 @@
       </div>
 
       <div v-else>
-        <!-- Transaction List Grouped by Date -->
-        <f7-list media-list class="no-margin" style="background: transparent">
-          <f7-list-item
-            v-for="txn in txns"
-            :key="txn.id"
-            :title="txn.merchant || 'Transaksi'"
-            :after="`-${formatRp(txn.amount)}`"
-            :subtitle="txn.envelopeName"
-            :text="txn.note || formatTxnDate(txn.transactionAt)"
-            swipeout
-            @click="showTransactionDetail(txn)"
-            @swipeout:delete="deleteTxn(txn.id)"
-            style="cursor: pointer"
-          >
-            <template #media>
+        <!-- Search & Filter Controls -->
+        <div style="padding: 16px 16px 8px; background: transparent">
+          <!-- Search Input -->
+          <div style="position: relative; margin-bottom: 12px">
+            <span
+              class="material-symbols-outlined"
+              style="
+                position: absolute;
+                left: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #707973;
+                font-size: 20px;
+              "
+            >
+              search
+            </span>
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Cari toko, barang, nominal..."
+              style="
+                width: 100%;
+                padding: 12px 40px 12px 44px;
+                background: #ffffff;
+                border: 1px solid #bfc9c1;
+                border-radius: 16px;
+                font-size: 14px;
+                color: #161a32;
+                box-sizing: border-box;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01);
+                outline: none;
+                transition: border-color 0.2s;
+              "
+              onfocus="this.style.borderColor = '#0f5238'"
+              onblur="this.style.borderColor = '#bfc9c1'"
+            />
+            <!-- Clear Button -->
+            <span
+              v-if="searchQuery"
+              @click="searchQuery = ''"
+              class="material-symbols-outlined"
+              style="
+                position: absolute;
+                right: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #707973;
+                font-size: 20px;
+                cursor: pointer;
+              "
+            >
+              close
+            </span>
+          </div>
+
+          <!-- Filter Chips Row 1: Envelopes -->
+          <div style="margin-bottom: 12px" v-if="uniqueEnvelopes.length > 0">
+            <div
+              style="
+                font-size: 11px;
+                font-weight: 700;
+                color: #707973;
+                margin-bottom: 6px;
+                padding-left: 4px;
+              "
+            >
+              FILTER AMPLOP
+            </div>
+            <div
+              class="scroll-x-no-scrollbar"
+              style="
+                display: flex;
+                gap: 8px;
+                overflow-x: auto;
+                padding-bottom: 4px;
+                -webkit-overflow-scrolling: touch;
+              "
+            >
               <div
-                class="icon-circle"
-                :style="{
-                  background: `${txn.envelopeColor}22`,
-                  color: txn.envelopeColor,
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '18px',
-                }"
+                @click="selectedEnvelope = null"
+                :style="getChipStyle(selectedEnvelope === null)"
               >
-                {{ txn.source === "ocr" ? "📷" : txn.source === "share" ? "📱" : "✍️" }}
+                Semua Amplop
               </div>
-            </template>
-            <f7-swipeout-actions right>
-              <f7-swipeout-button delete confirm-text="Hapus transaksi ini?">
-                Hapus
-              </f7-swipeout-button>
-            </f7-swipeout-actions>
-          </f7-list-item>
-        </f7-list>
+              <div
+                v-for="env in uniqueEnvelopes"
+                :key="env"
+                @click="selectedEnvelope = env"
+                :style="getChipStyle(selectedEnvelope === env)"
+              >
+                {{ env }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Filter Chips Row 2: Sources -->
+          <div style="margin-bottom: 4px">
+            <div
+              style="
+                font-size: 11px;
+                font-weight: 700;
+                color: #707973;
+                margin-bottom: 6px;
+                padding-left: 4px;
+              "
+            >
+              FILTER SUMBER
+            </div>
+            <div
+              class="scroll-x-no-scrollbar"
+              style="
+                display: flex;
+                gap: 8px;
+                overflow-x: auto;
+                padding-bottom: 4px;
+                -webkit-overflow-scrolling: touch;
+              "
+            >
+              <div
+                v-for="src in sources"
+                :key="src.id"
+                @click="selectedSource = src.id"
+                :style="getChipStyle(selectedSource === src.id)"
+              >
+                {{ src.name }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Filters Status Bar -->
+        <div
+          v-if="isAnyFilterActive"
+          style="
+            margin: 4px 16px 12px;
+            padding: 10px 14px;
+            background: #eef5f0;
+            border: 1px solid rgba(15, 82, 56, 0.15);
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #0f5238;
+            font-weight: 600;
+          "
+        >
+          <span>Menampilkan {{ filteredTxns.length }} dari {{ txns.length }} transaksi</span>
+          <f7-link @click="resetFilters" style="font-size: 12px; font-weight: 700; color: #ba1a1a">
+            Reset Filter
+          </f7-link>
+        </div>
+
+        <!-- Filter Empty State -->
+        <div
+          v-if="filteredTxns.length === 0"
+          style="
+            margin: 16px;
+            background: white;
+            border: 1px dashed #bfc9c1;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+          "
+        >
+          <div style="font-size: 48px; margin-bottom: 16px">🔍</div>
+          <div style="font-size: 15px; font-weight: 700; color: #161a32; margin-bottom: 8px">
+            Tidak Ada Transaksi yang Cocok
+          </div>
+          <div style="font-size: 12px; color: #707973; margin-bottom: 16px; line-height: 1.6">
+            Coba ganti kata kunci pencarian Anda atau reset filter aktif untuk melihat transaksi
+            lainnya.
+          </div>
+          <f7-link
+            @click="resetFilters"
+            style="
+              display: inline-block;
+              font-size: 13px;
+              font-weight: 700;
+              color: white;
+              background: #0f5238;
+              padding: 10px 24px;
+              border-radius: 12px;
+            "
+          >
+            Reset Filter & Pencarian
+          </f7-link>
+        </div>
+
+        <!-- Transaction List Grouped by Date -->
+        <div
+          v-else
+          v-for="group in groupedTransactions"
+          :key="group.date"
+          class="transactions-date-group"
+          style="margin-bottom: 16px"
+        >
+          <!-- Date Header -->
+          <div
+            style="
+              font-size: 12px;
+              font-weight: 700;
+              color: #707973;
+              margin: 16px 20px 8px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            "
+          >
+            {{ group.date }}
+          </div>
+
+          <f7-list
+            media-list
+            class="no-margin no-hairlines transactions-list-group"
+            style="background: transparent"
+          >
+            <f7-list-item
+              v-for="txn in group.transactions"
+              :key="txn.id"
+              :title="txn.note || txn.merchant || 'Belanja'"
+              :subtitle="txn.envelopeName"
+              :text="
+                txn.note && txn.merchant
+                  ? `${txn.merchant} · ${formatTxnTime(txn.transactionAt)}`
+                  : formatTxnTime(txn.transactionAt)
+              "
+              :after="`-${formatRp(parseFloat(txn.amount))}`"
+              swipeout
+              @click="showTransactionDetail(txn)"
+              @swipeout:delete="deleteTxn(txn.id)"
+              style="cursor: pointer"
+            >
+              <template #media>
+                <div
+                  class="icon-circle"
+                  :style="{
+                    position: 'relative',
+                    background: `${txn.envelopeColor}16`,
+                    color: txn.envelopeColor,
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '20px',
+                  }"
+                >
+                  {{ getEnvelopeEmoji(txn.envelopeName) }}
+                  <!-- Source Overlay Badge -->
+                  <div
+                    v-if="txn.source === 'ocr' || txn.source === 'share'"
+                    style="
+                      position: absolute;
+                      bottom: -3px;
+                      right: -3px;
+                      background: white;
+                      border: 1.5px solid #ffffff;
+                      border-radius: 50%;
+                      width: 14px;
+                      height: 14px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-size: 8px;
+                      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+                    "
+                  >
+                    {{ txn.source === "ocr" ? "📷" : "📱" }}
+                  </div>
+                </div>
+              </template>
+              <f7-swipeout-actions right>
+                <f7-swipeout-button delete confirm-text="Hapus transaksi ini?">
+                  Hapus
+                </f7-swipeout-button>
+              </f7-swipeout-actions>
+            </f7-list-item>
+          </f7-list>
+        </div>
       </div>
     </div>
 
@@ -115,7 +357,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import {
   f7Page,
   f7Navbar,
@@ -130,10 +372,16 @@ import {
 } from "framework7-vue";
 import { transactions, Transaction } from "../js/api";
 import { formatRp } from "../js/routes";
+import { getEnvelopeEmoji } from "../js/utils/emoji";
 import TransactionDetailSheet from "../components/TransactionDetailSheet.vue";
 
 const loading = ref(true);
 const txns = ref<Transaction[]>([]);
+
+// Filter states
+const searchQuery = ref("");
+const selectedEnvelope = ref<string | null>(null);
+const selectedSource = ref<string>("");
 
 const detailOpened = ref(false);
 const selectedTransaction = ref<Transaction | null>(null);
@@ -143,8 +391,115 @@ const showTransactionDetail = (txn: Transaction) => {
   detailOpened.value = true;
 };
 
+// Sources data
+const sources = [
+  { id: "", name: "Semua Sumber" },
+  { id: "ocr", name: "📷 Struk" },
+  { id: "share", name: "📱 Share" },
+  { id: "manual", name: "✍️ Manual" },
+];
+
+// Helper styles for chips
+const getChipStyle = (isActive: boolean) => {
+  return {
+    padding: "6px 14px",
+    borderRadius: "20px",
+    fontSize: "12px",
+    fontWeight: "600",
+    cursor: "pointer",
+    whiteSpace: "nowrap" as const,
+    transition: "all 0.2s",
+    background: isActive ? "#0f5238" : "#ffffff",
+    color: isActive ? "#ffffff" : "#707973",
+    border: isActive ? "1px solid #0f5238" : "1px solid #bfc9c1",
+    boxShadow: isActive ? "0 2px 6px rgba(15, 82, 56, 0.12)" : "none",
+  };
+};
+
+// Reset filters
+const resetFilters = () => {
+  searchQuery.value = "";
+  selectedEnvelope.value = null;
+  selectedSource.value = "";
+};
+
+// Check if any filter is active
+const isAnyFilterActive = computed(() => {
+  return !!searchQuery.value || selectedEnvelope.value !== null || selectedSource.value !== "";
+});
+
+// Extract unique envelopes from loaded transactions
+const uniqueEnvelopes = computed(() => {
+  const names = txns.value.map(t => t.envelopeName);
+  return Array.from(new Set(names)).filter(Boolean);
+});
+
+// Filter transactions dynamically
+const filteredTxns = computed(() => {
+  return txns.value.filter(txn => {
+    // 1. Search Query
+    if (searchQuery.value) {
+      const q = searchQuery.value.toLowerCase();
+      const matchMerchant = txn.merchant?.toLowerCase().includes(q);
+      const matchNote = txn.note?.toLowerCase().includes(q);
+      const matchEnvelope = txn.envelopeName.toLowerCase().includes(q);
+      const matchAmount = txn.amount.toString().includes(q);
+      if (!matchMerchant && !matchNote && !matchEnvelope && !matchAmount) {
+        return false;
+      }
+    }
+    // 2. Envelope Filter
+    if (selectedEnvelope.value && txn.envelopeName !== selectedEnvelope.value) {
+      return false;
+    }
+    // 3. Source Filter
+    if (selectedSource.value && txn.source !== selectedSource.value) {
+      return false;
+    }
+    return true;
+  });
+});
+
+// Group transactions by date
+const groupedTransactions = computed(() => {
+  const groups: { [key: string]: Transaction[] } = {};
+
+  // Sort transactions in descending order first
+  const sorted = [...filteredTxns.value].sort(
+    (a, b) => new Date(b.transactionAt).getTime() - new Date(a.transactionAt).getTime()
+  );
+
+  sorted.forEach(txn => {
+    const date = new Date(txn.transactionAt);
+    const dateKey = date.toLocaleDateString("id-ID", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    if (!groups[dateKey]) {
+      groups[dateKey] = [];
+    }
+    groups[dateKey].push(txn);
+  });
+
+  return Object.keys(groups).map(date => ({
+    date,
+    transactions: groups[date],
+  }));
+});
+
+// Format transaction time
+const formatTxnTime = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return date.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 const exportToCSV = () => {
-  if (txns.value.length === 0) {
+  if (filteredTxns.value.length === 0) {
     f7.dialog.alert("Tidak ada transaksi untuk diekspor.", "Info");
     return;
   }
@@ -158,7 +513,7 @@ const exportToCSV = () => {
     "Catatan",
   ];
 
-  const rows = txns.value.map(t => {
+  const rows = filteredTxns.value.map(t => {
     const date = new Date(t.transactionAt).toLocaleString("id-ID", {
       day: "2-digit",
       month: "2-digit",
@@ -203,7 +558,7 @@ const exportToCSV = () => {
 
   f7.toast
     .create({
-      text: "CSV berhasil diunduh! 📁",
+      text: `${filteredTxns.value.length} transaksi berhasil diekspor! 📁`,
       closeTimeout: 2000,
       position: "bottom",
     })
@@ -219,18 +574,6 @@ const loadTransactions = async () => {
   } finally {
     loading.value = false;
   }
-};
-
-const formatTxnDate = (dateStr: string) => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("id-ID", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 };
 
 const deleteTxn = async (id: string) => {
@@ -252,13 +595,11 @@ const deleteTxn = async (id: string) => {
 };
 
 const handleTransactionSaved = async (e: Event) => {
-  // Always update transactions when saved/changed
   await loadTransactions();
 
   const detail = (e as CustomEvent).detail;
-  if (!detail) return; // SSE update (no toast needed here, handled by page that was in foreground or just silent update)
+  if (!detail) return;
 
-  // Show Toast only if this page's view is currently the active view
   const isCurrentView = f7.views.current?.router?.currentRoute?.path === "/transactions/";
   if (!isCurrentView) return;
 
@@ -309,3 +650,72 @@ onBeforeUnmount(() => {
   window.removeEventListener("fintr:envelope-changed", loadTransactions);
 });
 </script>
+
+<style scoped>
+.scroll-x-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.scroll-x-no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+:deep(.transactions-list-group ul) {
+  background: transparent !important;
+}
+
+:deep(.transactions-list-group .swipeout) {
+  background: white;
+  border: 1px solid #bfc9c1;
+  border-radius: 16px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+:deep(.transactions-list-group .swipeout:active) {
+  transform: scale(0.99);
+}
+
+:deep(.transactions-list-group .item-content) {
+  padding-left: 12px;
+}
+
+:deep(.transactions-list-group .item-inner) {
+  padding-right: 16px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+:deep(.transactions-list-group .item-title) {
+  font-weight: 700;
+  color: #161a32;
+  font-size: 14px;
+}
+
+:deep(.transactions-list-group .item-subtitle) {
+  font-size: 11px;
+  color: #0f5238;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+:deep(.transactions-list-group .item-text) {
+  font-size: 11px;
+  color: #707973;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+:deep(.transactions-list-group .item-after) {
+  font-family: var(--fintr-font-headline);
+  font-weight: 800;
+  color: #ba1a1a;
+  font-size: 14px;
+}
+</style>
