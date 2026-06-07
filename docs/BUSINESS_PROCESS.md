@@ -2,7 +2,18 @@
 
 ## 📌 Riwayat Versi & Perubahan (Changelog)
 
-- **v1.0.46 (Rilis Saat Ini)**:
+- **v1.0.48 (Rilis Saat Ini)**:
+  - **Penyempurnaan Antarmuka (UI/UX) Kelola Amplop**:
+    - **Visual Squircles & Emojis**: Mengganti titik warna padat standar (16px) dengan kontainer visual premium 44x44px squircles yang menggunakan opacity warna dasar (10%) dan gradasi garis batas yang harmonis (30%), dengan emoji kategori di tengahnya (`getEnvelopeEmoji`) untuk menyelaraskan dengan dashboard utama.
+    - **Kartu Mengambang & Hover Interaktif**: Mengubah list layout Framework7 standar menjadi baris kartu berlatar putih dengan border lembut, bayangan halus, dan efek hover transisi scaling interaktif yang membesar pelan dan bergeser ke atas untuk memberikan sensasi taktil modern.
+    - **Pill Rollover Berwarna**: Menampilkan perilaku rollover anggaran ("Transfer ke Tabungan", "Menumpuk (Rollover)", "Kembali Nol (Reset)") sebagai label pill berwarna (biru, hijau, abu-abu) dengan kontras teks dan border yang tinggi guna mempermudah pemahaman konfigurasi amplop dalam sekali lirik.
+    - **Overlay Target Tabungan**: Menampilkan badge 🏦 kecil secara absolut di pojok kanan bawah squircles untuk menandai amplop target tabungan dengan jelas tanpa merusak estetika antarmuka.
+- **v1.0.47**:
+  - **Interactive Search & Filters and Premium Card UI**:
+    - Menambahkan fitur pencarian real-time dan chip filter scroll horizontal untuk Amplop dan Sumber Transaksi (`📷 Struk`, `📱 Share`, `✍️ Manual`).
+    - Menampilkan data riwayat transaksi dalam bentuk kartu mengambang dibatasi header tanggal Indonesia yang terurut menurun.
+    - Sinkronisasi ekspor CSV untuk hanya mengunduh data transaksi yang sesuai filter aktif.
+- **v1.0.46**:
   - **Perbaikan UI/UX Pengisian Otomatis Split Catatan**:
     - **Pemetaan Teks Catatan Item dari OCR**: Memastikan tombol Auto-Split secara aktif memetakan dan menginisialisasi `note` dengan nama barang belanjaan asli yang diekstrak oleh OCR AI Gemini Vision (`item.name`). Hal ini mencegah input nama barang tetap tersembunyi (karena nilai `undefined`) dan memungkinkan pengguna melihat/mengedit catatan item tersebut langsung di kartu editor ketika mengganti alokasi amplop.
 - **v1.0.45**:

@@ -84,63 +84,151 @@
         </f7-link>
       </div>
 
-      <f7-list v-else media-list class="no-margin">
+      <f7-list v-else media-list class="no-margin envelopes-list-group">
         <f7-list-item
           v-for="item in items"
           :key="item.id"
-          :title="item.name"
-          :subtitle="`Alokasi Default: ${formatRp(item.defaultAmount)}`"
-          :text="`Rollover: ${getRolloverLabel(item.rolloverBehavior)}`"
           swipeout
           link="#"
           @click="openEditSheet(item)"
+          class="envelope-card-item"
         >
           <template #media>
-            <div style="position: relative">
+            <div
+              style="
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 44px;
+                height: 44px;
+                margin-top: 4px;
+              "
+            >
+              <!-- Circle container -->
               <div
                 :style="{
-                  width: '16px',
-                  height: '16px',
-                  borderRadius: '50%',
-                  background: item.color,
-                  marginTop: '12px',
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  background: `${item.color}1c`,
+                  border: `1.5px solid ${item.color}30`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '22px',
                 }"
-              ></div>
-              <!-- Savings target indicator -->
-              <span
+              >
+                {{ getEnvelopeEmoji(item.name) }}
+              </div>
+              <!-- Savings target indicator overlay -->
+              <div
                 v-if="item.isSavingsTarget"
-                class="material-symbols-outlined"
                 style="
                   position: absolute;
-                  bottom: -6px;
-                  right: -8px;
-                  font-size: 12px;
-                  color: #22c55e;
-                  background: white;
+                  bottom: -4px;
+                  right: -4px;
+                  width: 18px;
+                  height: 18px;
+                  background: #ffffff;
+                  border: 1.5px solid #22c55e;
                   border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+                  font-size: 10px;
                 "
                 title="Target Tabungan"
-                >savings</span
               >
+                🏦
+              </div>
             </div>
           </template>
 
-          <!-- Savings target badge inline -->
-          <template #after>
-            <span
-              v-if="item.isSavingsTarget"
+          <template #title>
+            <div
               style="
-                font-size: 10px;
-                font-weight: 700;
-                color: #166534;
-                background: #dcfce7;
-                border: 1px solid #86efac;
-                border-radius: 999px;
-                padding: 2px 8px;
-                white-space: nowrap;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
               "
-              >🏦 Target Tabungan</span
             >
+              <span style="font-size: 15px; font-weight: 700; color: #1e293b">
+                {{ item.name }}
+              </span>
+              <!-- Inline badge if savings target -->
+              <span
+                v-if="item.isSavingsTarget"
+                style="
+                  font-size: 9px;
+                  font-weight: 800;
+                  color: #15803d;
+                  background: #dcfce7;
+                  border: 1px solid #bbf7d0;
+                  border-radius: 6px;
+                  padding: 2px 6px;
+                  white-space: nowrap;
+                  text-transform: uppercase;
+                  letter-spacing: 0.3px;
+                "
+              >
+                Target Tabungan
+              </span>
+            </div>
+          </template>
+
+          <template #subtitle>
+            <div style="font-size: 13px; font-weight: 500; color: #64748b; margin-top: 4px">
+              Alokasi Default:
+              <span style="font-weight: 800; color: #0f5238">{{
+                formatRp(item.defaultAmount)
+              }}</span>
+            </div>
+          </template>
+
+          <template #text>
+            <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px">
+              <span
+                style="
+                  font-size: 10px;
+                  color: #94a3b8;
+                  font-weight: 600;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                "
+                >Rollover:</span
+              >
+              <span
+                :style="{
+                  fontSize: '10px',
+                  fontWeight: '700',
+                  padding: '2px 8px',
+                  borderRadius: '6px',
+                  background:
+                    item.rolloverBehavior === 'rollover_self'
+                      ? '#eef5f0'
+                      : item.rolloverBehavior === 'rollover_to_savings'
+                        ? '#eff6ff'
+                        : '#f1f5f9',
+                  color:
+                    item.rolloverBehavior === 'rollover_self'
+                      ? '#0f5238'
+                      : item.rolloverBehavior === 'rollover_to_savings'
+                        ? '#1d4ed8'
+                        : '#475569',
+                  border:
+                    item.rolloverBehavior === 'rollover_self'
+                      ? '1px solid rgba(15, 82, 56, 0.15)'
+                      : item.rolloverBehavior === 'rollover_to_savings'
+                        ? '1px solid rgba(29, 78, 216, 0.15)'
+                        : '1px solid rgba(71, 85, 105, 0.15)',
+                }"
+              >
+                {{ getRolloverLabel(item.rolloverBehavior) }}
+              </span>
+            </div>
           </template>
 
           <f7-swipeout-actions right>
@@ -387,6 +475,7 @@ import {
 } from "framework7-vue";
 import { envelopes } from "../js/api";
 import { formatRp } from "../js/routes";
+import { getEnvelopeEmoji } from "../js/utils/emoji";
 
 const loading = ref(true);
 const creating = ref(false);
@@ -591,3 +680,60 @@ onUnmounted(() => {
   window.removeEventListener("fintr:envelope-changed", loadEnvelopes);
 });
 </script>
+
+<style scoped>
+.envelopes-list-group {
+  margin-top: 8px !important;
+}
+
+/* Deep select list component to remove default borders and background */
+:deep(.envelopes-list-group ul) {
+  background: transparent !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 16px !important;
+}
+
+:deep(.envelopes-list-group ul::before),
+:deep(.envelopes-list-group ul::after) {
+  display: none !important;
+}
+
+/* Custom rounded card styling for list items */
+.envelope-card-item {
+  background: #ffffff !important;
+  border: 1px solid var(--fintr-border-color, #e2e8f0) !important;
+  border-radius: 16px !important;
+  margin-bottom: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  overflow: hidden;
+}
+
+.envelope-card-item:hover {
+  border-color: var(--fintr-primary, #0f5238) !important;
+  box-shadow: 0 6px 16px rgba(15, 82, 56, 0.05) !important;
+  transform: translateY(-1px);
+}
+
+.envelope-card-item:active {
+  transform: scale(0.99);
+}
+
+/* Reset inner item content default borders and paddings */
+:deep(.envelope-card-item .item-content) {
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+  min-height: 80px !important;
+}
+
+:deep(.envelope-card-item .item-inner) {
+  border-bottom: none !important;
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+}
+
+:deep(.envelope-card-item .item-inner::after) {
+  display: none !important;
+}
+</style>
