@@ -65,15 +65,22 @@ jobs:
 
       - name: Rename APK for Release
         run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            VERSION="v$(node -p "require('./apps/client/package.json').version")"
+          fi
+          echo "Version determined: $VERSION"
+
           APK_PATH="apps/client/android/app/build/outputs/apk/release/app-release.apk"
           UNSIGNED_APK_PATH="apps/client/android/app/build/outputs/apk/release/app-release-unsigned.apk"
 
           if [ -f "$APK_PATH" ]; then
             # If signed successfully
-            cp "$APK_PATH" FamiVault-release.apk
+            cp "$APK_PATH" "FamiVault-${VERSION}.apk"
           elif [ -f "$UNSIGNED_APK_PATH" ]; then
             # Fallback to unsigned if secrets were not configured yet
-            cp "$UNSIGNED_APK_PATH" FamiVault-release-unsigned.apk
+            cp "$UNSIGNED_APK_PATH" "FamiVault-${VERSION}-unsigned.apk"
           else
             echo "Error: No APK file generated!"
             exit 1
@@ -83,13 +90,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: FamiVault-Android-APK
-          path: FamiVault-release*.apk
+          path: FamiVault-v*.apk
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: FamiVault-release*.apk
+          files: FamiVault-v*.apk
           draft: false
           prerelease: false
           generate_release_notes: true

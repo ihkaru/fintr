@@ -2,7 +2,10 @@
 
 ## 📌 Riwayat Versi & Perubahan (Changelog)
 
-- **v1.0.51 (Rilis Saat Ini)**:
+- **v1.0.52 (Rilis Saat Ini)**:
+  - **Pemberian Versi Dinamis pada Nama File APK**:
+    - **Renaming File via CI/CD**: Memodifikasi workflow GitHub Actions (`build-apk.yml`) untuk mendeteksi nama tag Git (misal `v1.0.52`) atau membaca field versi dari `package.json` secara dinamis. Nama file hasil build APK yang diunggah ke _artifacts_ dan rilis GitHub kini berformat `FamiVault-vX.Y.Z.apk` atau `FamiVault-vX.Y.Z-unsigned.apk` menggantikan nama generik `FamiVault-release.apk`.
+- **v1.0.51**:
   - **Optimasi Caching SWR (Stale-While-Revalidate) Anggaran/Amplop Aktif**:
     - **Penyimpanan State Terpusat (periodStore)**: Mengembangkan shared store sederhana berbasis Vue reactive refs (`periodStore.ts`) untuk membagikan data anggaran aktif dan daftar alokasi amplop yang dimuat dari Dashboard (`useDashboard.ts`) langsung ke formulir transaksi (`useTransactionForm.ts`).
     - **Eliminasi Lag Transisi**: Dengan membaca data periodStore secara langsung, formulir transaksi dapat langsung memetakan amplop pada ketukan render pertama (instant load), disusul proses verifikasi pembaruan data di latar belakang (background revalidation). Hal ini sepenuhnya menghilangkan lag transisi dan kedipan preloader saat pengguna menavigasi ke halaman input transaksi.
