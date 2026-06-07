@@ -1,5 +1,5 @@
 <template>
-  <f7-page name="add-transaction">
+  <f7-page name="add-transaction" :page-content="false">
     <f7-navbar>
       <f7-nav-left>
         <f7-link

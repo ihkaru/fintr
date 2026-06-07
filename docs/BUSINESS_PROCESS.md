@@ -2,7 +2,10 @@
 
 ## 📌 Riwayat Versi & Perubahan (Changelog)
 
-- **v1.0.49 (Rilis Saat Ini)**:
+- **v1.0.50 (Rilis Saat Ini)**:
+  - **RCA & Perbaikan Flashing Transisi Input Transaksi**:
+    - **Pencegahan Nested page-content**: Menambahkan `:page-content="false"` ke `<f7-page>` di `AddTransaction.vue` untuk mencegah Framework7 secara otomatis membungkus elemen default slot dengan container `.page-content` tambahan. Perbaikan ini mengeliminasi masalah _nested_ `.page-content` (satu di dalam yang lain) yang menyebabkan repainting ganda dan kedipan (flashing) warna latar belakang putih/transparan saat halaman transisi dibuka melalui klik FAB di Dashboard.
+- **v1.0.49**:
   - **Animasi Transisi Halaman Transaksi & Kelola Amplop**:
     - **Re-trigger Animasi via renderKey**: Menyematkan mekanisme re-triggering berbasis `:key` re-render pada container utama halaman `Transactions.vue` dan `Envelopes.vue` saat tab diaktifkan (`@page:beforein` dan `@page:tabshow`). Hal ini memastikan animasi masuk fade-up premium (`.animate-in`) diputar secara konsisten setiap kali pengguna berpindah tab tanpa memicu efek preloader yang berkedip.
 - **v1.0.48**:
