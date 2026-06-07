@@ -2,7 +2,10 @@
 
 ## 📌 Riwayat Versi & Perubahan (Changelog)
 
-- **v1.0.48 (Rilis Saat Ini)**:
+- **v1.0.49 (Rilis Saat Ini)**:
+  - **Animasi Transisi Halaman Transaksi & Kelola Amplop**:
+    - **Re-trigger Animasi via renderKey**: Menyematkan mekanisme re-triggering berbasis `:key` re-render pada container utama halaman `Transactions.vue` dan `Envelopes.vue` saat tab diaktifkan (`@page:beforein` dan `@page:tabshow`). Hal ini memastikan animasi masuk fade-up premium (`.animate-in`) diputar secara konsisten setiap kali pengguna berpindah tab tanpa memicu efek preloader yang berkedip.
+- **v1.0.48**:
   - **Penyempurnaan Antarmuka (UI/UX) Kelola Amplop**:
     - **Visual Squircles & Emojis**: Mengganti titik warna padat standar (16px) dengan kontainer visual premium 44x44px squircles yang menggunakan opacity warna dasar (10%) dan gradasi garis batas yang harmonis (30%), dengan emoji kategori di tengahnya (`getEnvelopeEmoji`) untuk menyelaraskan dengan dashboard utama.
     - **Kartu Mengambang & Hover Interaktif**: Mengubah list layout Framework7 standar menjadi baris kartu berlatar putih dengan border lembut, bayangan halus, dan efek hover transisi scaling interaktif yang membesar pelan dan bergeser ke atas untuk memberikan sensasi taktil modern.

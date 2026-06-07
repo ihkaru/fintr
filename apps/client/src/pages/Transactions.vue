@@ -1,5 +1,5 @@
 <template>
-  <f7-page name="transactions" @page:beforein="loadTransactions" @page:tabshow="loadTransactions">
+  <f7-page name="transactions" @page:beforein="onPageShow" @page:tabshow="onPageShow">
     <f7-navbar title="Riwayat Transaksi">
       <f7-nav-right>
         <f7-link
@@ -24,7 +24,7 @@
       <div style="margin-top: 16px; color: var(--fintr-text-muted)">Memuat daftar transaksi...</div>
     </div>
 
-    <div v-else>
+    <div v-else :key="renderKey" class="animate-in">
       <div
         v-if="txns.length === 0"
         class="empty-state"
@@ -638,6 +638,12 @@ const handleTransactionSaved = async (e: Event) => {
     },
   });
   toast.open();
+};
+
+const renderKey = ref(0);
+const onPageShow = () => {
+  renderKey.value++;
+  loadTransactions();
 };
 
 onMounted(() => {

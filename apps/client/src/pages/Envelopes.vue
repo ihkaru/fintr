@@ -1,5 +1,5 @@
 <template>
-  <f7-page name="envelopes" @page:beforein="loadEnvelopes" @page:tabshow="loadEnvelopes">
+  <f7-page name="envelopes" @page:beforein="onPageShow" @page:tabshow="onPageShow">
     <f7-navbar title="Kelola Amplop">
       <f7-nav-right>
         <f7-link icon-only @click="openCreateSheet">
@@ -17,7 +17,7 @@
       <div style="margin-top: 16px; color: var(--fintr-text-muted)">Memuat data amplop...</div>
     </div>
 
-    <div v-else>
+    <div v-else :key="renderKey" class="animate-in">
       <!-- Info Alert Box -->
       <div
         style="
@@ -670,6 +670,12 @@ const deleteEnvelope = async (item: any) => {
       f7.dialog.alert("Gagal menghapus: " + (err?.message || JSON.stringify(err)));
     }
   }
+};
+
+const renderKey = ref(0);
+const onPageShow = () => {
+  renderKey.value++;
+  loadEnvelopes();
 };
 
 onMounted(() => {
