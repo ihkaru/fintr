@@ -3,6 +3,7 @@ import { ref, computed, Ref } from "vue";
 export interface SplitItemState {
   allocationId: string;
   amount: number | "";
+  note?: string;
 }
 
 export function useSplit(
@@ -29,10 +30,12 @@ export function useSplit(
         {
           allocationId: formAllocationId.value || allocations[0]?.id || "",
           amount: currentAmount ? Math.ceil(Number(currentAmount) * 0.7) : "",
+          note: "",
         },
         {
           allocationId: allocations[1]?.id || allocations[0]?.id || "",
           amount: currentAmount ? Math.floor(Number(currentAmount) * 0.3) : "",
+          note: "",
         },
       ];
     } else {
@@ -46,6 +49,7 @@ export function useSplit(
     splitItems.value.push({
       allocationId: defaultAllocId,
       amount: "",
+      note: "",
     });
   };
 

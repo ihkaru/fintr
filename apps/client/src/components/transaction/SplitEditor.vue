@@ -5,11 +5,13 @@
       :key="idx"
       :allocation-id="item.allocationId"
       :amount="item.amount"
+      :note="item.note"
       :allocations="allocations"
       @update:allocation-id="
         val => emit('update-item', { index: idx, field: 'allocationId', value: val })
       "
       @update:amount="val => emit('update-item', { index: idx, field: 'amount', value: val })"
+      @update:note="val => emit('update-item', { index: idx, field: 'note', value: val })"
       @remove="emit('remove-item', idx)"
     />
 
@@ -58,6 +60,7 @@ defineProps<{
   splitItems: Array<{
     allocationId: string;
     amount: number | "";
+    note?: string;
   }>;
   allocations: Array<{
     id: string;
@@ -71,7 +74,7 @@ defineProps<{
 const emit = defineEmits<{
   (
     e: "update-item",
-    payload: { index: number; field: "allocationId" | "amount"; value: any }
+    payload: { index: number; field: "allocationId" | "amount" | "note"; value: any }
   ): void;
   (e: "add-item"): void;
   (e: "remove-item", index: number): void;

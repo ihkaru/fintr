@@ -22,7 +22,7 @@ export function useTransactionSubmit(
   currentPeriodId: Ref<string>,
   isSplit: Ref<boolean>,
   splitRemaining: Ref<number>,
-  splitItems: Ref<Array<{ allocationId: string; amount: number | "" }>>,
+  splitItems: Ref<Array<{ allocationId: string; amount: number | ""; note?: string }>>,
   splitTotal: Ref<number>,
   allocations: Ref<Array<any>>,
   filterSufficientOnly?: Ref<boolean>
@@ -119,9 +119,11 @@ export function useTransactionSubmit(
       allocationId: item.allocationId,
       amount: Number(item.amount),
       merchant: form.merchant || undefined,
-      note: form.note
-        ? `${form.note} (${splitItems.value.indexOf(item) + 1}/${splitItems.value.length})`
-        : `Split (${splitItems.value.indexOf(item) + 1}/${splitItems.value.length})`,
+      note: item.note
+        ? item.note
+        : form.note
+          ? `${form.note} (${splitItems.value.indexOf(item) + 1}/${splitItems.value.length})`
+          : `Split (${splitItems.value.indexOf(item) + 1}/${splitItems.value.length})`,
       transactionAt: new Date(form.date).toISOString(),
       source: form.source,
       rawImageKey: form.rawImageKey || undefined,

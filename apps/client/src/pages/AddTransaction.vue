@@ -361,7 +361,7 @@ const handleAutoSplit = () => {
       );
       return {
         allocationId: matched ? matched.id : allocations.value[0]?.id || "",
-        amount: item.amount || 0,
+        amount: item.total || item.price || 0,
       };
     });
   }
@@ -381,7 +381,7 @@ const handleUpdateSplitItem = ({
   value,
 }: {
   index: number;
-  field: "allocationId" | "amount";
+  field: "allocationId" | "amount" | "note";
   value: any;
 }) => {
   splitItems.value[index][field] = value;

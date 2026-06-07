@@ -78,6 +78,13 @@ export const transactions = {
       recommendedEnvelopeId?: string | null;
       analysisReasoning?: string | null;
       receiptUrl?: string | null;
+      items?: Array<{
+        name: string;
+        quantity: number;
+        price: number;
+        total: number;
+        recommendedEnvelopeId?: string | null;
+      }> | null;
     }> => {
       const job = await request<{
         status: "pending" | "processing" | "completed" | "failed";
@@ -90,6 +97,13 @@ export const transactions = {
           recommendedEnvelopeId?: string | null;
           analysisReasoning?: string | null;
           receiptUrl?: string | null;
+          items?: Array<{
+            name: string;
+            quantity: number;
+            price: number;
+            total: number;
+            recommendedEnvelopeId?: string | null;
+          }> | null;
         };
         error?: string;
       }>(`/transactions/ocr/status/${jobId}`);
@@ -127,6 +141,13 @@ export const transactions = {
       recommendedEnvelopeId?: string | null;
       analysisReasoning?: string | null;
       formattedNote?: string | null;
+      items?: Array<{
+        name: string;
+        quantity: number;
+        price: number;
+        total: number;
+        recommendedEnvelopeId?: string | null;
+      }> | null;
     }>("/transactions/parse-text", {
       method: "POST",
       body: JSON.stringify({ text, envelopes }),

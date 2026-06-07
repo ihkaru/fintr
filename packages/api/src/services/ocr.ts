@@ -11,7 +11,13 @@ export interface OcrResult {
   confidence: "high" | "medium" | "low";
   recommendedEnvelopeId?: string | null;
   analysisReasoning?: string | null;
-  items?: Array<{ name: string; quantity: number; price: number; total: number }> | null;
+  items?: Array<{
+    name: string;
+    quantity: number;
+    price: number;
+    total: number;
+    recommendedEnvelopeId?: string | null;
+  }> | null;
   formattedNote?: string | null;
 }
 
@@ -41,13 +47,18 @@ Ekstrak informasi berikut:
    - total: total harga item tersebut (angka saja)`;
 
   if (envelopes && envelopes.length > 0) {
-    systemPrompt += `\n5. recommendedEnvelopeId: ID amplop yang paling sesuai dari pilihan yang diberikan di bawah ini.
-6. analysisReasoning: Alasan singkat berbahasa Indonesia mengapa amplop tersebut dipilih.
+    systemPrompt += `
+   - recommendedEnvelopeId: ID amplop yang paling sesuai untuk item ini dari pilihan daftar amplop di bawah.`;
+  }
+
+  if (envelopes && envelopes.length > 0) {
+    systemPrompt += `\n5. recommendedEnvelopeId: ID amplop yang paling sesuai untuk transaksi keseluruhan dari pilihan yang diberikan di bawah ini.
+6. analysisReasoning: Alasan singkat berbahasa Indonesia mengapa amplop keseluruhan tersebut dipilih.
 
 Daftar amplop anggaran/kategori pengeluaran yang tersedia:
 ${envelopes.map(e => `- ID: "${e.id}", Nama Amplop: "${e.name}"`).join("\n")}
 
-Pilihlah salah satu ID amplop di atas yang paling menggambarkan jenis transaksi ini. Jika tidak ada yang cocok sama sekali, gunakan null.`;
+Pilihlah salah satu ID amplop di atas yang paling menggambarkan jenis transaksi/item ini. Jika tidak ada yang cocok sama sekali, gunakan null.`;
   }
 
   systemPrompt += `\n\nJawab dalam format JSON saja, tanpa markdown atau penjelasan tambahan di luar JSON:
@@ -60,7 +71,14 @@ Pilihlah salah satu ID amplop di atas yang paling menggambarkan jenis transaksi 
       "name": "POP MIE AYAM 75G",
       "quantity": 1,
       "price": 4900,
-      "total": 4900
+      "total": 4900`;
+
+  if (envelopes && envelopes.length > 0) {
+    systemPrompt += `,
+      "recommendedEnvelopeId": "some-envelope-uuid"`;
+  }
+
+  systemPrompt += `
     }
   ]`;
 
@@ -195,13 +213,18 @@ Ekstrak informasi berikut:
    - total: total harga item tersebut (angka saja)`;
 
   if (envelopes && envelopes.length > 0) {
-    systemPrompt += `\n5. recommendedEnvelopeId: ID amplop yang paling sesuai dari pilihan yang diberikan di bawah ini.
-6. analysisReasoning: Alasan singkat berbahasa Indonesia mengapa amplop tersebut dipilih.
+    systemPrompt += `
+   - recommendedEnvelopeId: ID amplop yang paling sesuai untuk item ini dari pilihan daftar amplop di bawah.`;
+  }
+
+  if (envelopes && envelopes.length > 0) {
+    systemPrompt += `\n5. recommendedEnvelopeId: ID amplop yang paling sesuai untuk transaksi keseluruhan dari pilihan yang diberikan di bawah ini.
+6. analysisReasoning: Alasan singkat berbahasa Indonesia mengapa amplop keseluruhan tersebut dipilih.
 
 Daftar amplop anggaran/kategori pengeluaran yang tersedia:
 ${envelopes.map(e => `- ID: "${e.id}", Nama Amplop: "${e.name}"`).join("\n")}
 
-Pilihlah salah satu ID amplop di atas yang paling menggambarkan jenis transaksi ini. Jika tidak ada yang cocok sama sekali, gunakan null.`;
+Pilihlah salah satu ID amplop di atas yang paling menggambarkan jenis transaksi/item ini. Jika tidak ada yang cocok sama sekali, gunakan null.`;
   }
 
   systemPrompt += `\n\nJawab dalam format JSON saja, tanpa markdown atau penjelasan tambahan di luar JSON:
@@ -214,7 +237,14 @@ Pilihlah salah satu ID amplop di atas yang paling menggambarkan jenis transaksi 
       "name": "POP MIE AYAM 75G",
       "quantity": 1,
       "price": 4900,
-      "total": 4900
+      "total": 4900`;
+
+  if (envelopes && envelopes.length > 0) {
+    systemPrompt += `,
+      "recommendedEnvelopeId": "some-envelope-uuid"`;
+  }
+
+  systemPrompt += `
     }
   ]`;
 
