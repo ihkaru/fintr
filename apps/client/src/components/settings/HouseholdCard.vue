@@ -63,8 +63,9 @@
               "
             >
               <img
-                v-if="member.avatarUrl"
+                v-if="member.avatarUrl && !avatarErrors[member.userId]"
                 :src="getAssetUrl(member.avatarUrl)"
+                @error="avatarErrors[member.userId] = true"
                 style="width: 100%; height: 100%; object-fit: cover"
                 alt="Avatar"
               />
@@ -149,6 +150,7 @@ const emit = defineEmits<{
 }>();
 
 const joinCode = ref("");
+const avatarErrors = ref<Record<string, boolean>>({});
 
 const submitJoin = () => {
   emit("join", joinCode.value);
