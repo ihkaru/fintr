@@ -53,6 +53,17 @@ const f7params = {
   theme: "md",
   darkMode: false,
   routes,
+  on: {
+    pageBeforeOut() {
+      // Blur focused elements before transition so they do not retain focus on inactive pages
+      if (
+        document.activeElement &&
+        typeof (document.activeElement as HTMLElement).blur === "function"
+      ) {
+        (document.activeElement as HTMLElement).blur();
+      }
+    },
+  },
 };
 
 // Initialize native hardware back button, app state listeners, and offline sync manager
