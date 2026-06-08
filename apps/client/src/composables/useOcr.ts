@@ -1,5 +1,6 @@
 import { ref, Ref } from "vue";
 import { transactions } from "../js/api";
+import { compressImage } from "../js/utils/image";
 
 export function useOcr() {
   const ocrStatus = ref("");
@@ -143,7 +144,7 @@ export function useOcr() {
     }
 
     const sessionId = ++currentOcrSessionId.value;
-    ocrStatus.value = "🔄 Mengirim gambar...";
+    ocrStatus.value = "⚡ Mengompresi gambar...";
     aiRecommendationText.value = "";
     ocrConfidence.value = "";
     ocrHighlightedFields.value = { amount: false, merchant: false, date: false };
@@ -153,16 +154,25 @@ export function useOcr() {
     localImagePreviewUrl.value = URL.createObjectURL(file);
 
     try {
-      const base64 = await fileToBase64(file);
+      const compressedFile = await compressImage(file);
+      if (sessionId !== currentOcrSessionId.value) return;
+
+      ocrStatus.value = "🔄 Mengirim gambar...";
+      const base64 = await fileToBase64(compressedFile);
       const envelopeCandidates = allocations.map(a => ({
         id: a.id,
         name: a.envelopeName,
       }));
 
-      const result = await transactions.ocr(base64, file.type, envelopeCandidates, statusText => {
-        if (sessionId !== currentOcrSessionId.value) return;
-        ocrStatus.value = `🔄 ${statusText}`;
-      });
+      const result = await transactions.ocr(
+        base64,
+        compressedFile.type,
+        envelopeCandidates,
+        statusText => {
+          if (sessionId !== currentOcrSessionId.value) return;
+          ocrStatus.value = `🔄 ${statusText}`;
+        }
+      );
 
       if (sessionId !== currentOcrSessionId.value) return;
       processOcrResult(result, form, isSplit, splitItems, allocations, aiRecommendationText);

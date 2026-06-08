@@ -6,6 +6,7 @@ import { useShareStore } from "../js/shareStore";
 import { useTransactionForm } from "./useTransactionForm";
 import { useTransactionSubmit } from "./useTransactionSubmit";
 import { queueTextOcrTransaction } from "../js/utils/offlineQueue";
+import { compressImage } from "../js/utils/image";
 import { f7 } from "framework7-vue";
 
 export function useAddTransaction(routeQueryAllocId?: string) {
@@ -150,6 +151,33 @@ export function useAddTransaction(routeQueryAllocId?: string) {
         clearOcrPreview();
         localImagePreviewUrl.value = `data:${data.mimeType};base64,${data.base64}`;
 
+        let base64ToSend = data.base64!;
+        let mimeTypeToSend = data.mimeType!;
+
+        try {
+          if (data.base64 && data.mimeType && data.type === "image") {
+            ocrStatus.value = "⚡ Mengompresi gambar...";
+            const byteCharacters = atob(data.base64);
+            const byteArrays = [];
+            for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+              const slice = byteCharacters.slice(offset, offset + 512);
+              const byteNumbers = new Array(slice.length);
+              for (let i = 0; i < slice.length; i++) {
+                byteNumbers[i] = slice.charCodeAt(i);
+              }
+              const byteArray = new Uint8Array(byteNumbers);
+              byteArrays.push(byteArray);
+            }
+            const blob = new Blob(byteArrays, { type: data.mimeType });
+            const compressedBlob = await compressImage(blob);
+            if (sessionId !== currentOcrSessionId.value) return;
+            base64ToSend = await fileToBase64(compressedBlob);
+            mimeTypeToSend = compressedBlob.type;
+          }
+        } catch (compressErr) {
+          console.warn("Gagal mengompresi gambar share target:", compressErr);
+        }
+
         ocrStatus.value = "🔄 Mengirim gambar...";
 
         if (allocations.value.length === 0) {
@@ -169,8 +197,8 @@ export function useAddTransaction(routeQueryAllocId?: string) {
 
         try {
           const result = await transactions.ocr(
-            data.base64!,
-            data.mimeType!,
+            base64ToSend,
+            mimeTypeToSend,
             envelopeCandidates,
             statusText => {
               if (sessionId !== currentOcrSessionId.value) return;
@@ -284,7 +312,12 @@ export function useAddTransaction(routeQueryAllocId?: string) {
             const blob = await res.blob();
             clearOcrPreview();
             localImagePreviewUrl.value = URL.createObjectURL(blob);
-            const base64 = await fileToBase64(blob);
+
+            ocrStatus.value = "⚡ Mengompresi gambar...";
+            const compressedBlob = await compressImage(blob);
+            if (sessionId !== currentOcrSessionId.value) return;
+
+            const base64 = await fileToBase64(compressedBlob);
 
             if (sessionId !== currentOcrSessionId.value) return;
             ocrStatus.value = "🔄 Mengirim gambar...";
@@ -306,7 +339,7 @@ export function useAddTransaction(routeQueryAllocId?: string) {
 
             const result = await transactions.ocr(
               base64,
-              blob.type,
+              compressedBlob.type,
               envelopeCandidates,
               statusText => {
                 if (sessionId !== currentOcrSessionId.value) return;
@@ -354,7 +387,12 @@ export function useAddTransaction(routeQueryAllocId?: string) {
           const blob = await sharedResponse.blob();
           clearOcrPreview();
           localImagePreviewUrl.value = URL.createObjectURL(blob);
-          const base64 = await fileToBase64(blob);
+
+          ocrStatus.value = "⚡ Mengompresi gambar...";
+          const compressedBlob = await compressImage(blob);
+          if (sessionId !== currentOcrSessionId.value) return;
+
+          const base64 = await fileToBase64(compressedBlob);
 
           if (sessionId !== currentOcrSessionId.value) return;
           ocrStatus.value = "🔄 Mengirim gambar...";
@@ -377,7 +415,7 @@ export function useAddTransaction(routeQueryAllocId?: string) {
           try {
             const result = await transactions.ocr(
               base64,
-              blob.type,
+              compressedBlob.type,
               envelopeCandidates,
               statusText => {
                 if (sessionId !== currentOcrSessionId.value) return;
