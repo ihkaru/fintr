@@ -18,6 +18,7 @@
       <img
         v-if="userProfile?.avatarUrl && !userAvatarError"
         :src="getAssetUrl(userProfile.avatarUrl)"
+        referrerpolicy="no-referrer"
         @error="userAvatarError = true"
         style="width: 100%; height: 100%; object-fit: cover"
         alt="Avatar"

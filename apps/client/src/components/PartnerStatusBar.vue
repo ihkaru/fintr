@@ -31,6 +31,7 @@
           <img
             v-if="userAvatar && !userAvatarError"
             :src="getAssetUrl(userAvatar)"
+            referrerpolicy="no-referrer"
             @error="userAvatarError = true"
             style="width: 100%; height: 100%; object-fit: cover"
           />
@@ -72,6 +73,7 @@
           <img
             v-if="partner.avatarUrl && !partnerAvatarError"
             :src="getAssetUrl(partner.avatarUrl)"
+            referrerpolicy="no-referrer"
             @error="partnerAvatarError = true"
             style="width: 100%; height: 100%; object-fit: cover"
           />
