@@ -3,11 +3,9 @@
     class="txn-item animate-in txn-row-clickable"
     @click="$emit('click')"
     style="
-      background: white;
-      border: 1px solid #bfc9c1;
-      border-radius: 16px;
+      background: transparent;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
       padding: 14px 16px;
-      margin-bottom: 8px;
       display: flex;
       align-items: center;
       gap: 12px;
@@ -174,10 +172,13 @@ const formattedDate = computed(() => {
 }
 .txn-row-clickable:hover {
   background: var(--fintr-bg-card-hover) !important;
-  border-color: var(--fintr-primary) !important;
 }
 .txn-row-clickable:active {
-  transform: scale(0.98);
+  background: rgba(0, 0, 0, 0.02) !important;
+  transform: scale(0.99);
+}
+.txn-item:last-child {
+  border-bottom: none !important;
 }
 @keyframes fadeIn {
   from {

@@ -49,7 +49,14 @@
     <div
       v-else
       class="recent-transactions-list"
-      style="margin: 0 16px 16px; background: white; border-radius: 16px; overflow: hidden"
+      style="
+        margin: 0 16px 16px;
+        background: white;
+        border: 1px solid var(--fintr-border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+      "
     >
       <TransactionRow
         v-for="t in recentTxns"
