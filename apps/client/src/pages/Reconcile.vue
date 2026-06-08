@@ -25,7 +25,8 @@
 
       <!-- Snapshot Input Form Component -->
       <ReconcileSnapshotForm
-        v-model:form="form"
+        :form="form"
+        @update:form="Object.assign(form, $event)"
         v-model:auto-note-enabled="autoNoteEnabled"
         :show-calculator="showCalculator"
         :wallets="wallets"
