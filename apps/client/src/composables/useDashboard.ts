@@ -17,6 +17,8 @@ export function useDashboard() {
   const recentTxns = ref<Transaction[]>([]);
   const reconcileData = ref<any>(null);
   const currentPeriodId = ref<string | null>(null);
+  const updatedAllocationIds = ref<string[]>([]);
+  const shouldFlashHero = ref(false);
 
   // Partner Status Bar State
   const currentUserProfile = ref<any>(getUser());
@@ -131,12 +133,28 @@ export function useDashboard() {
       return;
     }
 
-    // Only run if this page's view is currently the active view
-    if (f7.views.current?.router?.currentRoute?.path !== "/") return;
+    const currentPath = f7.views.current?.router?.currentRoute?.path;
+    // Only run if this page is active or we're on add-transaction returning to "/"
+    if (currentPath !== "/" && currentPath !== "/add-transaction/") return;
 
-    const { ids, amount, merchant, isSplit } = detail;
+    const { ids, amount, merchant, isSplit, allocationId, allocationIds } = detail;
     const merchantText = merchant ? ` di ${merchant}` : "";
     const typeText = isSplit ? "Pecahan transaksi" : "Transaksi";
+
+    // Set flash animation state
+    if (allocationId) {
+      updatedAllocationIds.value = [allocationId];
+      shouldFlashHero.value = true;
+    } else if (allocationIds) {
+      updatedAllocationIds.value = allocationIds;
+      shouldFlashHero.value = true;
+    }
+
+    // Automatically clear flash animation after 3.5 seconds
+    setTimeout(() => {
+      updatedAllocationIds.value = [];
+      shouldFlashHero.value = false;
+    }, 3500);
 
     const toast = f7.toast.create({
       text: `✅ ${typeText} ${formatRp(amount)}${merchantText} disimpan!`,
@@ -181,6 +199,8 @@ export function useDashboard() {
     currentUserProfile,
     partnerProfile,
     householdName,
+    updatedAllocationIds,
+    shouldFlashHero,
     loadDashboard,
     navigateToAddTransaction,
     openAddTransactionWithEnvelope,

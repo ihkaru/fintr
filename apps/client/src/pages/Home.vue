@@ -99,6 +99,7 @@
         :remaining="summary.remaining"
         :allocated="summary.allocated"
         :spent="summary.spent"
+        :should-flash="shouldFlashHero"
       />
 
       <!-- Budget Optimization Nudge -->
@@ -176,6 +177,7 @@
       <!-- Envelope Grid -->
       <EnvelopeGridSection
         :allocations-data="allocationsData"
+        :updated-allocation-ids="updatedAllocationIds"
         @switch-tab="switchToTab"
         @select-envelope="openAddTransactionWithEnvelope"
       />
@@ -298,6 +300,8 @@ const {
   currentUserProfile,
   partnerProfile,
   householdName,
+  updatedAllocationIds,
+  shouldFlashHero,
   loadDashboard,
   navigateToAddTransaction,
   openAddTransactionWithEnvelope,

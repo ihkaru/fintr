@@ -1,6 +1,7 @@
 <template>
   <div
     class="hero-stats animate-in"
+    :class="{ 'pulse-highlight-hero': shouldFlash }"
     :style="{
       margin: '12px 16px',
       background: cardBackground,
@@ -8,6 +9,7 @@
       borderRadius: '20px',
       padding: '24px',
       color: 'white',
+      transition: 'all 0.3s ease',
     }"
   >
     <div
@@ -61,6 +63,7 @@ const props = defineProps<{
   remaining: number;
   allocated: number;
   spent: number;
+  shouldFlash?: boolean;
 }>();
 
 const cardBackground = computed(() => {
@@ -88,6 +91,27 @@ const cardShadow = computed(() => {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+.pulse-highlight-hero {
+  animation: pulse-highlight-hero 2.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@keyframes pulse-highlight-hero {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 8px 24px rgba(15, 82, 56, 0.15);
+  }
+  15% {
+    transform: scale(1.02);
+    box-shadow:
+      0 8px 32px rgba(255, 255, 255, 0.4),
+      0 0 0 6px rgba(255, 255, 255, 0.2);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 8px 24px rgba(15, 82, 56, 0.15);
   }
 }
 </style>

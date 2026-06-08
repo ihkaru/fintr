@@ -71,6 +71,7 @@ export function useTransactionSubmit(
             amount: Number(form.amount),
             merchant: form.merchant || undefined,
             isSplit: false,
+            allocationId: form.allocationId,
           },
         })
       );
@@ -150,6 +151,7 @@ export function useTransactionSubmit(
             amount: splitTotal.value,
             merchant: form.merchant || undefined,
             isSplit: true,
+            allocationIds: txns.map(t => t.allocationId),
           },
         })
       );

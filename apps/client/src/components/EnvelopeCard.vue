@@ -1,6 +1,7 @@
 <template>
   <div
     class="envelope-card animate-in"
+    :class="{ 'pulse-highlight-card': isHighlighted }"
     :style="{
       background: allocation.isActive === false ? '#f8f9fa' : '#ffffff',
       border: allocation.isActive === false ? '1px dashed #ced4da' : '1px solid #bfc9c1',
@@ -10,6 +11,7 @@
       boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
       cursor: 'pointer',
       opacity: allocation.isActive === false ? 0.85 : 1,
+      transition: 'all 0.3s ease',
     }"
     @click="$emit('click')"
   >
@@ -152,6 +154,7 @@ interface Allocation {
 
 const props = defineProps<{
   allocation: Allocation;
+  isHighlighted?: boolean;
 }>();
 
 defineEmits<{
@@ -189,6 +192,28 @@ const progressBarColor = computed(() => {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+.pulse-highlight-card {
+  animation: pulse-highlight-card 2.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@keyframes pulse-highlight-card {
+  0% {
+    border-color: #bfc9c1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  }
+  15% {
+    border-color: #0f5238;
+    box-shadow:
+      0 0 0 6px rgba(15, 82, 56, 0.15),
+      0 4px 16px rgba(15, 82, 56, 0.1);
+    background-color: #f0f7f4 !important;
+  }
+  100% {
+    border-color: #bfc9c1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
   }
 }
 </style>

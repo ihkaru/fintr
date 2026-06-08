@@ -51,6 +51,7 @@
         :key="a.id"
         :allocation="a"
         :delay="idx * 0.05"
+        :is-highlighted="updatedAllocationIds?.includes(a.id)"
         @click="$emit('select-envelope', a.id)"
       />
     </div>
@@ -64,6 +65,7 @@ import EnvelopeCard from "./EnvelopeCard.vue";
 
 defineProps<{
   allocationsData: any[];
+  updatedAllocationIds?: string[];
 }>();
 
 defineEmits<{
